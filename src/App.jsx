@@ -12,7 +12,7 @@ function App() {
             {/* Main Content Section */}
             <main className="p-6">
                 <div className="flex justify-between gap-4">
-                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                    <div className="flex-1 bg-gray-200 shadow p-4 rounded">
                         <h2 className="text-lg font-bold mb-4 text-gray-600">Buttons</h2>
                         <div className="space-y-2">
                             <Button onClick={() => alert("Button 1 clicked!")}>Button 1</Button>
@@ -21,12 +21,12 @@ function App() {
                         </div>
                     </div>
 
-                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                    <div className="flex-1 bg-gray-200 shadow p-4 rounded">
                         <h2 className="text-lg font-bold mb-4 text-gray-600">Second Column</h2>
                         <p>This is the second column. Add your content here.</p>
                     </div>
 
-                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                    <div className="flex-1 bg-gray-200 shadow p-4 rounded">
                         <h2 className="text-lg font-bold mb-4 text-gray-600">Third Column</h2>
                         <p>This is the third column. Add your content here.</p>
                     </div>
