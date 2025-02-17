@@ -3,6 +3,7 @@ import Button from "./components/Button";
 import {IntervalSlider} from "./components/IntervalSlider.jsx";
 import PriceRangeSlider from "./components/PriceRangeSlider.jsx";
 import { useState } from "react";
+import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
 
 
 
@@ -28,6 +29,7 @@ function App() {
                             <Button onClick={() => alert("Button 1 clicked!")}>Button 1</Button>
                             <Button onClick={() => alert("Button 2 clicked!")}>Button 2</Button>
                             <Button onClick={() => alert("Button 3 clicked!")}>Button 3</Button>
+                            <TweakpaneComponent></TweakpaneComponent>
                         </div>
                     </div>
 

@@ -13,12 +13,11 @@ const valueCSS = {
 const PriceRangeSlider = ({
                               min,
                               max,
-                              trackColor = "#cecece",
+                              trackColor = "#7c7c7c",
                               onChange,
-                              rangeColor = "#ff0303",
+                              rangeColor = "#ff5100",
                               valueStyle = valueCSS,
                               width = "300px",
-                              currencyText = "$",
                           }) => {
 
     const [minVal, setMinVal] = useState(min);
@@ -71,13 +70,13 @@ const PriceRangeSlider = ({
             <div className="w-[300px] px-4 flex items-center justify-between gap-x-5">
 
                 <p className="text-xl text-neutral-100 font-semibold">
-                    {currencyText} {minVal}
+                    {minVal}
                 </p>
 
                 <div className="flex-1 border-dashed border border-neutral-500 mt-1"></div>
 
                 <p className="text-xl text-neutral-100 font-semibold">
-                    {currencyText} {maxVal}
+                    {maxVal}
                 </p>
 
             </div>
@@ -145,7 +144,6 @@ PriceRangeSlider.propTypes = {
     rangeColor: PropTypes.string, // Color of the selected range (default: red)
     valueStyle: PropTypes.object, // Inline styles for value display elements
     width: PropTypes.string, // Width of the slider (default: "300px")
-    currencyText: PropTypes.string, // Text or symbol to display with the values (default: "$")
 };
 
 export default PriceRangeSlider
