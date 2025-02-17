@@ -5,10 +5,11 @@ import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
 const TweakpaneComponent = () => {
     const paneRef = useRef(null);
+    const paneContainerRef = useRef(null); // The actual DOM container for Tweakpane
     const [params, setParams] = useState({ interval: { min: 16, max: 48 } });
-
     useEffect(() => {
-        const pane = new Tweakpane.Pane();
+        if (!paneContainerRef.current || paneRef.current) return;
+        const pane = new Tweakpane.Pane({ container: paneContainerRef.current }); // Attach to container
         pane.registerPlugin(EssentialsPlugin);
         paneRef.current = pane;
 
@@ -25,11 +26,12 @@ const TweakpaneComponent = () => {
 
         return () => {
             pane.dispose(); // Clean up on unmount
+            paneRef.current = null;
         };
     }, []);
 
     return (
-        <div className="relative p-4 bg-gray-800 rounded-lg" />
+        <div ref={paneContainerRef} className="relative p-4 bg-gray-800 rounded-lg" />
     );
 };
 

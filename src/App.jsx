@@ -30,6 +30,8 @@ function App() {
                             <Button onClick={() => alert("Button 2 clicked!")}>Button 2</Button>
                             <Button onClick={() => alert("Button 3 clicked!")}>Button 3</Button>
                             <TweakpaneComponent></TweakpaneComponent>
+                            <TweakpaneComponent></TweakpaneComponent>
+                            <TweakpaneComponent></TweakpaneComponent>
                         </div>
                     </div>
 
