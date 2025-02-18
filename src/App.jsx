@@ -4,14 +4,24 @@ import {IntervalSlider} from "./components/IntervalSlider.jsx";
 import PriceRangeSlider from "./components/PriceRangeSlider.jsx";
 import { useState } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
+import P5Wrapper from "./components/P5Wrapper"; // Import the wrapper
+import defaultSketch from "./sketches/defaultSketch"; // Import your sketch
+
+
 
 
 function App() {
     const [rangeValues, setRangeValues] = useState({ min: 0, max: 100 });
 
-    const handleRangeChange = (values) => {
+    /*const handleRangeChange = (values) => {
         setRangeValues(values);
+    };*/
+    const [smoothAmount, setSmoothAmount] = useState(4);
+
+    const handleRangeChange = (values) => {
+        console.log(values); // For debugging purposes
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -26,21 +36,17 @@ function App() {
                     <div className="basis-1/4 bg-gray-200 shadow p-4 rounded">
                         <h2 className="text-lg font-bold mb-4 text-gray-600">Buttons</h2>
                         <div className="space-y-2">
-                            <Button onClick={() => alert("Button 1 clicked!")}>Button 1</Button>
-                            <Button onClick={() => alert("Button 2 clicked!")}>Button 2</Button>
-                            <Button onClick={() => alert("Button 3 clicked!")}>Button 3</Button>
-                            <TweakpaneComponent></TweakpaneComponent>
+                            <TweakpaneComponent
+                                smoothAmount={smoothAmount}
+                                setSmoothAmount={setSmoothAmount}
+                            />
                         </div>
                     </div>
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
-                        <h2 className="text-lg font-bold mb-4 text-gray-600">Second Column</h2>
-                        <p>This is the second column. Add your content here.</p>
-                        <PriceRangeSlider
-                            min={1}
-                            max={10}
-                            onChange={handleRangeChange}
-                        />
+                        <Button onClick={() => alert("Button 1 clicked!")}>||</Button>
+                        {/* Render the p5.js sketch */}
+                        <P5Wrapper sketch={defaultSketch} smoothAmount={smoothAmount} />
                     </div>
                 </div>
             </main>

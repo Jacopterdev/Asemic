@@ -5,9 +5,10 @@ import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 import '../index.css'; // Include your CSS file here
 
 
-const TweakpaneComponent = () => {
+const TweakpaneComponent = ({smoothAmount, setSmoothAmount}) => {
     const paneRef = useRef(null);
     const paneContainerRef = useRef(null); // The actual DOM container for Tweakpane
+    const smoothAmountRef = useRef(smoothAmount); // To track the value safely without re-renders
 
     useEffect(() => {
         if (!paneContainerRef.current || paneRef.current) return;
@@ -26,7 +27,7 @@ const TweakpaneComponent = () => {
             lineWidth: { min: 1, max: 10 },   // Interval for Line Width
             lineType: "straight",             // Dropdown for Line Type
             lineComposition: "Branched",      // Dropdown for Line Composition
-            smoothAmount: 25,                 // Single slider for Smooth Amount
+            //smoothAmount: 4,                 // Single slider for Smooth Amount
         };
 
 
@@ -67,12 +68,24 @@ const TweakpaneComponent = () => {
         // Add a separator
         anatomyFolder.addSeparator();
 
-        // Add "Smooth Amount" Slider
-        anatomyFolder.addInput(anatomyParams, "smoothAmount", {
-            step: 1,
-            min: 0,
-            max: 100,
+        // Bind smoothAmount to Tweakpane
+        const smoothAmountControl = anatomyFolder.addInput(
+            { smoothAmount: smoothAmountRef.current }, // Initial value
+            "smoothAmount",
+            {
+                step: 1,
+                min: 0,
+                max: 10,
+            }
+        );
+
+        // Update React state when Tweakpane changes
+        smoothAmountControl.on("change", (event) => {
+            //console.log("Slider Value:", event.value); // Debugging output
+            setSmoothAmount(event.value); // Update parent state
         });
+
+
 
         // Configuration for Composition (Future extensions)
         const compositionFolder = pane.addFolder({ title: "Composition" });
@@ -82,7 +95,16 @@ const TweakpaneComponent = () => {
             pane.dispose(); // Clean up on unmount
             paneRef.current = null;
         };
-    }, []);
+    }, [setSmoothAmount]);
+
+    useEffect(() => {
+        // Sync Tweakpane slider with the updated smoothAmount from React
+        if (paneRef.current) {
+            smoothAmountRef.current = smoothAmount; // Update the current value reference
+            paneRef.current.importPreset({ smoothAmount });
+        }
+    }, [smoothAmount]); // Watch for React state changes
+
 
     return (
         <div ref={paneContainerRef} className="relative p-4 theme-translucent" />
