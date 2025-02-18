@@ -12,47 +12,38 @@ function Header() {
     return (
         <>
             {/* Header */}
-            <header className="flex justify-between items-center px-5 py-3 bg-gray-800 text-white">
-                {/* Left-aligned group */}
-                <div className="flex items-center gap-3">
-                    {/* Burger Menu Button */}
-                    <button
+            <header className="flex justify-between items-center h-8 bg-gray-100 text-gray-800 drop-shadow-xs">
+                {/* Left-aligned burger menu */}
+                <div className="flex items-center gap-3 pl-4">
+                    <div
                         onClick={toggleMenu}
-                        className="text-2xl text-white focus:outline-none"
+                        className="focus:outline-none bg-gray-100 cursor-pointer text-sm text-gray-500"
                     >
                         &#9776;
-                    </button>
+                    </div>
+                </div>
 
+                {/* Center-aligned content using container */}
+                <div className="container mx-auto flex items-center gap-3 px-6">
                     {/* Small SVG Logo */}
-                    <div className="w-10 h-10">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 100 100"
-                            fill="currentColor"
-                        >
-                            <circle
-                                cx="50"
-                                cy="50"
-                                r="40"
-                                className="text-secondary"
-                            />
-                        </svg>
+                    <div>
+                        <img src="/S.svg" alt="S icon" className="h-5 w-5" />
                     </div>
 
                     {/* Title */}
-                    <h1 className="text-lg font-medium">
-                        Autotelic Mixed Initiative CST
+                    <h1 className="text-lg font-medium text-gray-600 font-mono font-bold select-none">
+                        SLG
                     </h1>
                 </div>
 
                 {/* Placeholder for right-aligned group */}
-                <div className="flex items-center gap-3"></div>
+                <div className="flex items-center gap-3 pr-6"></div>
             </header>
 
             {/* Off-Canvas Sliding Menu */}
             {isMenuOpen && (
                 <div
-                    className={`fixed top-0 left-0 w-64 h-full bg-gray-700 text-white shadow-lg transform transition-transform duration-300 ${
+                    className={`fixed top-0 left-0 w-64 h-full bg-gray-100 text-gray-800 shadow-lg transform transition-transform duration-300 ${
                         isMenuOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
                 >
@@ -60,17 +51,17 @@ function Header() {
                         <h2 className="text-lg font-bold mb-4">Menu</h2>
                         <ul className="space-y-2">
                             <li>
-                                <a href="#home" className="block px-4 py-2 hover:bg-gray-600">
+                                <a href="#home" className="block px-4 py-2 hover:bg-gray-200">
                                     Home
                                 </a>
                             </li>
                             <li>
-                                <a href="#about" className="block px-4 py-2 hover:bg-gray-600">
+                                <a href="#about" className="block px-4 py-2 hover:bg-gray-200">
                                     About
                                 </a>
                             </li>
                             <li>
-                                <a href="#contact" className="block px-4 py-2 hover:bg-gray-600">
+                                <a href="#contact" className="block px-4 py-2 hover:bg-gray-200">
                                     Contact
                                 </a>
                             </li>

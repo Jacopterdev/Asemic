@@ -27,7 +27,7 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
-            <header className="bg-gray-50 text-gray-800 p-4 text-center">
+            <header className="bg-gray-50 text-gray-800 p-4 text-center mx-auto">
                 <Header />
             </header>
 
@@ -45,9 +45,16 @@ function App() {
                     </div>
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
-                        <Button onClick={() => alert("Button 1 clicked!")}>missArea</Button>
-                        {/* Render the p5.js sketch */}
-                        <P5Wrapper sketch={defaultSketch} smoothAmount={smoothAmount} />
+                        <div className="flex space-y-2">
+                            <div className="button">grid</div>
+                            <div className="button">xray</div>
+                            <div className="button">xport</div>
+                            <div className="button">seed</div>
+                        </div>
+                        <div className="flex space-y-2 bg-white">
+                            {/* Render the p5.js sketch */}
+                            <P5Wrapper sketch={defaultSketch} smoothAmount={smoothAmount} />
+                        </div>
                     </div>
                 </div>
             </main>
