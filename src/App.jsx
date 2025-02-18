@@ -34,7 +34,6 @@ function App() {
             <main className="container mx-auto p-6">
                 <div className="flex justify-between gap-4">
                     <div className="basis-1/4 bg-gray-200 shadow p-4 rounded">
-                        <h2 className="text-lg font-bold mb-4 text-gray-600">Buttons</h2>
                         <div className="space-y-2">
                             <TweakpaneComponent
                                 smoothAmount={smoothAmount}
@@ -44,7 +43,7 @@ function App() {
                     </div>
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
-                        <Button onClick={() => alert("Button 1 clicked!")}>||</Button>
+                        <Button onClick={() => alert("Button 1 clicked!")}>missArea</Button>
                         {/* Render the p5.js sketch */}
                         <P5Wrapper sketch={defaultSketch} smoothAmount={smoothAmount} />
                     </div>

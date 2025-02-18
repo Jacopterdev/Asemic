@@ -87,6 +87,7 @@ const TweakpaneComponent = ({smoothAmount, setSmoothAmount}) => {
 
 
 
+
         // Configuration for Composition (Future extensions)
         const compositionFolder = pane.addFolder({ title: "Composition" });
         // Add more inputs to Composition here if needed...
