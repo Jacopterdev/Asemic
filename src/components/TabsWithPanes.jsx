@@ -1,48 +1,117 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as Tweakpane from "tweakpane";
+import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 
 const TabsWithPanes = () => {
     const [tabs, setTabs] = useState([
-        { id: 1, params: { size: 50 }, pane: null },
-        { id: 2, params: { size: 30 }, pane: null },
+        {
+            id: 1,
+            params: {
+                subShape: "Triangle",
+                connection: "atEnd", // Default value
+                rotationType: "relative", // Default value
+                rotation: { min: 0, max: 360 }, // Default interval
+                amount: { min: 0, max: 50 }, // Default interval
+                size: { min: 0, max: 100 }, // Default interval
+                distort: { min: 0, max: 100 }, // Default interval
+            },
+            pane: null,
+        },
+        {
+            id: 2,
+            params: {
+                subShape: "Triangle",
+                connection: "Along",
+                rotationType: "absolute",
+                rotation: { min: 30, max: 120 },
+                amount: { min: 10, max: 30 },
+                size: { min: 20, max: 80 },
+                distort: { min: 5, max: 50 },
+            },
+            pane: null,
+        },
     ]); // Initial tabs with parameters
+
     const [activeTab, setActiveTab] = useState(tabs[0].id); // Track the currently active tab
     const paneContainerRefs = useRef({}); // Track container refs for each tab
     const panes = useRef({}); // Track Tweakpane instances for each tab
 
     // Handle Tweakpane initialization for the active tab
     useEffect(() => {
-        // Find the data for the active tab
         const activeTabData = tabs.find((tab) => tab.id === activeTab);
-
         if (!activeTabData) return;
 
-        // Get the container ref
         const container = paneContainerRefs.current[activeTab];
-
-        // Ensure the container exists
         if (!container) {
             console.warn(`No container for tab ${activeTab}`);
             return;
         }
 
-        // Create a new Tweakpane instance if it doesn't already exist
+        // Create the Tweakpane instance if it does not exist
         if (!panes.current[activeTab]) {
             const pane = new Tweakpane.Pane({ container });
+            pane.registerPlugin(EssentialsPlugin); // Register Essentials Plugin
+
+            pane.addInput(activeTabData.params, "subShape", {
+                options: {
+                    square: "Square",
+                    triangle: "Triangle",
+                    circle: "Circle",
+                },
+            });
+
+            // Add inputs for the active tab
+            pane.addInput(activeTabData.params, "connection", {
+                options: {
+                    atEnd: "atEnd",
+                    Along: "Along",
+                },
+            });
+
+            pane.addInput(activeTabData.params, "rotationType", {
+                options: {
+                    relative: "relative",
+                    absolute: "absolute",
+                },
+            });
+
+            pane.addInput(activeTabData.params, "rotation", {
+                view: "interval",
+                min: 0,
+                max: 360,
+                step: 1,
+                label: "Rotation",
+            });
+
+            pane.addInput(activeTabData.params, "amount", {
+                view: "interval",
+                min: 0,
+                max: 50,
+                step: 1,
+                label: "Amount",
+            });
+
             pane.addInput(activeTabData.params, "size", {
+                view: "interval",
                 min: 0,
                 max: 100,
                 step: 1,
                 label: "Size",
             });
 
+            pane.addInput(activeTabData.params, "distort", {
+                view: "interval",
+                min: 0,
+                max: 100,
+                step: 1,
+                label: "Distort",
+            });
+
             // Save the pane instance
             panes.current[activeTab] = pane;
         }
 
-        return () => {
-            // IMPORTANT: Do not dispose of the pane on tab switch, only when a tab is permanently removed
-        };
+        return () => {};
     }, [activeTab, tabs]);
 
     // Add a new tab dynamically
@@ -50,7 +119,15 @@ const TabsWithPanes = () => {
         const newTabId = tabs.length + 1;
         const newTab = {
             id: newTabId,
-            params: { size: 50 },
+            params: {
+                subShape: "Triangle",
+                connection: "atEnd",
+                rotationType: "relative",
+                rotation: { min: 0, max: 360 },
+                amount: { min: 0, max: 50 },
+                size: { min: 0, max: 100 },
+                distort: { min: 0, max: 100 },
+            },
             pane: null,
         };
         setTabs([...tabs, newTab]);
@@ -80,7 +157,6 @@ const TabsWithPanes = () => {
                     +
                 </button>
             </div>
-
 
             {/* Active Tab's Pane */}
             <div className="pane-container p-4 bg-gray-100 rounded theme-translucent">
