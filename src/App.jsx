@@ -5,7 +5,8 @@ import PriceRangeSlider from "./components/PriceRangeSlider.jsx";
 import { useState } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
 import P5Wrapper from "./components/P5Wrapper"; // Import the wrapper
-import defaultSketch from "./sketches/defaultSketch"; // Import your sketch
+import defaultSketch from "./sketches/defaultSketch";
+import TabsWithPanes from "./components/TabsWithPanes.jsx"; // Import your sketch
 
 
 
@@ -39,6 +40,7 @@ function App() {
                                 smoothAmount={smoothAmount}
                                 setSmoothAmount={setSmoothAmount}
                             />
+                            <TabsWithPanes />
                         </div>
                     </div>
 

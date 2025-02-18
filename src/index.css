@@ -19,6 +19,10 @@ button {
     @apply hover:bg-gray-400 bg-gray-300 text-xs text-gray-600 font-light py-1 px-4 rounded m-0.5 transition duration-100 ease-in-out font-mono;
 }
 
+.button-active {
+    @apply bg-gray-400 text-xs text-gray-600 font-light py-1 px-4 rounded m-0.5 transition duration-100 ease-in-out font-mono;
+}
+
 .slider {
     position: relative;
 }
