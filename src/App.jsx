@@ -45,11 +45,16 @@ function App() {
                     </div>
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
-                        <div className="flex space-y-2">
-                            <div className="button">grid</div>
-                            <div className="button">xray</div>
-                            <div className="button">xport</div>
-                            <div className="button">seed</div>
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-2">
+                                <div className="button">Edit Skeleton</div>
+                                <div className="button">Anatomy View</div>
+                                <div className="button">Composition View</div>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <div className="button">Grid Type</div>
+                                <div className="button">Export</div>
+                            </div>
                         </div>
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
