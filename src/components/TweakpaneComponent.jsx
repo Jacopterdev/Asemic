@@ -1,115 +1,107 @@
-import React, { useEffect, useRef } from "react";
-import PropTypes from "prop-types";
-import * as Tweakpane from "tweakpane";
-import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
-import '../index.css'; // Include your CSS file here
+import React, { useEffect, useRef, useState } from 'react';
+import * as Tweakpane from 'tweakpane';
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
+import '../index.css';
 
-
-const TweakpaneComponent = ({smoothAmount, setSmoothAmount}) => {
+const TweakpaneComponent = ({ defaultParams, setParams }) => {
     const paneRef = useRef(null);
     const paneContainerRef = useRef(null); // The actual DOM container for Tweakpane
-    const smoothAmountRef = useRef(smoothAmount); // To track the value safely without re-renders
+
+    // Using React state to manage all tweakpane parameters
+    const [params, updateParams] = useState(defaultParams);
+
+    // Utility for safely updating React state
+    const updateParam = (key, value) => {
+        updateParams((prev) => ({
+            ...prev,
+            [key]: value,
+        }));
+
+        // Only update the parent state when the parameter changes
+        setParams((prev) => ({
+            ...prev,
+            [key]: value,
+        }));
+    };
 
     useEffect(() => {
         if (!paneContainerRef.current || paneRef.current) return;
 
-        const pane = new Tweakpane.Pane({ container: paneContainerRef.current }); // Attach to container
+        // Initialize Tweakpane
+        const pane = new Tweakpane.Pane({ container: paneContainerRef.current }); // Attach to the DOM container
         pane.registerPlugin(EssentialsPlugin);
         paneRef.current = pane;
 
-        // Configuration for Skeleton
-        const skeletonParams = {
-            missArea: { min: 10, max: 50 }, // Interval (min-max range) for Miss Area
-        };
-
-        const anatomyParams = {
-            numberOfLines: { min: 5, max: 15 }, // Interval for Number of Lines
-            lineWidth: { min: 1, max: 10 },   // Interval for Line Width
-            lineType: "straight",             // Dropdown for Line Type
-            lineComposition: "Branched",      // Dropdown for Line Composition
-            //smoothAmount: 4,                 // Single slider for Smooth Amount
-        };
-
-
-        const skeletonFolder = pane.addFolder({ title: "Skeleton" });
-        skeletonFolder.addInput(skeletonParams, "missArea", {
+        // Add folders and inputs to Tweakpane
+        const skeletonFolder = pane.addFolder({ title: 'Skeleton' });
+        skeletonFolder.addInput(params, 'missArea', {
             min: 0,
             max: 100,
             step: 1,
+        }).on('change', (event) => {
+            updateParam('missArea', event.value); // Update React state and parent state
         });
 
-        const anatomyFolder = pane.addFolder({ title: "Anatomy" });
-        anatomyFolder.addInput(anatomyParams, "numberOfLines", {
+        const anatomyFolder = pane.addFolder({ title: 'Anatomy' });
+        anatomyFolder.addInput(params, 'numberOfLines', {
             min: 1,
             max: 50,
             step: 1,
+        }).on('change', (event) => {
+            updateParam('numberOfLines', event.value);
         });
-        anatomyFolder.addInput(anatomyParams, "lineWidth", {
+
+        anatomyFolder.addInput(params, 'lineWidth', {
             min: 1,
             max: 100,
             step: 1,
-        });
-        anatomyFolder.addInput(anatomyParams, "lineType", {
-            // Dropdown menu for 'Line Type'
-            options: {
-                Straight: "straight",
-                Curved: "curved",
-            },
-        });
-        anatomyFolder.addInput(anatomyParams, "lineComposition", {
-            // Dropdown menu for 'Line Composition'
-            options: {
-                Branched: "Branched",
-                Segmented: "Segmented",
-                "In Series": "In Series",
-            },
+        }).on('change', (event) => {
+            updateParam('lineWidth', event.value);
         });
 
-        // Add a separator
+        anatomyFolder.addInput(params, 'lineType', {
+            options: {
+                Straight: 'straight',
+                Curved: 'curved',
+            },
+        }).on('change', (event) => {
+            updateParam('lineType', event.value);
+        });
+
+        anatomyFolder.addInput(params, 'lineComposition', {
+            options: {
+                Branched: 'Branched',
+                Segmented: 'Segmented',
+                'In Series': 'In Series',
+            },
+        }).on('change', (event) => {
+            updateParam('lineComposition', event.value);
+        });
+
+        // Add `smoothAmount` input
         anatomyFolder.addSeparator();
-
-        // Bind smoothAmount to Tweakpane
-        const smoothAmountControl = anatomyFolder.addInput(
-            { smoothAmount: smoothAmountRef.current }, // Initial value
-            "smoothAmount",
-            {
-                step: 1,
-                min: 0,
-                max: 10,
-            }
-        );
-
-        // Update React state when Tweakpane changes
-        smoothAmountControl.on("change", (event) => {
-            //console.log("Slider Value:", event.value); // Debugging output
-            setSmoothAmount(event.value); // Update parent state
+        anatomyFolder.addInput(params, 'smoothAmount', {
+            step: 1,
+            min: 0,
+            max: 10,
+        }).on('change', (event) => {
+            updateParam('smoothAmount', event.value);
         });
-
-
-
-
-        // Configuration for Composition (Future extensions)
-        const compositionFolder = pane.addFolder({ title: "Composition" });
-        // Add more inputs to Composition here if needed...
 
         return () => {
             pane.dispose(); // Clean up on unmount
             paneRef.current = null;
         };
-    }, [setSmoothAmount]);
+    }, []); // Only run once on mount (empty dependency array)
 
     useEffect(() => {
-        // Sync Tweakpane slider with the updated smoothAmount from React
+        // If defaultParams change, update the Tweakpane values
         if (paneRef.current) {
-            smoothAmountRef.current = smoothAmount; // Update the current value reference
-            paneRef.current.importPreset({ smoothAmount });
+            paneRef.current.importPreset(params);
         }
-    }, [smoothAmount]); // Watch for React state changes
+    }, [defaultParams]); // Sync React state only if defaultParams change
 
-
-    return (
-        <div ref={paneContainerRef} className="relative p-4 theme-translucent" />
-    );
+    return <div ref={paneContainerRef} className="relative p-4 theme-translucent" />;
 };
 
 export default TweakpaneComponent;

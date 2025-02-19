@@ -18,7 +18,15 @@ function App() {
     /*const handleRangeChange = (values) => {
         setRangeValues(values);
     };*/
-    const [smoothAmount, setSmoothAmount] = useState(4);
+    const [params, setParams] = useState({
+        missArea: 10,
+        numberOfLines: 15,
+        smoothAmount: 5,
+        lineWidth: 2,
+        lineType: 'straight',
+        lineComposition: 'Branched',
+    });
+    console.log(params);
 
     const handleRangeChange = (values) => {
         console.log(values); // For debugging purposes
@@ -38,9 +46,7 @@ function App() {
                     <div className="basis-1/4 bg-gray-200 shadow p-4 rounded">
                         <div className="space-y-2">
                             <TweakpaneComponent
-                                smoothAmount={smoothAmount}
-                                setSmoothAmount={setSmoothAmount}
-                            />
+                                defaultParams={params} setParams={setParams} />
                             <TabsWithPanes />
                         </div>
                     </div>
@@ -56,7 +62,7 @@ function App() {
                         </div>
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
-                            <P5Wrapper sketch={defaultSketch} smoothAmount={smoothAmount} />
+                            <P5Wrapper sketch={defaultSketch} smoothAmount={params.smoothAmount} />
                         </div>
                     </div>
                 </div>
