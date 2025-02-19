@@ -10,7 +10,7 @@ const TabsWithPanes = () => {
                 subShape: "Triangle",
                 connection: "atEnd", // Default value
                 rotationType: "relative", // Default value
-                rotation: { min: 0, max: 360 }, // Default interval
+                angle: { x: 0, y: 50 },
                 amount: { min: 0, max: 50 }, // Default interval
                 size: { min: 0, max: 100 }, // Default interval
                 distort: { min: 0, max: 100 }, // Default interval
@@ -23,7 +23,7 @@ const TabsWithPanes = () => {
                 subShape: "Triangle",
                 connection: "Along",
                 rotationType: "absolute",
-                rotation: { min: 30, max: 120 },
+                angle: { x: 0, y: 50 },
                 amount: { min: 10, max: 30 },
                 size: { min: 20, max: 80 },
                 distort: { min: 5, max: 50 },
@@ -60,27 +60,50 @@ const TabsWithPanes = () => {
                 },
             });
 
-            // Add inputs for the active tab
+            // Add `connection` as a radiogrid
             pane.addInput(activeTabData.params, "connection", {
-                options: {
-                    atEnd: "atEnd",
-                    Along: "Along",
+                view: "radiogrid",
+                groupName: "Connection Type",
+                size: [2, 1], // 2 columns, 1 row
+                cells: (x, y) => {
+                    const options = ["atEnd", "Along"];
+                    return {
+                        title: options[x],
+                        value: options[x],
+                    };
                 },
             });
 
+            // Add `rotationType` as a radiogrid
             pane.addInput(activeTabData.params, "rotationType", {
-                options: {
-                    relative: "relative",
-                    absolute: "absolute",
+                view: "radiogrid",
+                groupName: "Rotation Type",
+                size: [2, 1], // 2 columns, 1 row
+                cells: (x, y) => {
+                    const options = ["relative", "absolute"];
+                    return {
+                        title: options[x],
+                        value: options[x],
+                    };
                 },
             });
 
-            pane.addInput(activeTabData.params, "rotation", {
-                view: "interval",
-                min: 0,
-                max: 360,
-                step: 1,
-                label: "Rotation",
+
+            // Add a point2D input to the pane
+            pane.addInput(activeTabData.params, 'angle', {
+                label: 'angle',
+            });
+            function calculateAngle(point) {
+                const { x, y } = point;
+                const angleRadians = Math.atan2(y, x); // Returns angle in radians
+                const angleDegrees = angleRadians * (180 / Math.PI); // Convert to degrees
+                return angleDegrees;
+            }
+            pane.on('change', (event) => {
+                if (event.presetKey === 'angle') {
+                    const angle = calculateAngle(event.value);
+                    //console.log(`Angle relative to (0, 0): ${angle.toFixed(2)} degrees`);
+                }
             });
 
             pane.addInput(activeTabData.params, "amount", {
@@ -123,7 +146,7 @@ const TabsWithPanes = () => {
                 subShape: "Triangle",
                 connection: "atEnd",
                 rotationType: "relative",
-                rotation: { min: 0, max: 360 },
+                angle: { x: 0, y: 50 },
                 amount: { min: 0, max: 50 },
                 size: { min: 0, max: 100 },
                 distort: { min: 0, max: 100 },

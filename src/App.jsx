@@ -6,7 +6,8 @@ import { useState } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
 import P5Wrapper from "./components/P5Wrapper"; // Import the wrapper
 import defaultSketch from "./sketches/defaultSketch";
-import TabsWithPanes from "./components/TabsWithPanes.jsx"; // Import your sketch
+import TabsWithPanes from "./components/TabsWithPanes.jsx";
+import ButtonGroup from "./components/ButtonGroup.jsx"; // Import your sketch
 
 
 
@@ -46,11 +47,8 @@ function App() {
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
                         <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-2">
-                                <div className="button">Edit Skeleton</div>
-                                <div className="button">Anatomy View</div>
-                                <div className="button">Composition View</div>
-                            </div>
+                            <ButtonGroup />
+
                             <div className="flex items-center space-x-4">
                                 <div className="button">Grid Type</div>
                                 <div className="button">Export</div>
