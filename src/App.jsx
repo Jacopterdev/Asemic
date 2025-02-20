@@ -22,15 +22,15 @@ function App() {
         lineType: 'straight',
         lineComposition: 'Branched',
     });
-    console.log(params);
 
     const [subShapeParams, setSubShapeParams] = useState({});
 
     const handleSetParams = (updatedParams) => {
         setSubShapeParams(updatedParams);
-        console.log(subShapeParams);
     };
 
+    const mergedParams = { ...params, ...subShapeParams };
+    console.log("mergedParams: ", mergedParams);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -64,7 +64,7 @@ function App() {
                         </div>
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
-                            <P5Wrapper sketch={defaultSketch} smoothAmount={params.smoothAmount} />
+                            <P5Wrapper sketch={defaultSketch} mergedParams={mergedParams} />
                         </div>
                     </div>
                 </div>

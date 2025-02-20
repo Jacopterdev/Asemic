@@ -1,19 +1,24 @@
-﻿const defaultSketch = (p, smoothAmountRef) => {
+﻿const defaultSketch = (p, mergedParamsRef) => {
     let x = 300;
+    //console.log("Params:", mergedParamsRef.current);
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
-        p.createCanvas(900, 600);
-        p.background(220); // Light gray background
+        p.createCanvas(900, 800);
+        p.angleMode(p.DEGREES);
     };
 
     p.draw = () => {
-        const smoothAmount = smoothAmountRef.current; // Dynamically fetch the current smoothAmount value
+        const mergedParams = mergedParamsRef.current;
+        const angle = mergedParams[1].angle;
+        const smoothAmount = mergedParams.smoothAmount;
+
         p.background(255); // Reset background each frame
         p.noStroke();
         p.fill(0); // Color: black
-        p.ellipse(x, p.height / 2, 200); // Draw a circle
-        p.ellipse(x+40, p.height / 2 - 100, 100); // Draw a circle
+        p.ellipse(x, p.height / 2, angle); // Draw a circle
+
+
 
         // Apply filter dynamically based on smoothAmount
         if (smoothAmount > 0) {

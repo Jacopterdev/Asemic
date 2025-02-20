@@ -1,15 +1,16 @@
 ﻿import React, { useEffect, useRef } from "react";
 import p5 from "p5";
 
-const P5Wrapper = ({ sketch, smoothAmount }) => {
+const P5Wrapper = ({ sketch, mergedParams }) => {
     const p5Ref = useRef();
-    const smoothAmountRef = useRef(smoothAmount); // Keep track of smoothAmount changes
+    //const smoothAmountRef = useRef(smoothAmount); // Keep track of smoothAmount changes
+    const mergedParamsRef = useRef(mergedParams);
 
     useEffect(() => {
         // Initialize p5 sketch ONCE
         const p5Instance = new p5((p) => {
             // Pass a setup function and dynamically update smoothAmount during runtime
-            sketch(p, smoothAmountRef);
+            sketch(p, mergedParamsRef);
         }, p5Ref.current);
 
         // Cleanup on component unmount
@@ -20,8 +21,9 @@ const P5Wrapper = ({ sketch, smoothAmount }) => {
 
     useEffect(() => {
         // Keep the smoothAmountRef up to date
-        smoothAmountRef.current = smoothAmount;
-    }, [smoothAmount]); // Update smoothAmountRef whenever smoothAmount changes
+        //smoothAmountRef.current = smoothAmount;
+        mergedParamsRef.current = mergedParams;
+    }, [mergedParams]); // Update smoothAmountRef whenever smoothAmount changes
 
     return <div ref={p5Ref}></div>; // The p5 canvas will attach here
 };
