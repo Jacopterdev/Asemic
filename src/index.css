@@ -27,6 +27,11 @@ button, .button{
     @apply bg-gray-200 text-xs text-gray-600 font-light py-1 px-4 rounded mx-0.5 transition duration-100 ease-in-out font-mono cursor-pointer select-none;
 }
 
+.mini-delete{
+    @apply right-1 ml-6 absolute hover:bg-gray-200 bg-gray-300 text-xs text-gray-600 font-light py-0.5 px-1 rounded transition duration-100 ease-in-out font-mono cursor-pointer select-none;
+    font-size: 0.5rem;
+}
+
 .slider {
     position: relative;
 }
