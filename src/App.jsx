@@ -13,11 +13,7 @@ import ButtonGroup from "./components/ButtonGroup.jsx"; // Import your sketch
 
 
 function App() {
-    const [rangeValues, setRangeValues] = useState({ min: 0, max: 100 });
 
-    /*const handleRangeChange = (values) => {
-        setRangeValues(values);
-    };*/
     const [params, setParams] = useState({
         missArea: 10,
         numberOfLines: 15,
@@ -28,8 +24,11 @@ function App() {
     });
     console.log(params);
 
-    const handleRangeChange = (values) => {
-        console.log(values); // For debugging purposes
+    const [subShapeParams, setSubShapeParams] = useState({});
+
+    const handleSetParams = (updatedParams) => {
+        setSubShapeParams(updatedParams);
+        console.log(subShapeParams);
     };
 
 
@@ -47,7 +46,10 @@ function App() {
                         <div className="space-y-2">
                             <TweakpaneComponent
                                 defaultParams={params} setParams={setParams} />
-                            <TabsWithPanes />
+                            <TabsWithPanes
+                                subShapeParams={subShapeParams}
+                                setParams={handleSetParams}
+                            />
                         </div>
                     </div>
 

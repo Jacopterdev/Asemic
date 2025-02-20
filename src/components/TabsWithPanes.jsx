@@ -2,7 +2,33 @@ import React, { useState, useEffect, useRef } from "react";
 import * as Tweakpane from "tweakpane";
 import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 
-const TabsWithPanes = () => {
+const TabsWithPanes = ({subShapeParams, setParams}) => {
+    const [activeTabData, updateParams] = useState(subShapeParams);
+    // Updates the active tab's state and notifies the parent
+    const updateParam = (key, value) => {
+        updateParams((prev) => ({
+            ...prev,
+            [key]: value,
+        }));
+
+        // Update the specific tab in `tabs`
+        setTabs((prevTabs) =>
+            prevTabs.map((tab) =>
+                tab.id === activeTab
+                    ? { ...tab, params: { ...tab.params, [key]: value } }
+                    : tab
+            )
+        );
+
+        // Update the parent state to reflect changes
+        setParams((prevParentParams) => ({
+            ...prevParentParams,
+            [activeTab]: {
+                ...prevParentParams[activeTab],
+                [key]: value,
+            },
+        }));
+    };
     const [tabs, setTabs] = useState([
         {
             id: 1,
@@ -37,8 +63,17 @@ const TabsWithPanes = () => {
     const panes = useRef({}); // Track Tweakpane instances for each tab
     const nextTabId = useRef(3); // Start with 3 because tabs 1 and 2 already exist
 
+    useEffect(() => {
+        const initialParams = {};
+        tabs.forEach((tab) => {
+            initialParams[tab.id] = tab.params;
+        });
+        setParams(initialParams);
+    }, []);
+
+
     const addTab = () => {
-        const newTabId = nextTabId.current; // Use the current unique ID
+        const newTabId = nextTabId.current;
         const newTab = {
             id: newTabId,
             params: {
@@ -53,36 +88,47 @@ const TabsWithPanes = () => {
             pane: null,
         };
 
-        setTabs([...tabs, newTab]);
-        setActiveTab(newTabId); // Set the newly added tab as active
+        // Update tabs state
+        setTabs((prevTabs) => [...prevTabs, newTab]);
 
-        nextTabId.current += 1; // Increment the counter for the next tab
+        // Update parent's state with the new tab's params
+        setParams((prevParentParams) => ({
+            ...prevParentParams,
+            [newTabId]: newTab.params,
+        }));
+
+        // Set the newly added tab as active
+        setActiveTab(newTabId);
+
+        nextTabId.current += 1; // Increment ID for next tab
     };
 
     // Handle deleting a tab
     const deleteTab = (tabId) => {
-        // Destroy Tweakpane instance for the deleted tab, if it exists
+        // Destroy Tweakpane instance
         if (panes.current[tabId]) {
-            panes.current[tabId].dispose(); // Dispose of the Tweakpane instance
-            delete panes.current[tabId]; // Clean up the panes ref
+            panes.current[tabId].dispose();
+            delete panes.current[tabId];
         }
 
-        // Clean up the DOM reference for the deleted tab container
+        // Clean up the pane container ref
         delete paneContainerRefs.current[tabId];
 
-        // Remove the deleted tab from the `tabs` state
+        // Remove the tab from `tabs`
         const updatedTabs = tabs.filter((tab) => tab.id !== tabId);
         setTabs(updatedTabs);
 
-        // Update the active tab if the deleted tab was active
-        if (tabId === activeTab) {
-            if (updatedTabs.length > 0) {
-                // Set the active tab to the first remaining tab
-                setActiveTab(updatedTabs[0].id);
-            } else {
-                // No tabs left, reset activeTab to null
-                setActiveTab(null);
-            }
+        // Remove the tab's parameters from the parent's state
+        setParams((prevParentParams) => {
+            const { [tabId]: _, ...remainingParams } = prevParentParams;
+            return remainingParams;
+        });
+
+        // Update the active tab
+        if (tabId === activeTab && updatedTabs.length > 0) {
+            setActiveTab(updatedTabs[0].id);
+        } else if (updatedTabs.length === 0) {
+            setActiveTab(null);
         }
     };
 
@@ -111,6 +157,8 @@ const TabsWithPanes = () => {
                     triangle: "Triangle",
                     circle: "Circle",
                 },
+            }).on('change', (event) => {
+                updateParam('subShape', event.value);
             });
 
             // Add `connection` as a radiogrid
@@ -125,6 +173,8 @@ const TabsWithPanes = () => {
                         value: options[x],
                     };
                 },
+            }).on('change', (event) => {
+                updateParam('connection', event.value);
             });
 
             // Add `rotationType` as a radiogrid
@@ -139,6 +189,8 @@ const TabsWithPanes = () => {
                         value: options[x],
                     };
                 },
+            }).on('change', (event) => {
+                updateParam('rotationType', event.value);
             });
 
 
@@ -157,6 +209,7 @@ const TabsWithPanes = () => {
             pane.on('change', (event) => {
                 if (event.presetKey === 'angle') {
                     const angle = calculateAngle(event.value);
+                    updateParam('angle', angle);
                     //console.log(`Angle relative to (0, 0): ${angle.toFixed(2)} degrees`);
                 }
             });
@@ -167,6 +220,8 @@ const TabsWithPanes = () => {
                 max: 50,
                 step: 1,
                 label: "Amount",
+            }).on('change', (event) => {
+                updateParam('amount', event.value);
             });
 
             pane.addInput(activeTabData.params, "size", {
@@ -175,6 +230,8 @@ const TabsWithPanes = () => {
                 max: 100,
                 step: 1,
                 label: "Size",
+            }).on('change', (event) => {
+                updateParam('size', event.value);
             });
 
             pane.addInput(activeTabData.params, "distort", {
@@ -183,6 +240,8 @@ const TabsWithPanes = () => {
                 max: 100,
                 step: 1,
                 label: "Distort",
+            }).on('change', (event) => {
+                updateParam('distort', event.value);
             });
 
             // Save the pane instance
@@ -193,8 +252,18 @@ const TabsWithPanes = () => {
         };
     }, [activeTab, tabs]);
 
-    // Add a new tab dynamically
+    useEffect(() => {
+        if (!activeTab) return;
 
+        // Update the parent state with the active tab's data
+        const activeTabData = tabs.find((tab) => tab.id === activeTab);
+        if (activeTabData) {
+            setParams((prevParentParams) => ({
+                ...prevParentParams,
+                [activeTab]: activeTabData.params,
+            }));
+        }
+    }, [activeTab, tabs]);
 
     return (
         <div className="tabs-with-panes w-full">
@@ -223,7 +292,7 @@ const TabsWithPanes = () => {
                     ))
                 ) : (
                     <div className="flex-grow flex justify-center items-center text-gray-500 text-xs flex-grow text-center font-mono">
-                        Sub-Shapes
+                        Add Sub-Shapes
                     </div>
                 )}
                 <button
