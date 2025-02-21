@@ -1,23 +1,27 @@
-class ConstructionGrid {
-    constructor(p, cols, rows) {
-        this.p = p;
+import BaseGrid from "./BaseGrid.js";
+class RectGrid extends BaseGrid{
+    constructor(p, cols, rows, xStart, yStart, gridSize) {
+        super(p, xStart, yStart, gridSize);
+
         this.cols = cols;
         this.rows = rows;
-        this.cellWidth = p.width/cols;
-        this.cellHeight = p.height/rows;
+        this.cellWidth = gridSize/cols;
+        this.cellHeight = gridSize/rows;
         this.grid = [];
-        this.snapThreshold = 50;
         this.initGrid();
     }
 
     // Initialize the grid with GenShape objects
     initGrid() {
+        //console.log("totalWidth: ", this.gridSize);
+        //console.log("canvas width: ", this.p.width);
+        //console.log("cell width ", this.cellWidth);
         this.grid = [];
         for (let i = 0; i < this.cols; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.rows; j++) {
-                let x = i * this.cellWidth;
-                let y = j * this.cellHeight;
+                let x = this.xStart + i * this.cellWidth;
+                let y = this.yStart + j * this.cellHeight;
 
                 this.grid[i][j] = {
                     x: x,
@@ -35,8 +39,8 @@ class ConstructionGrid {
             for (let j = 0; j < this.rows; j++) {
                 let cell = this.grid[i][j];
                 p.noFill();
-                p.stroke(220,100,0);
-                p.strokeWeight(1);
+                p.stroke(this.strokeColor);
+                p.strokeWeight(this.strokeWeight);
                 p.rect(cell.x, cell.y, cell.w, cell.h);
             }
         }
@@ -85,4 +89,4 @@ class ConstructionGrid {
 
 
 }
-export default ConstructionGrid;
+export default RectGrid;

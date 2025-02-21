@@ -1,33 +1,60 @@
-﻿import ConstructionGrid from "../sketches/ConstructionGrid";
+﻿import RectGrid from "./RectGrid.js";
+import GridContext from "./GridContext.js";
+import RadialGrid from "./RadialGrid.js";
+import MouseEventHandler from "./MouseEventHandler.js";
+import PointRenderer from "./PointRenderer.js";
 
 const defaultSketch = (p, mergedParamsRef) => {
     let x = 3;
     //console.log("Params:", mergedParamsRef.current);
-    let cGrid;
     let points = [];
+    let margin = 20;
+    let gridContext;
+    let mouseHandler;
+    let pointRenderer;
+
+
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
-        p.createCanvas(900, 800);
+        p.createCanvas(900, 900);
         p.angleMode(p.DEGREES);
-        cGrid = new ConstructionGrid(p, 3, 3);
+
+        let xStart = margin;
+        let yStart = margin;
+        let gridSize = p.width - (margin * 2);
+
+        const gridType = "radial";
+        // Dynamically set the grid type in GridContext
+        if (gridType === "radial") {
+            gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
+        } else if (gridType === "rect") {
+            gridContext = new GridContext(RectGrid, p, 3, 3, xStart, yStart, gridSize);
+        }
+
+        // Initialize the MouseEventHandler
+        mouseHandler = new MouseEventHandler(p, gridContext, points);
+        pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
+
 
     };
 
     p.mousePressed = () => {
-        if(cGrid){
-            // Get the snap position from the grid
-            const snapPosition = cGrid.getSnapPosition(p.mouseX, p.mouseY);
-
-            if (snapPosition) {
-                // If snapping occurs, place an ellipse at the snap position
-                points.push({ x: snapPosition.x, y: snapPosition.y });
-            } else {
-                // If no snapping, place an ellipse at the mouse position
-                points.push({ x: p.mouseX, y: p.mouseY });
-            }
-        }
-
+        if (!mouseHandler) return;
+        // Delegate mousePressed logic to MouseEventHandler
+        mouseHandler.handleMousePressed();
     };
+
+    p.mouseDragged = () => {
+        if (!mouseHandler) return;
+        mouseHandler.handleMouseDragged();
+    };
+
+    p.mouseReleased = () => {
+        if (!mouseHandler) return;
+        mouseHandler.handleMouseReleased();
+    };
+
+
 
     p.draw = () => {
         const mergedParams = mergedParamsRef.current;
@@ -39,21 +66,22 @@ const defaultSketch = (p, mergedParamsRef) => {
         p.fill(0); // Color: black
         p.ellipse(x, p.height / 2, angle); // Draw a circle
 
-        cGrid.draw();
-        //x += 1;
-        cGrid.setGridSize(x,x);
-
-        p.fill(0); // Set fill color to black
-        points.forEach((ellipse) => {
-            p.ellipse(ellipse.x, ellipse.y, 5, 5);
-        });
-
 
         // Apply filter dynamically based on smoothAmount
         if (smoothAmount > 0) {
             //p.filter(p.BLUR, smoothAmount); // Apply smoothAmount as blur
         }
         //p.filter(p.THRESHOLD, 0.5);
+
+
+        gridContext.draw();
+
+        points.forEach((point) => {
+            const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);
+            pointRenderer.draw(point, isHovered);
+        });
+
+
     };
 };
 
