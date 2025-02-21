@@ -4,6 +4,7 @@ import RadialGrid from "./RadialGrid.js";
 import MouseEventHandler from "./MouseEventHandler.js";
 import PointRenderer from "./PointRenderer.js";
 import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
+import LineManager from "./LineManager.js";
 
 const defaultSketch = (p, mergedParamsRef) => {
     let x = 3;
@@ -14,8 +15,7 @@ const defaultSketch = (p, mergedParamsRef) => {
     let mouseHandler;
     let pointRenderer;
     let possibleLinesRenderer;
-
-
+    let lineManager;
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
@@ -26,19 +26,22 @@ const defaultSketch = (p, mergedParamsRef) => {
         let yStart = margin;
         let gridSize = p.width - (margin * 2);
 
-        const gridType = "radial";
+        const gridType = "rect";
         // Dynamically set the grid type in GridContext
         if (gridType === "radial") {
             gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
         } else if (gridType === "rect") {
             gridContext = new GridContext(RectGrid, p, 3, 3, xStart, yStart, gridSize);
         }
+        // Init lineManager
+        lineManager = new LineManager();
 
         // Initialize the MouseEventHandler
-        mouseHandler = new MouseEventHandler(p, gridContext, points);
-        pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
-        possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
+        mouseHandler = new MouseEventHandler(p, gridContext, points, lineManager);
 
+        pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
+
+        possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
 
     };
 
@@ -57,6 +60,8 @@ const defaultSketch = (p, mergedParamsRef) => {
         if (!mouseHandler) return;
         mouseHandler.handleMouseReleased();
     };
+
+
 
 
 
@@ -81,7 +86,7 @@ const defaultSketch = (p, mergedParamsRef) => {
         gridContext.draw();
 
         // Draw lines between all points
-        possibleLinesRenderer.drawAllLines(points);
+        possibleLinesRenderer.drawLines(lineManager.getLines());
 
         points.forEach((point) => {
             const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);

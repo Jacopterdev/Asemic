@@ -1,25 +1,28 @@
 ﻿class PossibleLinesRenderer {
-    constructor(p, lineColor = [250, 140, 0, 100]) {
+    constructor(p, lineColor = [250, 140, 0, 196], disabledLineColor = [220, 220, 220, 156]) {
         this.p = p; // Reference to the p5 instance
         this.lineColor = this.p.color(...lineColor); // Default line color with transparency
-        this.strokeWeight = 0.2;
+        this.disabledLineColor = this.p.color(...disabledLineColor);
+        this.strokeWeight = 1;
     }
 
     /**
-     * Draws lines between all possible pairs of points.
-     * @param {Array} points - Array of plain point objects { x, y }.
+     * Draws the selected and remaining lines.
+     * @param {Array} possibleLines - All possible lines from points.
+     * @param {Array} selectedLines - Lines that are currently "active".
      */
-    drawAllLines(points) {
-        this.p.stroke(this.lineColor); // Set line color
-        this.p.strokeWeight(this.strokeWeight); // Set line thickness
-
-        for (let i = 0; i < points.length; i++) {
-            for (let j = i + 1; j < points.length; j++) {
-                // Connect points[i] to points[j]
-                this.p.line(points[i].x, points[i].y, points[j].x, points[j].y);
-            }
-        }
+    /**
+     * Draws the lines, applying styles based on their selection state.
+     * @param {Array} possibleLines - Array of all line objects with `selected` property.
+     */
+    drawLines(possibleLines) {
+        possibleLines.forEach((line) => {
+            this.p.stroke(line.selected ? this.lineColor : this.disabledLineColor);
+            this.p.strokeWeight(this.strokeWeight);
+            this.p.line(line.start.x, line.start.y, line.end.x, line.end.y);
+        });
     }
+
 }
 
 export default PossibleLinesRenderer;
