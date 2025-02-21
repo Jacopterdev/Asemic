@@ -3,6 +3,7 @@ import GridContext from "./GridContext.js";
 import RadialGrid from "./RadialGrid.js";
 import MouseEventHandler from "./MouseEventHandler.js";
 import PointRenderer from "./PointRenderer.js";
+import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
 
 const defaultSketch = (p, mergedParamsRef) => {
     let x = 3;
@@ -12,6 +13,8 @@ const defaultSketch = (p, mergedParamsRef) => {
     let gridContext;
     let mouseHandler;
     let pointRenderer;
+    let possibleLinesRenderer;
+
 
 
     p.setup = () => {
@@ -34,6 +37,7 @@ const defaultSketch = (p, mergedParamsRef) => {
         // Initialize the MouseEventHandler
         mouseHandler = new MouseEventHandler(p, gridContext, points);
         pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
+        possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
 
 
     };
@@ -75,6 +79,9 @@ const defaultSketch = (p, mergedParamsRef) => {
 
 
         gridContext.draw();
+
+        // Draw lines between all points
+        possibleLinesRenderer.drawAllLines(points);
 
         points.forEach((point) => {
             const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);

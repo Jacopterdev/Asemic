@@ -25,7 +25,10 @@
      * @param {Boolean} isHovered - Whether the point is currently hovered.
      */
     draw(point, isHovered) {
-        this.p.fill(isHovered ? this.hoverColor : this.defaultColor);
+        this.p.stroke(isHovered ? this.hoverColor : this.defaultColor);
+        this.p.strokeWeight(1);
+        //this.p.fill(isHovered ? this.hoverColor : this.defaultColor);
+        this.p.noFill();
         this.p.ellipse(point.x, point.y, this.size, this.size); // Draw the point
     }
 }
