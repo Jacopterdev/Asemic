@@ -56,8 +56,6 @@ class MouseEventHandler {
         } else{
             // If no point is being dragged, toggle line selection
             const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
-            console.log("hoveredLine: ", hoveredLine);
-
             if (hoveredLine) {
                 // Use an identifier for toggling the selection state of lines
                 const lineId = `${hoveredLine.start.x},${hoveredLine.start.y}-${hoveredLine.end.x},${hoveredLine.end.y}`;
@@ -65,7 +63,6 @@ class MouseEventHandler {
                 // Avoid toggling the same line multiple times during a single drag
                 if (!this.toggledLines.has(lineId)) {
                     hoveredLine.selected = !hoveredLine.selected; // Toggle selection
-                    console.log("toggled a line");
                     this.toggledLines.add(lineId); // Mark as toggled
                 }
             }
@@ -161,9 +158,7 @@ class MouseEventHandler {
     }
 
     isInCanvas() {
-        console.log(this.gridContext.grid);
         const { xStart, yStart, gridSize } = this.gridContext.grid;
-        console.log(xStart, yStart, gridSize);
 
         // Check if the mouse position is within the canvas boundaries
         return (

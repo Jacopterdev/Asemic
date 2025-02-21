@@ -11,6 +11,10 @@
      */
     addLinesForPoint(newPoint, existingPoints) {
         existingPoints.forEach((existingPoint) => {
+            if (newPoint.x === existingPoint.x && newPoint.y === existingPoint.y) {
+                return; // Do not add this line
+            }
+
             this.lines.push({
                 start: existingPoint,
                 end: newPoint,
@@ -36,6 +40,17 @@
     getLines() {
         return this.lines;
     }
+
+    /**
+     * Retrieves a list of selected lines without their 'selected' property.
+     * @returns {Array} A list of selected lines without the 'selected' property.
+     */
+    getSelectedLines() {
+        return this.lines
+            .filter(line => line.selected) // Only selected lines
+            .map(({ start, end }) => ({ start, end })); // Remove 'selected' property
+    }
+
 }
 
 export default LineManager;

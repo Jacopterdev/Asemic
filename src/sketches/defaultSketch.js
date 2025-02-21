@@ -5,6 +5,7 @@ import MouseEventHandler from "./MouseEventHandler.js";
 import PointRenderer from "./PointRenderer.js";
 import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
 import LineManager from "./LineManager.js";
+import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
 
 const defaultSketch = (p, mergedParamsRef) => {
     let x = 3;
@@ -16,6 +17,7 @@ const defaultSketch = (p, mergedParamsRef) => {
     let pointRenderer;
     let possibleLinesRenderer;
     let lineManager;
+    let ephemeralLineAnimator;
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
@@ -42,6 +44,12 @@ const defaultSketch = (p, mergedParamsRef) => {
         pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
 
         possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
+
+        //Animator
+        ephemeralLineAnimator = new EphemeralLineAnimator(p, lineManager);
+
+        ephemeralLineAnimator.start(); // Start the animation
+
 
     };
 
@@ -78,10 +86,11 @@ const defaultSketch = (p, mergedParamsRef) => {
 
         // Apply filter dynamically based on smoothAmount
         if (smoothAmount > 0) {
-            //p.filter(p.BLUR, smoothAmount); // Apply smoothAmount as blur
+            p.filter(p.BLUR, smoothAmount); // Apply smoothAmount as blur
         }
-        //p.filter(p.THRESHOLD, 0.5);
+        p.filter(p.THRESHOLD, 0.5);
 
+        ephemeralLineAnimator.updateAndDraw(); // Update and
 
         gridContext.draw();
 
@@ -92,6 +101,9 @@ const defaultSketch = (p, mergedParamsRef) => {
             const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);
             pointRenderer.draw(point, isHovered);
         });
+
+
+
 
 
     };
