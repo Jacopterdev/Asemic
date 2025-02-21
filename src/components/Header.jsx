@@ -32,7 +32,7 @@ function Header() {
 
                     {/* Title */}
                     <h1 className="text-lg font-medium text-gray-600 font-mono font-bold select-none">
-                        SLG
+                        ShapeLangGen
                     </h1>
                 </div>
 
@@ -43,7 +43,7 @@ function Header() {
             {/* Off-Canvas Sliding Menu */}
             {isMenuOpen && (
                 <div
-                    className={`fixed top-0 left-0 w-64 h-full bg-gray-100 text-gray-800 shadow-lg transform transition-transform duration-300 ${
+                    className={` z-20 fixed top-0 left-0 w-64 h-full bg-gray-100 text-gray-800 shadow-lg transform transition-transform duration-300 ${
                         isMenuOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
                 >
