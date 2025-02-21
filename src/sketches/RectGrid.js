@@ -62,29 +62,34 @@ class RectGrid extends BaseGrid{
      * @returns {object|null} An object with the snapped x and y position, or null if no snapping occurs.
      */
     getSnapPosition(mouseX, mouseY) {
-        // Calculate the column and row index for the mouse position
-        const col = Math.floor(mouseX / this.cellWidth);
-        const row = Math.floor(mouseY / this.cellHeight);
-
-        // Ensure mouse is within bounds of the grid
-        if (col >= 0 && col <= this.cols && row >= 0 && row <= this.rows) {
-            // Calculate the closest corner coordinates
-            const cornerX = col * this.cellWidth;
-            const cornerY = row * this.cellHeight;
-
-            // Check the distance between mouse position and the closest corner
-            const distance = Math.sqrt(
-                Math.pow(mouseX - cornerX, 2) + Math.pow(mouseY - cornerY, 2)
-            );
-
-            // Snap if within the threshold
-            if (distance <= this.snapThreshold) {
-                return { x: cornerX, y: cornerY };
-            }
+        // Ensure the mouse is within the bounds of the grid
+        if (mouseX < this.xStart || mouseY < this.yStart ||
+            mouseX > this.xStart + this.cols * this.cellWidth ||
+            mouseY > this.yStart + this.rows * this.cellHeight) {
+            return null; // Out of bounds
         }
-        // If out of bounds or not within the threshold, return null
+
+        // Calculate the closest corner in the grid
+        const col = Math.round((mouseX - this.xStart) / this.cellWidth); // Closest column index
+        const row = Math.round((mouseY - this.yStart) / this.cellHeight); // Closest row index
+
+        // Calculate the corner position
+        const snapX = this.xStart + col * this.cellWidth;
+        const snapY = this.yStart + row * this.cellHeight;
+
+        // Calculate the distance between the mouse position and the snapped position
+        const distance = Math.sqrt(Math.pow(mouseX - snapX, 2) + Math.pow(mouseY - snapY, 2));
+
+        // Snap only if within the defined threshold
+        if (distance <= this.snapThreshold) {
+            return { x: snapX, y: snapY };
+        }
+
+        // Otherwise, return null (no snapping)
         return null;
+
     }
+
 
 
 
