@@ -4,8 +4,10 @@ import BaseGrid from "./BaseGrid";
 class RadialGrid extends BaseGrid {
     constructor(p, xStart, yStart, radius, radialDivisions, angularDivisions) {
         super(p, xStart, yStart, radius * 2); // Use radius * 2 as the gridSize for a radial grid
-        this.xStart = xStart + radius;
-        this.yStart = yStart + radius;
+        this.xStart = xStart;
+        this.yStart = yStart;
+        this.xCenter = xStart + radius;
+        this.yCenter = yStart + radius;
         this.radius = radius;
         this.radialDivisions = radialDivisions; // Number of concentric circles
         this.angularDivisions = angularDivisions; // Number of angular segments
@@ -39,53 +41,70 @@ class RadialGrid extends BaseGrid {
 
         // Draw concentric circles
         for (const r of this.grid.circles) {
-            p.ellipse(this.xStart, this.yStart, r * 2, r * 2);
+            p.ellipse(this.xCenter, this.yCenter, r * 2, r * 2);
         }
 
         // Draw radial spokes
         for (const angle of this.grid.spokes) {
-            const x = this.xStart + Math.cos(angle) * this.radius;
-            const y = this.yStart + Math.sin(angle) * this.radius;
-            p.line(this.xStart, this.yStart, x, y);
+            const x = this.xCenter + Math.cos(angle) * this.radius;
+            const y = this.yCenter + Math.sin(angle) * this.radius;
+            p.line(this.xCenter, this.yCenter, x, y);
         }
     }
 
     // Snapping logic for the radial grid
     getSnapPosition(mouseX, mouseY) {
-        const dx = mouseX - this.xStart;
-        const dy = mouseY - this.yStart;
+        const dx = mouseX - this.xCenter;
+        const dy = mouseY - this.yCenter;
 
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
+        let angle = Math.atan2(dy, dx);
+
+        // Normalize angle to [0, 2π] for consistent comparison
+        if (angle < 0) {
+            angle += 2 * Math.PI;
+        }
+        // Snap to the center of the grid
+        if (distance <= this.snapThreshold) {
+            return {
+                x: this.xCenter,
+                y: this.yCenter,
+            };
+        }
+
 
         // Snap to the nearest circle
         let closestCircle = null;
-        let minDistance = Infinity;
+        let minCircleDistance = Infinity;
 
         for (const r of this.grid.circles) {
             const d = Math.abs(distance - r);
-            if (d < minDistance && d <= this.snapThreshold) {
+            if (d < minCircleDistance && d <= this.snapThreshold) {
                 closestCircle = r;
-                minDistance = d;
+                minCircleDistance = d;
             }
         }
 
         // Snap to the nearest spoke
         let closestAngle = null;
-        minDistance = Infinity;
+        let minAngleDistance = Infinity;
 
         for (const a of this.grid.spokes) {
-            const d = Math.abs(angle - a);
-            if (d < minDistance && distance <= this.radius && d <= this.snapThreshold) {
+            const angleDistance = Math.abs(angle - a);
+
+            // Ensure angular distance accounts for wrapping around 2π
+            const wrappedDistance = Math.min(angleDistance, 2 * Math.PI - angleDistance);
+
+            if (wrappedDistance < minAngleDistance && distance <= this.radius && wrappedDistance <= this.snapThreshold) {
                 closestAngle = a;
-                minDistance = d;
+                minAngleDistance = wrappedDistance;
             }
         }
 
         if (closestCircle !== null && closestAngle !== null) {
             return {
-                x: this.xStart + closestCircle * Math.cos(closestAngle),
-                y: this.yStart + closestCircle * Math.sin(closestAngle),
+                x: this.xCenter + closestCircle * Math.cos(closestAngle),
+                y: this.yCenter + closestCircle * Math.sin(closestAngle),
             };
         }
 

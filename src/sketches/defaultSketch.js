@@ -29,7 +29,7 @@ const defaultSketch = (p, mergedParamsRef) => {
         let yStart = margin;
         let gridSize = p.width - (margin * 2);
 
-        const gridType = "rect";
+        const gridType = "radial";
         // Dynamically set the grid type in GridContext
         if (gridType === "radial") {
             gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
