@@ -18,10 +18,11 @@ const defaultSketch = (p, mergedParamsRef) => {
     let possibleLinesRenderer;
     let lineManager;
     let ephemeralLineAnimator;
+    let missRadius;
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
-        p.createCanvas(900, 900);
+        p.createCanvas(800, 800);
         p.angleMode(p.DEGREES);
 
         let xStart = margin;
@@ -41,7 +42,8 @@ const defaultSketch = (p, mergedParamsRef) => {
         // Initialize the MouseEventHandler
         mouseHandler = new MouseEventHandler(p, gridContext, points, lineManager);
 
-        pointRenderer = new PointRenderer(p); // Initialize the PointRenderer
+        missRadius = mergedParamsRef.current.missArea;
+        pointRenderer = new PointRenderer(p, missRadius); // Initialize the PointRenderer
 
         possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
 
@@ -77,6 +79,8 @@ const defaultSketch = (p, mergedParamsRef) => {
         const mergedParams = mergedParamsRef.current;
         const angle = mergedParams[1].angle;
         const smoothAmount = mergedParams.smoothAmount;
+        missRadius = mergedParamsRef.current.missArea;
+        pointRenderer.setMissRadius(missRadius);
 
         p.background(255); // Reset background each frame
         p.noStroke();
