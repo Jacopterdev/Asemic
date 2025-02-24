@@ -7,6 +7,7 @@ import PointRenderer from "./PointRenderer.js";
 import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
 import LineManager from "./LineManager.js";
 import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
+import DisplayGrid from "./DisplayGrid.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let x = 3;
@@ -21,6 +22,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let ephemeralLineAnimator;
     let missRadius;
     let currentGridType = "none"; // Track the current grid type
+    let displayGrid;
 
 
     p.setup = () => {
@@ -51,6 +53,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
         ephemeralLineAnimator.start(); // Start the animation
 
+        displayGrid = new DisplayGrid(p, 3,3);
 
     };
 
@@ -108,6 +111,12 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
 
     p.draw = () => {
+        p.background(255); // Reset background each frame
+        if(toolConfigRef.current.state === "Anatomy"){
+            displayGrid.draw()
+            return;
+        }
+
         updateGridContext();
         const mergedParams = mergedParamsRef.current;
         const angle = mergedParams[1].angle.min;
@@ -116,7 +125,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         missRadius = mergedParamsRef.current.missArea;
         pointRenderer.setMissRadius(missRadius);
 
-        p.background(255); // Reset background each frame
+
         p.noStroke();
         p.fill(0); // Color: black
         p.ellipse(x, p.height / 2, angle); // Draw a circle
