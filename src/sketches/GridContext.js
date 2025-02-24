@@ -20,6 +20,16 @@
     getSnapPosition(mouseX, mouseY) {
         return this.grid.getSnapPosition(mouseX, mouseY);
     }
+
+    mousePressed(x,y) {
+        return this.grid.mousePressed(x,y);
+    }
+    mouseReleased() {
+        return this.grid.mouseReleased();
+    }
+    mouseDragged(x,y) {
+        return this.grid.mouseDragged(x,y);
+    }
 }
 
 export default GridContext;

@@ -20,5 +20,9 @@ class NoGrid extends BaseGrid {
     getSnapPosition(mouseX, mouseY) {
         return null;
     }
+
+    mousePressed(x,y) {return;}
+    mouseReleased() {return;}
+    mouseDragged(x,y) {return;}
 }
 export default NoGrid;

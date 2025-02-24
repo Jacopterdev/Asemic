@@ -12,6 +12,19 @@ class RadialGrid extends BaseGrid {
         this.radialDivisions = radialDivisions; // Number of concentric circles
         this.angularDivisions = angularDivisions; // Number of angular segments
         this.initGrid();
+
+        // Knob positions
+        this.angularKnob = { x: this.xStart + this.radius * 2, y: this.yCenter, size: 15 };
+        this.radialKnob = { x: this.xCenter, y: this.yStart, size: 15 };
+
+        // Dragging state
+        this.draggingRadialKnob = false;
+        this.draggingAngularKnob = false;
+
+        // Initial states for dragging adjustments
+        this.initialRadialDivisions = this.radialDivisions;
+        this.initialAngularDivisions = this.angularDivisions;
+
     }
 
     // Initialize the radial grid (concentric circles & spokes)
@@ -50,6 +63,15 @@ class RadialGrid extends BaseGrid {
             const y = this.yCenter + Math.sin(angle) * this.radius;
             p.line(this.xCenter, this.yCenter, x, y);
         }
+
+        // Draw radial divisions knob
+        p.fill(255);
+        p.strokeWeight(2);
+        p.ellipse(this.radialKnob.x, this.radialKnob.y, this.radialKnob.size);
+
+        // Draw angular divisions knob
+        p.ellipse(this.angularKnob.x, this.angularKnob.y, this.angularKnob.size);
+
     }
 
     // Snapping logic for the radial grid
@@ -110,6 +132,74 @@ class RadialGrid extends BaseGrid {
 
         return null; // Return null if no snapping occurs
     }
+
+    // Handle mouse press events
+    mousePressed(mouseX, mouseY) {
+        const distToRadialKnob = this.p.dist(mouseX, mouseY, this.radialKnob.x, this.radialKnob.y);
+        const distToAngularKnob = this.p.dist(mouseX, mouseY, this.angularKnob.x, this.angularKnob.y);
+
+        // Check if either knob is pressed
+        if (distToRadialKnob < this.radialKnob.size / 2) {
+            this.draggingRadialKnob = true;
+            this.initialRadialDivisions = this.radialDivisions; // Save the starting radial divisions
+        }
+        if (distToAngularKnob < this.angularKnob.size / 2) {
+            this.draggingAngularKnob = true;
+            this.initialAngularDivisions = this.angularDivisions; // Save the starting angular divisions
+        }
+    }
+
+    // Handle mouse dragging
+    mouseDragged(mouseX, mouseY) {
+        const dragRange = 100; // Range in pixels for full incremental change
+        const minRadialDivisions = 2;
+        const maxRadialDivisions = 12;
+        const minAngularDivisions = 2;
+        const maxAngularDivisions = 12;
+
+        if (this.draggingRadialKnob) {
+            // Horizontal drag controls radial divisions
+            const deltaX = mouseX - this.radialKnob.x;
+
+            // Scale deltaX to change in radial divisions
+            const change = Math.round(deltaX / dragRange * (maxRadialDivisions - minRadialDivisions));
+            const newRadialDivisions = this.initialRadialDivisions + change;
+
+            // Clamp to allowed range
+            const clampedRadialDivisions = Math.min(maxRadialDivisions, Math.max(minRadialDivisions, newRadialDivisions));
+
+            // Update the grid
+            this.radialDivisions = clampedRadialDivisions;
+            this.initGrid();
+        }
+
+        if (this.draggingAngularKnob) {
+            // Vertical drag controls angular divisions
+            const deltaY = mouseY - this.angularKnob.y;
+
+            // Scale deltaY to change in angular divisions
+            const change = Math.round(deltaY / dragRange * (maxAngularDivisions - minAngularDivisions));
+            const newAngularDivisions = this.initialAngularDivisions - change; // Dragging up decreases divisions
+
+            // Clamp to allowed range
+            const clampedAngularDivisions = Math.min(maxAngularDivisions, Math.max(minAngularDivisions, newAngularDivisions));
+
+            // Update the grid
+            this.angularDivisions = clampedAngularDivisions;
+            this.initGrid();
+        }
+    }
+
+    // Handle mouse release events
+    mouseReleased() {
+        this.draggingRadialKnob = false;
+        this.draggingAngularKnob = false;
+
+        // Finalize state
+        this.initialRadialDivisions = this.radialDivisions;
+        this.initialAngularDivisions = this.angularDivisions;
+    }
+
 }
 
 export default RadialGrid;

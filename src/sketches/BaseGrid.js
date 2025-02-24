@@ -28,6 +28,9 @@
     setSnapThreshold(threshold) {
         this.snapThreshold = threshold;
     }
+    mousePressed(x,y) {return;}
+    mouseReleased() {return;}
+    mouseDragged(x,y) {return;}
 }
 
 export default BaseGrid;

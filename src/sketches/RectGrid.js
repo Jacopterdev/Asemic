@@ -8,14 +8,24 @@ class RectGrid extends BaseGrid{
         this.cellWidth = gridSize/cols;
         this.cellHeight = gridSize/rows;
         this.grid = [];
+
         this.initGrid();
+
+        // Knob positions (start near the top-left of the grid)
+        this.colsKnob = { x: xStart + this.gridSize - 50, y: yStart, size: 30 };
+        this.rowsKnob = { x: xStart + this.gridSize, y: yStart + 50, size: 30 };
+
+        // Tracking dragging state
+        this.draggingColsKnob = false;
+        this.draggingRowsKnob = false;
+        // To track the initial counts when dragging starts
+        this.initialCols = this.cols;
+        this.initialRows = this.rows;
+
     }
 
     // Initialize the grid with GenShape objects
     initGrid() {
-        //console.log("totalWidth: ", this.gridSize);
-        //console.log("canvas width: ", this.p.width);
-        //console.log("cell width ", this.cellWidth);
         this.grid = [];
         for (let i = 0; i < this.cols; i++) {
             this.grid[i] = [];
@@ -44,14 +54,23 @@ class RectGrid extends BaseGrid{
                 p.rect(cell.x, cell.y, cell.w, cell.h);
             }
         }
+        // Columns knob
+        p.fill(255);
+        p.strokeWeight(2);
+        p.ellipse(this.colsKnob.x, this.colsKnob.y, this.colsKnob.size);
+
+        // Rows knob
+        p.ellipse(this.rowsKnob.x, this.rowsKnob.y, this.rowsKnob.size);
+
     }
 
     // Dynamically set grid size and reinitialize
     setGridSize(cols, rows) {
-        this.cols = cols;
-        this.rows = rows;
-        this.cellWidth = this.p.width / cols; // Recalculate cell width
-        this.cellHeight = this.p.height / rows; // Recalculate cell height
+        this.cols = Math.max(1, Math.floor(cols)); // Ensure at least 1 column
+        this.rows = Math.max(1, Math.floor(rows)); // Ensure at least 1 row
+
+        this.cellWidth = this.gridSize / cols; // Recalculate cell width
+        this.cellHeight = this.gridSize / rows; // Recalculate cell height
         this.initGrid(); // Reinitialize the grid
     }
 
@@ -90,7 +109,75 @@ class RectGrid extends BaseGrid{
 
     }
 
+    // Handle mouse press events to check if knobs are clicked
+    mousePressed(mouseX, mouseY) {
+        const distToColsKnob = this.p.dist(mouseX, mouseY, this.colsKnob.x, this.colsKnob.y);
+        const distToRowsKnob = this.p.dist(mouseX, mouseY, this.rowsKnob.x, this.rowsKnob.y);
 
+        // Check if either knob is clicked
+        if (distToColsKnob < this.colsKnob.size / 2) {
+            this.draggingColsKnob = true;
+            this.initialCols = this.cols; // Save the starting number of columns
+        }
+        if (distToRowsKnob < this.rowsKnob.size / 2) {
+            this.draggingRowsKnob = true;
+            this.initialRows = this.rows; // Save the starting number of rows
+        }
+
+    }
+    // Handle mouse dragging
+    mouseDragged(mouseX, mouseY) {
+        const dragRange = 100; // Range in pixels for full change (-100 to 100 for max scaling)
+        const maxCols = 12;
+        const minCols = 2;
+        const maxRows = 12;
+        const minRows = 2;
+
+        if (this.draggingColsKnob) {
+            // Calculate relative horizontal drag distance
+            const deltaX = mouseX - this.colsKnob.x;
+
+            // Scale deltaX to a change in columns
+            const change = Math.round(deltaX / dragRange * (maxCols - minCols));
+
+            // Apply the change to the starting number of columns
+            const newCols = this.initialCols + change;
+
+            // Clamp the value
+            const clampedCols = Math.min(maxCols, Math.max(minCols, newCols));
+
+            // Update grid temporarily
+            this.setGridSize(clampedCols, this.rows);
+        }
+
+        if (this.draggingRowsKnob) {
+            // Calculate relative vertical drag distance
+            const deltaY = mouseY - this.rowsKnob.y;
+
+            // Scale deltaY to a change in rows
+            const change = Math.round(deltaY / dragRange * (maxRows - minRows));
+
+            // Apply the change to the starting number of rows
+            const newRows = this.initialRows + change;
+
+            // Clamp the value
+            const clampedRows = Math.min(maxRows, Math.max(minRows, newRows));
+
+            // Update grid temporarily
+            this.setGridSize(this.cols, clampedRows);
+        }
+    }
+
+// Handle mouse release events
+    mouseReleased() {
+        // Stop dragging and finalize the columns/rows
+        this.draggingColsKnob = false;
+        this.draggingRowsKnob = false;
+
+        // Finalize the column and row count by setting them to the grid (already done in dragging)
+        this.initialCols = this.cols;
+        this.initialRows = this.rows;
+    }
 
 
 }
