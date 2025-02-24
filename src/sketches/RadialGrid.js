@@ -177,7 +177,7 @@ class RadialGrid extends BaseGrid {
             this.initGrid();
 
             // Update label for radial divisions
-            this.knobLabel.update(clampedRadialDivisions, this.radialKnob.x, this.radialKnob.y);
+            this.knobLabel.update(clampedRadialDivisions, this.radialKnob.x + 20, this.radialKnob.y);
 
         }
 
@@ -197,7 +197,7 @@ class RadialGrid extends BaseGrid {
             this.initGrid();
 
             // Update label for angular divisions
-            this.knobLabel.update(clampedAngularDivisions, this.angularKnob.x, this.angularKnob.y);
+            this.knobLabel.update(clampedAngularDivisions, this.angularKnob.x , this.angularKnob.y+ 20);
 
         }
         return this.draggingAngularKnob || this.draggingRadialKnob;

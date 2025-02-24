@@ -38,13 +38,28 @@
         if (!this.visible) return;
 
         const p = this.p;
+        const padding = 4; // Add some spacing around the text
+        const textWidth = p.textWidth(this.text); // Get the width of the text
+        const textHeight = this.fontSize; // Assume text height is approximately the font size
+        const backdropWidth = textWidth + padding * 2; // Backdrop width (account for padding)
+        const backdropHeight = textHeight + padding * 2; // Backdrop height
+
         p.push();
+
+        // Draw the backdrop (white rectangle with grey stroke)
+        p.fill(255); // White fill
+        p.stroke(200); // Grey stroke
+        p.strokeWeight(1); // Thin stroke
+        p.rect(this.x - padding, this.y - backdropHeight / 2, backdropWidth, backdropHeight, 4); // Rounded rectangle
+
+        // Draw the text
         p.textFont(this.font); // Set font
         p.textSize(this.fontSize); // Set font size
-        p.fill(0); // Text color
-        p.noStroke(); // Disable outline
-        p.textAlign(p.LEFT, p.CENTER); // Align text to the center vertically
-        p.text(this.text, this.x, this.y); // Draw text
+        p.fill(0); // Black text
+        p.noStroke(); // Disable text stroke
+        p.textAlign(p.LEFT, p.CENTER); // Align text
+        p.text(this.text, this.x, this.y); // Draw the label
+
         p.pop();
     }
 }

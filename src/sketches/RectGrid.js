@@ -13,8 +13,8 @@ class RectGrid extends BaseGrid{
         this.initGrid();
 
         // Knob positions (start near the top-left of the grid)
-        this.colsKnob = { x: xStart + this.gridSize - 50, y: yStart, size: 30 };
-        this.rowsKnob = { x: xStart + this.gridSize, y: yStart + 50, size: 30 };
+        this.colsKnob = { x: xStart + this.gridSize - 50, y: yStart, size: 15 };
+        this.rowsKnob = { x: xStart + this.gridSize, y: yStart + 50, size: 15 };
 
         // Tracking dragging state
         this.draggingColsKnob = false;
