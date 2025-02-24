@@ -30,7 +30,7 @@ const defaultSketch = (p, mergedParamsRef) => {
         let yStart = margin;
         let gridSize = p.width - (margin * 2);
 
-        const gridType = "rect";
+        const gridType = "none";
         // Dynamically set the grid type in GridContext
         if (gridType === "radial") {
             gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
@@ -60,21 +60,25 @@ const defaultSketch = (p, mergedParamsRef) => {
 
     p.mousePressed = () => {
         if (!mouseHandler) return;
+        let knobDragged = gridContext.mousePressed(p.mouseX, p.mouseY);
+        if (knobDragged) return;
         // Delegate mousePressed logic to MouseEventHandler
         mouseHandler.handleMousePressed();
-        gridContext.mousePressed(p.mouseX, p.mouseY);
     };
 
     p.mouseDragged = () => {
         if (!mouseHandler) return;
+        let knobDragged = gridContext.mouseDragged(p.mouseX, p.mouseY);
+        if (knobDragged) return;
         mouseHandler.handleMouseDragged();
-        gridContext.mouseDragged(p.mouseX, p.mouseY);
+
     };
 
     p.mouseReleased = () => {
         if (!mouseHandler) return;
+        let knobDragged = gridContext.mouseReleased();
+        if (knobDragged) return;
         mouseHandler.handleMouseReleased();
-        gridContext.mouseReleased();
     };
 
 

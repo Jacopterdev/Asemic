@@ -1,4 +1,5 @@
 import BaseGrid from "./BaseGrid.js";
+import KnobLabel from "./KnobLabel.js";
 class RectGrid extends BaseGrid{
     constructor(p, cols, rows, xStart, yStart, gridSize) {
         super(p, xStart, yStart, gridSize);
@@ -21,6 +22,9 @@ class RectGrid extends BaseGrid{
         // To track the initial counts when dragging starts
         this.initialCols = this.cols;
         this.initialRows = this.rows;
+
+        this.knobLabel = new KnobLabel(p); // Create an instance of KnobLabel
+
 
     }
 
@@ -61,6 +65,8 @@ class RectGrid extends BaseGrid{
 
         // Rows knob
         p.ellipse(this.rowsKnob.x, this.rowsKnob.y, this.rowsKnob.size);
+
+        this.knobLabel.draw();
 
     }
 
@@ -124,6 +130,8 @@ class RectGrid extends BaseGrid{
             this.initialRows = this.rows; // Save the starting number of rows
         }
 
+        return this.draggingColsKnob || this.draggingRowsKnob;
+
     }
     // Handle mouse dragging
     mouseDragged(mouseX, mouseY) {
@@ -148,6 +156,9 @@ class RectGrid extends BaseGrid{
 
             // Update grid temporarily
             this.setGridSize(clampedCols, this.rows);
+
+            // Update the label for columns
+            this.knobLabel.update(clampedCols, this.colsKnob.x + 20, this.colsKnob.y);
         }
 
         if (this.draggingRowsKnob) {
@@ -165,11 +176,18 @@ class RectGrid extends BaseGrid{
 
             // Update grid temporarily
             this.setGridSize(this.cols, clampedRows);
+
+            // Update the label for rows
+            this.knobLabel.update(clampedRows, this.rowsKnob.x, this.rowsKnob.y + 20);
+
         }
+
+        return this.draggingColsKnob || this.draggingRowsKnob;
     }
 
 // Handle mouse release events
     mouseReleased() {
+        const wasDraggingKnob = this.draggingColsKnob || this.draggingRowsKnob;
         // Stop dragging and finalize the columns/rows
         this.draggingColsKnob = false;
         this.draggingRowsKnob = false;
@@ -177,6 +195,11 @@ class RectGrid extends BaseGrid{
         // Finalize the column and row count by setting them to the grid (already done in dragging)
         this.initialCols = this.cols;
         this.initialRows = this.rows;
+
+        // Hide the label when dragging stops
+        this.knobLabel.hide();
+        return wasDraggingKnob;
+
     }
 
 

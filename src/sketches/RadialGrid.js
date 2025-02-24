@@ -1,5 +1,6 @@
 ﻿
 import BaseGrid from "./BaseGrid";
+import KnobLabel from "./KnobLabel";
 
 class RadialGrid extends BaseGrid {
     constructor(p, xStart, yStart, radius, radialDivisions, angularDivisions) {
@@ -25,6 +26,7 @@ class RadialGrid extends BaseGrid {
         this.initialRadialDivisions = this.radialDivisions;
         this.initialAngularDivisions = this.angularDivisions;
 
+        this.knobLabel = new KnobLabel(p); // Create an instance of KnobLabel
     }
 
     // Initialize the radial grid (concentric circles & spokes)
@@ -72,6 +74,7 @@ class RadialGrid extends BaseGrid {
         // Draw angular divisions knob
         p.ellipse(this.angularKnob.x, this.angularKnob.y, this.angularKnob.size);
 
+        this.knobLabel.draw();
     }
 
     // Snapping logic for the radial grid
@@ -147,6 +150,7 @@ class RadialGrid extends BaseGrid {
             this.draggingAngularKnob = true;
             this.initialAngularDivisions = this.angularDivisions; // Save the starting angular divisions
         }
+        return this.draggingAngularKnob || this.draggingRadialKnob;
     }
 
     // Handle mouse dragging
@@ -171,6 +175,10 @@ class RadialGrid extends BaseGrid {
             // Update the grid
             this.radialDivisions = clampedRadialDivisions;
             this.initGrid();
+
+            // Update label for radial divisions
+            this.knobLabel.update(clampedRadialDivisions, this.radialKnob.x, this.radialKnob.y);
+
         }
 
         if (this.draggingAngularKnob) {
@@ -187,17 +195,28 @@ class RadialGrid extends BaseGrid {
             // Update the grid
             this.angularDivisions = clampedAngularDivisions;
             this.initGrid();
+
+            // Update label for angular divisions
+            this.knobLabel.update(clampedAngularDivisions, this.angularKnob.x, this.angularKnob.y);
+
         }
+        return this.draggingAngularKnob || this.draggingRadialKnob;
     }
 
     // Handle mouse release events
     mouseReleased() {
+        const wasDraggingKnob = this.draggingRadialKnob || this.draggingAngularKnob;
         this.draggingRadialKnob = false;
         this.draggingAngularKnob = false;
 
         // Finalize state
         this.initialRadialDivisions = this.radialDivisions;
         this.initialAngularDivisions = this.angularDivisions;
+
+        // Hide the label when dragging stops
+        this.knobLabel.hide();
+
+        return wasDraggingKnob;
     }
 
 }
