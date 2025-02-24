@@ -36,7 +36,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 subShape: "Triangle",
                 connection: "atEnd", // Default value
                 rotationType: "relative", // Default value
-                angle: {x: 0, y: 50},
+                angle: {min: 0, max: 360},
                 amount: {min: 0, max: 50}, // Default interval
                 size: {min: 0, max: 100}, // Default interval
                 distort: {min: 0, max: 100}, // Default interval
@@ -49,7 +49,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 subShape: "Triangle",
                 connection: "Along",
                 rotationType: "absolute",
-                angle: {x: 0, y: 50},
+                angle: {min: 0, max: 360},
                 amount: {min: 10, max: 30},
                 size: {min: 20, max: 80},
                 distort: {min: 5, max: 50},
@@ -80,7 +80,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 subShape: "Triangle",
                 connection: "atEnd",
                 rotationType: "relative",
-                angle: { x: 0, y: 50 },
+                angle: {min: 0, max: 360},
                 amount: { min: 0, max: 50 },
                 size: { min: 0, max: 100 },
                 distort: { min: 0, max: 100 },
@@ -161,58 +161,42 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 updateParam('subShape', event.value);
             });
 
-            // Add `connection` as a radiogrid
+            // Add `connection`
             pane.addInput(activeTabData.params, "connection", {
-                view: "radiogrid",
-                groupName: "Connection Type",
-                size: [2, 1], // 2 columns, 1 row
-                cells: (x, y) => {
-                    const options = ["atEnd", "Along"];
-                    return {
-                        title: options[x],
-                        value: options[x],
-                    };
+                label: "Connection", // Optional: Add a label
+                options: {
+                    "At End": "atEnd",  // Displayed: "At End", Value: "atEnd"
+                    "Along": "Along",   // Displayed: "Along", Value: "Along"
                 },
-            }).on('change', (event) => {
-                updateParam('connection', event.value);
+            }).on("change", (event) => {
+                updateParam("connection", event.value); // Update the state
             });
 
-            // Add `rotationType` as a radiogrid
+
+            // Add `rotationType`
             pane.addInput(activeTabData.params, "rotationType", {
-                view: "radiogrid",
-                groupName: "Rotation Type",
-                size: [2, 1], // 2 columns, 1 row
-                cells: (x, y) => {
-                    const options = ["relative", "absolute"];
-                    return {
-                        title: options[x],
-                        value: options[x],
-                    };
+                label: "Rotation Type", // Optional: Add a label
+                options: {
+                    Relative: "relative",  // Displayed: "Relative", Value: "relative"
+                    Absolute: "absolute",  // Displayed: "Absolute", Value: "absolute"
                 },
-            }).on('change', (event) => {
-                updateParam('rotationType', event.value);
+            }).on("change", (event) => {
+                updateParam("rotationType", event.value); // Update the state
             });
+
 
 
             // Add a point2D input to the pane
-            pane.addInput(activeTabData.params, 'angle', {
-                label: 'angle',
+            pane.addInput(activeTabData.params, "angle", {
+                view: "slider", // Use slider for a single value or interval for ranges
+                min: 0,         // Minimum slider value (e.g., 0 degrees)
+                max: 360,       // Maximum slider value (e.g., 360 degrees)
+                step: 1,        // Slider step increment (e.g., 1 degree per step)
+                label: "Angle", // Label to display next to the slider
+            }).on("change", (event) => {
+                updateParam("angle", event.value); // Update the angle value in state
             });
 
-            function calculateAngle(point) {
-                const {x, y} = point;
-                const angleRadians = Math.atan2(y, x); // Returns angle in radians
-                const angleDegrees = angleRadians * (180 / Math.PI); // Convert to degrees
-                return angleDegrees;
-            }
-
-            pane.on('change', (event) => {
-                if (event.presetKey === 'angle') {
-                    const angle = calculateAngle(event.value);
-                    updateParam('angle', angle);
-                    //console.log(`Angle relative to (0, 0): ${angle.toFixed(2)} degrees`);
-                }
-            });
 
             pane.addInput(activeTabData.params, "amount", {
                 view: "interval",
