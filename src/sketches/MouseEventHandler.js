@@ -97,11 +97,13 @@ class MouseEventHandler {
             // Reset dragging state
             this.draggingPoint = null;
         } else {
-            // Check if the release was a significant drag
+            /**
+             * / Check if the release was a significant drag
             const hasDragged = Math.sqrt(
                 Math.pow(this.mouseDragStart.x - this.p.mouseX, 2) +
                 Math.pow(this.mouseDragStart.y - this.p.mouseY, 2)
             ) > movementThreshold;
+            **/
 
             const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
             if (!hoveredPoint && this.toggledLines.size === 0) {
@@ -159,7 +161,6 @@ class MouseEventHandler {
 
     isInCanvas() {
         const { xStart, yStart, gridSize } = this.gridContext.grid;
-
         // Check if the mouse position is within the canvas boundaries
         return (
             this.p.mouseX >= xStart &&

@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 
 const ButtonGroup = () => {
-    const [selectedButton, setSelectedButton] = useState(null); // Tracks the selected button index
+    const [selectedButton, setSelectedButton] = useState(0); // Tracks the selected button index
 
     const buttons = ["Edit Skeleton", "Anatomy View", "Composition View"]; // Button labels
 

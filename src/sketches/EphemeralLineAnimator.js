@@ -22,7 +22,6 @@
      */
     start() {
         const selectedLines = this.lineManager.getSelectedLines();
-        console.log(selectedLines);
 
         if (selectedLines.length < 1) return; // Not enough points to pick from
 

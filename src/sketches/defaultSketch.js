@@ -1,6 +1,7 @@
 ﻿import RectGrid from "./RectGrid.js";
 import GridContext from "./GridContext.js";
 import RadialGrid from "./RadialGrid.js";
+import NoGrid from "./NoGrid.js";
 import MouseEventHandler from "./MouseEventHandler.js";
 import PointRenderer from "./PointRenderer.js";
 import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
@@ -29,12 +30,14 @@ const defaultSketch = (p, mergedParamsRef) => {
         let yStart = margin;
         let gridSize = p.width - (margin * 2);
 
-        const gridType = "radial";
+        const gridType = "none";
         // Dynamically set the grid type in GridContext
         if (gridType === "radial") {
             gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
         } else if (gridType === "rect") {
             gridContext = new GridContext(RectGrid, p, 3, 3, xStart, yStart, gridSize);
+        } else if (gridType === "none") {
+            gridContext = new GridContext(NoGrid, p, xStart, yStart, gridSize);
         }
         // Init lineManager
         lineManager = new LineManager();
