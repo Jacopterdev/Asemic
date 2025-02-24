@@ -32,6 +32,49 @@ function App() {
     const mergedParams = { ...params, ...subShapeParams };
     console.log("mergedParams: ", mergedParams);
 
+
+    const firstGroupButtons = [
+        {
+            label: "Edit Skeleton",
+            onClick: () => setIsSecondGroupVisible(true), // Ensure the second group is visible
+        },
+        {
+            label: "Anatomy",
+            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
+
+        },
+        {
+            label: "Composition",
+            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
+
+        },
+    ];
+
+    const secondGroupButtons = [
+        {
+            label: "Ø",
+            onClick: () => console.log("Secondary Button 1 clicked"),
+        },
+        {
+            label: "#",
+            onClick: () => console.log("Secondary Button 2 clicked"),
+        },
+        {
+            label: "./public/S.svg",
+            onClick: () => console.log("Secondary Button 2 clicked"),
+        },
+    ];
+
+    const handleFirstGroupSelection = (index) => {
+        console.log(`First group selected index: ${index}`);
+    };
+
+
+
+    const [isSecondGroupVisible, setIsSecondGroupVisible] = useState(true); // Track visibility of the second ButtonGroup
+
+
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
@@ -55,9 +98,17 @@ function App() {
 
                     <div className="flex-1 bg-gray-200 shadow p-4 rounded">
                         <div className="flex justify-between items-center">
-                            <ButtonGroup />
+                            <ButtonGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
+
+                            {isSecondGroupVisible && (
+                                <div className="mt-4">
+                                    <ButtonGroup buttons={secondGroupButtons} />
+                                </div>
+                            )}
 
                             <div className="flex items-center space-x-4">
+
+
                                 <div className="button">Grid Type</div>
                                 <div className="button">Export</div>
                             </div>
