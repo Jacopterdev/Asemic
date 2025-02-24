@@ -8,7 +8,7 @@ import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
 import LineManager from "./LineManager.js";
 import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
 
-const defaultSketch = (p, mergedParamsRef) => {
+const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let x = 3;
     //console.log("Params:", mergedParamsRef.current);
     let points = [];
@@ -20,6 +20,8 @@ const defaultSketch = (p, mergedParamsRef) => {
     let lineManager;
     let ephemeralLineAnimator;
     let missRadius;
+    let currentGridType = "none"; // Track the current grid type
+
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
@@ -28,17 +30,11 @@ const defaultSketch = (p, mergedParamsRef) => {
 
         let xStart = margin;
         let yStart = margin;
-        let gridSize = p.width - (margin * 2);
+        let gridSize = p.width - margin * 2;
 
-        const gridType = "none";
-        // Dynamically set the grid type in GridContext
-        if (gridType === "radial") {
-            gridContext = new GridContext(RadialGrid, p, xStart, yStart, gridSize / 2, 5, 12); // Adjust parameters
-        } else if (gridType === "rect") {
-            gridContext = new GridContext(RectGrid, p, 3, 3, xStart, yStart, gridSize);
-        } else if (gridType === "none") {
-            gridContext = new GridContext(NoGrid, p, xStart, yStart, gridSize);
-        }
+        // Initialize the gridContext based on the default `currentGridType` ("none")
+        gridContext = new GridContext(NoGrid, p, xStart, yStart, gridSize);
+
         // Init lineManager
         lineManager = new LineManager();
 
@@ -57,6 +53,35 @@ const defaultSketch = (p, mergedParamsRef) => {
 
 
     };
+
+    const updateGridContext = () => {
+        let xStart = margin;
+        let yStart = margin;
+        let gridSize = p.width - margin * 2;
+
+        // Retrieve the latest grid type from toolConfigRef
+        const toolConfig = toolConfigRef.current;
+        const gridType = toolConfig?.grid || "none";
+        // Only update the gridContext if the gridType has changed
+        if (currentGridType !== gridType) {
+            if (gridType === "Ø") {
+                gridContext.setGridType(RadialGrid,
+                    p,
+                    xStart,
+                    yStart,
+                    gridSize / 2,
+                    5,
+                    12
+                ); // Adjust parameters
+            } else if (gridType === "#") {
+                gridContext.setGridType(RectGrid, p, 3, 3, xStart, yStart, gridSize);
+            } else if (gridType === "none" ||gridType === "./public/S.svg") {
+                gridContext.setGridType(NoGrid, p, xStart, yStart, gridSize);
+            }
+            currentGridType = gridType; // Update current grid type
+        }
+    };
+
 
     p.mousePressed = () => {
         if (!mouseHandler) return;
@@ -82,13 +107,12 @@ const defaultSketch = (p, mergedParamsRef) => {
     };
 
 
-
-
-
     p.draw = () => {
+        updateGridContext();
         const mergedParams = mergedParamsRef.current;
         const angle = mergedParams[1].angle.min;
         const smoothAmount = mergedParams.smoothAmount;
+
         missRadius = mergedParamsRef.current.missArea;
         pointRenderer.setMissRadius(missRadius);
 

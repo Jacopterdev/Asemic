@@ -33,6 +33,13 @@ function App() {
     console.log("mergedParams: ", mergedParams);
 
 
+    // NEW: State for managing selected buttons for each group
+    const [toolConfig, setToolConfig] = useState({
+        state: "Edit Skeleton", // Default selection for the first group
+        grid: "Ø", // Default selection for the second group
+    });
+
+
     const firstGroupButtons = [
         {
             label: "Edit Skeleton",
@@ -65,9 +72,25 @@ function App() {
         },
     ];
 
+    // Callback for handling button selection in the first group
     const handleFirstGroupSelection = (index) => {
+        setToolConfig((prevState) => ({
+            ...prevState,
+            state: firstGroupButtons[index].label, // Update `state` with the selected label
+        }));
+
         console.log(`First group selected index: ${index}`);
     };
+    const handleSecondGroupSelection = (index) => {
+        setToolConfig((prevState) => ({
+            ...prevState,
+            grid: secondGroupButtons[index].label, // Update `grid` with the selected label
+        }));
+
+        console.log(`Second group selected index: ${index}`);
+    };
+
+
 
 
 
@@ -102,7 +125,8 @@ function App() {
 
                             {isSecondGroupVisible && (
                                 <div className="mt-4">
-                                    <ButtonGroup buttons={secondGroupButtons} />
+                                    <ButtonGroup buttons={secondGroupButtons} onButtonSelect={handleSecondGroupSelection}
+                                    />
                                 </div>
                             )}
 
@@ -115,7 +139,7 @@ function App() {
                         </div>
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
-                            <P5Wrapper sketch={defaultSketch} mergedParams={mergedParams} />
+                            <P5Wrapper sketch={defaultSketch} mergedParams={mergedParams} toolConfig={toolConfig}/>
                         </div>
                     </div>
                 </div>
