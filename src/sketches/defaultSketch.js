@@ -8,6 +8,7 @@ import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
 import LineManager from "./LineManager.js";
 import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
 import DisplayGrid from "./DisplayGrid.js";
+import CompositionTool from "./CompositionTool/CompositionTool.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let x = 3;
@@ -23,6 +24,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let missRadius;
     let currentGridType = "none"; // Track the current grid type
     let displayGrid;
+    let compositionTool;
+
 
 
     p.setup = () => {
@@ -53,7 +56,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
         ephemeralLineAnimator.start(); // Start the animation
 
-        displayGrid = new DisplayGrid(p, 3,3);
+        displayGrid = new DisplayGrid(p, 3,3, xStart, yStart, gridSize);
+
+        compositionTool = new CompositionTool(p);
 
     };
 
@@ -113,8 +118,17 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     p.draw = () => {
         p.background(255); // Reset background each frame
         if(toolConfigRef.current.state === "Anatomy"){
-            displayGrid.draw()
+            displayGrid.setGrid(3,3);
+            displayGrid.draw();
+            mouseHandler = null;
             return;
+        } else if (toolConfigRef.current.state === "Composition"){
+            compositionTool.draw(p);
+            mouseHandler = null;
+            return;
+
+        } else if (toolConfigRef.current.state === "Edit Skeleton"){
+            if (!mouseHandler) mouseHandler = new MouseEventHandler(p, gridContext, points, lineManager);
         }
 
         updateGridContext();
@@ -151,9 +165,13 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
 
 
-
-
     };
+
+    p.keyPressed = (evt) => {
+        console.log(compositionTool);
+        if(!compositionTool) return;
+        compositionTool.keyPressed(evt.key);
+    }
 };
 
 export default defaultSketch;

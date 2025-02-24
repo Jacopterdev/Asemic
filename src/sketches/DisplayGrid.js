@@ -1,10 +1,14 @@
 class DisplayGrid {
-    constructor(p, cols, rows) {
+    constructor(p, cols, rows, xStart, yStart, gridSize) {
         this.p = p;
         this.cols = cols;
         this.rows = rows;
-        this.cellWidth = p.width/cols;
-        this.cellHeight = p.height/rows;
+        this.gridSize = gridSize;
+        this.xStart = xStart;
+        this.yStart = yStart;
+        this.gridSize = gridSize;
+        this.cellWidth = gridSize/cols;
+        this.cellHeight = gridSize/rows;
         this.grid = [];
         this.hoveredCell = null;
 
@@ -13,12 +17,14 @@ class DisplayGrid {
 
     // Initialize the grid with GenShape objects
     initGrid() {
+        this.cellWidth = this.gridSize/this.cols;
+        this.cellHeight = this.gridSize/this.rows;
         this.grid = [];
         for (let i = 0; i < this.cols; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.rows; j++) {
-                let x = i * this.cellWidth;
-                let y = j * this.cellHeight;
+                let x = i * this.cellWidth + this.xStart;
+                let y = j * this.cellHeight + this.yStart;
 
                 this.grid[i][j] = {
                     x: x,
@@ -46,7 +52,7 @@ class DisplayGrid {
                 }
 
                 p.stroke(200);
-                p.strokeWeight(0.1);
+                p.strokeWeight(1);
                 p.rect(cell.x, cell.y, cell.w, cell.h);
 
                 // Draw the shape assigned to this cell
@@ -54,7 +60,11 @@ class DisplayGrid {
             }
         }
     }
-
+    setGrid(cols, rows) {
+        this.cols = cols;
+        this.rows = rows;
+        this.initGrid();
+    }
     // Detect if the mouse is hovering over a cell
     updateHover(mx, my) {
         this.hoveredCell = null;
