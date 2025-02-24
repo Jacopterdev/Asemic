@@ -87,7 +87,7 @@ const defaultSketch = (p, mergedParamsRef) => {
 
     p.draw = () => {
         const mergedParams = mergedParamsRef.current;
-        const angle = mergedParams[1].angle;
+        const angle = mergedParams[1].angle.min;
         const smoothAmount = mergedParams.smoothAmount;
         missRadius = mergedParamsRef.current.missArea;
         pointRenderer.setMissRadius(missRadius);
