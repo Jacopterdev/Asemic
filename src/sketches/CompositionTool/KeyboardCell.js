@@ -16,7 +16,7 @@
     draw(p) {
         // Change fill color based on whether the cell is active or not
         if (this.isActive) {
-            p.fill(200, 100, 255); // Active fill color (example: purple)
+            p.fill(64, 64, 64, 32); // Active fill color (example: semi-transparent gray)
         } else {
             p.fill(255); // Default fill color (white)
         }
@@ -54,6 +54,16 @@
             if (this.callback) {
                 this.callback(this.char);
             }
+        }
+    }
+
+    checkKeyReleased(key) {
+        // Check if the key matches the cell's character (case-insensitive)
+        if (key.toLowerCase() === this.char.toLowerCase()) {
+            console.log(`Key "${this.char}" released!`);
+
+            // Deactivate the cell (reset its state)
+            this.isActive = false;
         }
     }
 }

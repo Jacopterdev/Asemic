@@ -41,5 +41,8 @@ class KeyboardGrid {
         // Pass the key press event to each cell
         this.cells.forEach((cell) => cell.checkKeyPressed(key));
     }
+    keyReleased(key){
+        this.cells.forEach((cell) => cell.checkKeyReleased(key));
+    }
 }
 export default KeyboardGrid;

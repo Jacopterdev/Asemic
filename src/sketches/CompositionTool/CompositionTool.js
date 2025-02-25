@@ -1,17 +1,29 @@
 ﻿import KeyboardGrid from "./KeyboardGrid.js";
+import ShapeInputField from "./ShapeInputField.js";
+import shapeInputField from "./ShapeInputField.js";
 
 class CompositionTool {
     constructor(p) {
+        this.p = p;
+        // Create the ShapeInputField
+        this.shapeInputField = new ShapeInputField(
+            p,
+            50,           // X position
+            50,           // Y position (above the keyboard)
+            p.width - 100, // Width of the input field
+            200           // Height of the input field
+        );
+
         // Initialize the KeyboardGrid with the required parameters,
         // including a callback function bound to this instance
         this.keyboardGrid = new KeyboardGrid(
             p,         // Pass the p5 instance
             50,        // x-coordinate of the grid's top-left corner
             p.height/2,        // y-coordinate of the grid's top-left corner
-            (p.width - (2*50))/9,        // Size of each cell
+            (p.width - (2*50))/10,        // Size of each cell
             3,         // Number of rows
-            9,         // Number of columns
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ", // Alphabet to populate the grid
+            10,         // Number of columns
+            "QWERTYUIOPASDFGHJKL ZXCVBNM   ", // Alphabet to populate the grid
             (key) => this.onKeyPress(key) // Callback for key presses
         );
 
@@ -19,17 +31,36 @@ class CompositionTool {
     // Handle key presses from the p5 sketch and forward them to the KeyboardGrid
     keyPressed(key) {
         this.keyboardGrid.keyPressed(key);
+        if (key === "Backspace") {
+            this.shapeInputField.removeLastShape(); // Handle backspace
+        } else {
+            this.shapeInputField.addShape(key); // Add shape based on key
+        }
+    }
+
+    keyReleased(key){
+        this.keyboardGrid.keyReleased(key);
+
     }
 
     // Callback for when a key is pressed (add custom behavior here)
     onKeyPress(key) {
         console.log(`Key "${key}" pressed in CompositionTool!`);
-        // Add any additional behavior to handle the key press
     }
 
     // Render the keyboard grid
     draw(p) {
+        this.shapeInputField.draw();
+        p.filter(p.BLUR, 4);
+        p.filter(p.THRESHOLD, 0.5);
+
+        if (this.shapeInputField.cursorVisible) {      // Conditional logic for cursor
+            const { x, y } = this.shapeInputField.getCursorPosition();
+            this.shapeInputField.drawCursor(x, y); // Draw cursor separately
+        }
+
         this.keyboardGrid.draw(p);
+
     }
 
 }

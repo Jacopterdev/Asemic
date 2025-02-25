@@ -168,9 +168,16 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     };
 
     p.keyPressed = (evt) => {
-        console.log(compositionTool);
+
+
         if(!compositionTool) return;
+        console.log(evt.key);
         compositionTool.keyPressed(evt.key);
+    }
+
+    p.keyReleased = (evt) => {
+        if(!compositionTool) return;
+        compositionTool.keyReleased(evt.key);
     }
 };
 
