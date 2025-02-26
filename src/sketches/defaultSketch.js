@@ -9,10 +9,10 @@ import LineManager from "./LineManager.js";
 import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
 import DisplayGrid from "./DisplayGrid.js";
 import CompositionTool from "./CompositionTool/CompositionTool.js";
+import ShapeGenerator from "./ShapeGenerator.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let x = 3;
-    //console.log("Params:", mergedParamsRef.current);
     let points = [];
     let margin = 20;
     let gridContext;
@@ -25,6 +25,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let currentGridType = "none"; // Track the current grid type
     let displayGrid;
     let compositionTool;
+    let shapeGenerator;
+    let mergedParams;
 
 
 
@@ -32,6 +34,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         // Create the canvas (adjust dimensions as needed)
         p.createCanvas(800, 800);
         p.angleMode(p.DEGREES);
+
+        mergedParams = mergedParamsRef.current;
+        console.log(mergedParams);
+        shapeGenerator = new ShapeGenerator(p, mergedParams);
 
         let xStart = margin;
         let yStart = margin;
@@ -92,6 +98,12 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
 
     p.mousePressed = () => {
+        if(!shapeGenerator){
+            return;
+        }
+        // Automatically generate shapes when starting
+        shapeGenerator.generateCompositeForms();
+
         if (!mouseHandler) return;
         let knobDragged = gridContext.mousePressed(p.mouseX, p.mouseY);
         if (knobDragged) return;
@@ -116,11 +128,31 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
 
     p.draw = () => {
+        const lines = lineManager.getSelectedLines(); // Get the selected lines
+        mergedParams = mergedParamsRef.current; // Get the current mergedParams
+
+        // Merge lines, points, and mergedParams into one object
+        mergedParams = {
+            ...mergedParams, // Keep existing parameters
+            lines: lines, // Add lines array
+            points: points // Add points array
+        };
+
+        // Overwrite mergedParamsRef with the updated mergedParams
+        mergedParamsRef.current = mergedParams;
+
         p.background(255); // Reset background each frame
         if(toolConfigRef.current.state === "Anatomy"){
             displayGrid.setGrid(3,3);
             displayGrid.draw();
             mouseHandler = null;
+
+
+            // Draw all generative elements
+            shapeGenerator.drawLines();
+            shapeGenerator.drawPolygons();
+            shapeGenerator.applyEffects();
+
             return;
         } else if (toolConfigRef.current.state === "Composition"){
             compositionTool.draw(p);
@@ -132,7 +164,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         }
 
         updateGridContext();
-        const mergedParams = mergedParamsRef.current;
+
         const angle = mergedParams[1].angle.min;
         const smoothAmount = mergedParams.smoothAmount;
 
