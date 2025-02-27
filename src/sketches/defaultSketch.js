@@ -78,7 +78,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         const gridType = toolConfig?.grid || "none";
         // Only update the gridContext if the gridType has changed
         if (currentGridType !== gridType) {
-            if (gridType === "Ø") {
+            if (gridType === "radial") {
                 gridContext.setGridType(RadialGrid,
                     p,
                     xStart,
@@ -87,9 +87,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
                     5,
                     12
                 ); // Adjust parameters
-            } else if (gridType === "#") {
+            } else if (gridType === "rect") {
                 gridContext.setGridType(RectGrid, p, 3, 3, xStart, yStart, gridSize);
-            } else if (gridType === "none" ||gridType === "./public/S.svg") {
+            } else if (gridType === "none") {
                 gridContext.setGridType(NoGrid, p, xStart, yStart, gridSize);
             }
             currentGridType = gridType; // Update current grid type

@@ -36,7 +36,7 @@ function App() {
     // NEW: State for managing selected buttons for each group
     const [toolConfig, setToolConfig] = useState({
         state: "Edit Skeleton", // Default selection for the first group
-        grid: "Ø", // Default selection for the second group
+        grid: "radial", // Default selection for the second group
     });
 
 
@@ -59,15 +59,18 @@ function App() {
 
     const secondGroupButtons = [
         {
-            label: "Ø",
+            label: "./public/radial.svg",
+            type: "radial",
             onClick: () => console.log("Secondary Button 1 clicked"),
         },
         {
-            label: "#",
+            label: "./public/rect.svg",
+            type: "rect",
             onClick: () => console.log("Secondary Button 2 clicked"),
         },
         {
-            label: "./public/S.svg",
+            label: "./public/noGrid.svg",
+            type: "none",
             onClick: () => console.log("Secondary Button 2 clicked"),
         },
     ];
@@ -84,7 +87,7 @@ function App() {
     const handleSecondGroupSelection = (index) => {
         setToolConfig((prevState) => ({
             ...prevState,
-            grid: secondGroupButtons[index].label, // Update `grid` with the selected label
+            grid: secondGroupButtons[index].type, // Update `grid` with the selected label
         }));
 
         console.log(`Second group selected index: ${index}`);
