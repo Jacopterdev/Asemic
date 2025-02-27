@@ -52,8 +52,9 @@ const TweakpaneComponent = ({ defaultParams, setParams }) => {
         });
 
         anatomyFolder.addInput(params, 'lineWidth', {
+            view: "interval",
             min: 1,
-            max: 100,
+            max: 30,
             step: 1,
         }).on('change', (event) => {
             updateParam('lineWidth', event.value);

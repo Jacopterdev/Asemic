@@ -18,7 +18,7 @@ function App() {
         missArea: 10,
         numberOfLines: 15,
         smoothAmount: 5,
-        lineWidth: 2,
+        lineWidth: {min: 2, max: 30},
         lineType: 'straight',
         lineComposition: 'Branched',
     });
