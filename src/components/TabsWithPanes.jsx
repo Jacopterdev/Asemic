@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import * as Tweakpane from "tweakpane";
 import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 
+// Map subShapes to the corresponding SVG file paths in the `public` directory
+const svgMapping = {
+    Triangle: "/shapes/triangle.svg",
+    Circle: "/shapes/circle.svg",
+    Square: "/shapes/square.svg",
+};
+
 const TabsWithPanes = ({subShapeParams, setParams}) => {
     const [activeTabData, updateParams] = useState(subShapeParams);
     // Updates the active tab's state and notifies the parent
@@ -36,23 +43,10 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 subShape: "Triangle",
                 connection: "atEnd", // Default value
                 rotationType: "relative", // Default value
-                angle: {min: 0, max: 360},
-                amount: {min: 0, max: 50}, // Default interval
-                size: {min: 0, max: 100}, // Default interval
-                distort: {min: 0, max: 100}, // Default interval
-            },
-            pane: null,
-        },
-        {
-            id: 2,
-            params: {
-                subShape: "Triangle",
-                connection: "Along",
-                rotationType: "absolute",
-                angle: {min: 0, max: 360},
-                amount: {min: 10, max: 30},
-                size: {min: 20, max: 80},
-                distort: {min: 5, max: 50},
+                angle: {min: 0, max: 10},
+                amount: {min: 1, max: 3}, // Default interval
+                size: {min: 20, max: 40}, // Default interval
+                distort: {min: 0, max: 10}, // Default interval
             },
             pane: null,
         },
@@ -61,7 +55,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
     const [activeTab, setActiveTab] = useState(tabs.length > 0 ? tabs[0].id : null);
     const paneContainerRefs = useRef({}); // Track container refs for each tab
     const panes = useRef({}); // Track Tweakpane instances for each tab
-    const nextTabId = useRef(3); // Start with 3 because tabs 1 and 2 already exist
+    const nextTabId = useRef(2); // Start with 2 because tabs 1 already exist
 
     useEffect(() => {
         const initialParams = {};
@@ -77,12 +71,12 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
         const newTab = {
             id: newTabId,
             params: {
-                subShape: "Triangle",
+                subShape: "Square",
                 connection: "atEnd",
                 rotationType: "relative",
-                angle: {min: 0, max: 360},
-                amount: { min: 0, max: 50 },
-                size: { min: 0, max: 100 },
+                angle: {min: 180, max: 190},
+                amount: { min: 2, max: 5 },
+                size: { min: 80, max: 100 },
                 distort: { min: 0, max: 100 },
             },
             pane: null,
@@ -264,7 +258,17 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                             onClick={() => setActiveTab(tab.id)}
                             style={{flex: 1}} // To evenly stretch the tabs
                         >
-                            {tab.id}
+                            {/* Render the SVG for the subShape */}
+                            {svgMapping[tab.params.subShape] ? (
+                                <img
+                                    src={svgMapping[tab.params.subShape]}
+                                    alt={tab.params.subShape}
+                                    className="h-6 w-6"
+                                />
+                            ) : (
+                                "?"
+                            )}
+
                             {/* Delete Button */}
                             <button
                                 className="mini-delete absolute top-0 right-0 hidden group-hover:inline"
