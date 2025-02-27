@@ -44,6 +44,7 @@ const TweakpaneComponent = ({ defaultParams, setParams }) => {
 
         const anatomyFolder = pane.addFolder({ title: 'Anatomy' });
         anatomyFolder.addInput(params, 'numberOfLines', {
+            view: "interval",
             min: 1,
             max: 50,
             step: 1,
