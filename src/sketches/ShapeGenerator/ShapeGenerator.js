@@ -1,6 +1,8 @@
 import ConfigParser from "./ConfigParser.js";
 import { LINE_MODE, LINE_TYPE } from "./Constants.js";
 
+//HAJ JAKOB
+
 class ShapeGenerator {
   constructor(p, jsonConfig) {
     this.p = p;
