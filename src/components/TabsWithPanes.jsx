@@ -41,12 +41,12 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             id: 1,
             params: {
                 subShape: "Triangle",
-                connection: "atEnd", // Default value
+                connection: "Along", // Default value
                 rotationType: "relative", // Default value
-                angle: {min: 0, max: 10},
+                angle: {min: 0, max: 360},
                 amount: {min: 1, max: 3}, // Default interval
-                size: {min: 20, max: 40}, // Default interval
-                distort: {min: 0, max: 10}, // Default interval
+                size: {min: 20, max: 160}, // Default interval
+                distort: {min: 0, max: 0}, // Default interval
             },
             pane: null,
         },
@@ -72,12 +72,12 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             id: newTabId,
             params: {
                 subShape: "Square",
-                connection: "atEnd",
-                rotationType: "relative",
-                angle: {min: 180, max: 190},
-                amount: { min: 2, max: 5 },
-                size: { min: 80, max: 100 },
-                distort: { min: 0, max: 100 },
+                connection: "Along", // Default value
+                rotationType: "relative", // Default value
+                angle: {min: 0, max: 360},
+                amount: {min: 1, max: 3}, // Default interval
+                size: {min: 20, max: 160}, // Default interval
+                distort: {min: 0, max: 0}, // Default interval
             },
             pane: null,
         };
