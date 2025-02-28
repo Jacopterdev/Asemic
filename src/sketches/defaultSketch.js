@@ -62,7 +62,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
         ephemeralLineAnimator.start(); // Start the animation
 
-        displayGrid = new DisplayGrid(p, 3,3, xStart, yStart, gridSize);
+        displayGrid = new DisplayGrid(p, 3,3, xStart, yStart, gridSize, mergedParams);
 
         compositionTool = new CompositionTool(p);
 
@@ -146,18 +146,20 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
         p.background(255); // Reset background each frame
         if(toolConfigRef.current.state === "Anatomy"){
-            if(!shapeGenerator){return;}
+            mouseHandler = null;
+            //if(!shapeGenerator){return;}
             // Draw all generative elements
-            shapeGenerator.drawLines();
-            shapeGenerator.drawPolygons();
-            //shapeGenerator.applyEffects();
+            //shapeGenerator.drawLines();
+            //shapeGenerator.drawPolygons();
 
+            displayGrid.drawShapes();
+
+            //shapeGenerator.applyEffects();
             p.filter(p.BLUR, mergedParams.smoothAmount);
+
             p.filter(p.THRESHOLD, 0.5);
 
-            displayGrid.setGrid(3,3);
-            displayGrid.draw();
-            mouseHandler = null;
+            displayGrid.drawGrid();
 
 
 
@@ -218,6 +220,11 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     p.keyReleased = (evt) => {
         if(!compositionTool) return;
         compositionTool.keyReleased(evt.key);
+    }
+
+    p.mouseWheel = (event) => {
+        if(!displayGrid) return;
+        displayGrid.handleScroll(event.delta); // Pass the scroll delta to the grid
     }
 };
 
