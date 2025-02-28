@@ -184,7 +184,7 @@ class ConfigParser {
       case "Hexagon":
         return 6;
       case "Circle":
-        return 12;
+        return 30;
       default:
         return 3;
     }
