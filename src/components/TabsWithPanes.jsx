@@ -195,7 +195,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             pane.addInput(activeTabData.params, "amount", {
                 view: "interval",
                 min: 0,
-                max: 50,
+                max: 100,
                 step: 1,
                 label: "Amount",
             }).on('change', (event) => {
@@ -205,7 +205,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             pane.addInput(activeTabData.params, "size", {
                 view: "interval",
                 min: 0,
-                max: 100,
+                max: 300,
                 step: 1,
                 label: "Size",
             }).on('change', (event) => {
@@ -215,7 +215,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             pane.addInput(activeTabData.params, "distort", {
                 view: "interval",
                 min: 0,
-                max: 100,
+                max: 200,
                 step: 1,
                 label: "Distort",
             }).on('change', (event) => {
