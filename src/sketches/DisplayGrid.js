@@ -7,7 +7,7 @@ class DisplayGrid {
         this.gridSize = gridSize;
         this.xStart = xStart;
         this.yStart = yStart;
-        this.gridSize = gridSize;
+
         this.cellWidth = gridSize/cols;
         this.cellHeight = gridSize/rows;
         this.grid = [];
@@ -38,7 +38,7 @@ class DisplayGrid {
                 const letter = String.fromCharCode(letterCode);
                 letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
 
-                let shape = new ShapeGenerator(this.p);
+                let shape = new ShapeGenerator(this.p, this.mergedParams);
                 shape.generateCompositeForms();
                 this.grid[j][i] = {
                     x: x,
@@ -117,7 +117,7 @@ class DisplayGrid {
                     // Scale down the shape to fit within the cell dimensions
                     const scaleX = (p.w / cell.w) * 0.1;
                     const scaleY = (p.h / cell.h) * 0.1;
-                    p.scale(0.4);
+                    p.scale(0.28);
 
                     // Draw the shape relative to the translated origin (scaled to fit)
                     cell.shape.drawLines();
@@ -128,7 +128,16 @@ class DisplayGrid {
             }
         }
 }
-
+    updateMergedParams(mergedParams) {
+        this.mergedParams = mergedParams;
+        for (let j = 0; j < this.grid.length; j++) {
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                cell.shape = new ShapeGenerator(this.p, this.mergedParams);
+                cell.shape.generateCompositeForms();
+            }
+        }
+    }
     setGrid(cols, rows) {
         this.cols = cols;
         this.rows = rows;
@@ -207,7 +216,7 @@ class DisplayGrid {
                 const letter = String.fromCharCode(letterCode);
                 letterCode = letterCode === 90 ? 65 : letterCode + 1;
 
-                let shape = new ShapeGenerator(this.p);
+                let shape = new ShapeGenerator(this.p, this.mergedParams);
                 shape.generateCompositeForms();
 
                 newRow.push({

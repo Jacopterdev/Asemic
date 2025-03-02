@@ -1,34 +1,23 @@
-﻿import RectGrid from "./RectGrid.js";
-import GridContext from "./GridContext.js";
-import RadialGrid from "./RadialGrid.js";
-import NoGrid from "./NoGrid.js";
-import MouseEventHandler from "./MouseEventHandler.js";
-import PointRenderer from "./PointRenderer.js";
-import PossibleLinesRenderer from "./PossibleLinesRenderer.js";
-import LineManager from "./LineManager.js";
-import EphemeralLineAnimator from "./EphemeralLineAnimator.js";
-import DisplayGrid from "./DisplayGrid.js";
-import CompositionTool from "./CompositionTool/CompositionTool.js";
-import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
-import {defaultConfig, exampleConfig} from "./ShapeGenerator/Constants.js";
+﻿import LineManager from "./LineManager.js";
+import SkeletonState from "./States/SkeletonState.js";
+import AnatomyState from "./States/AnatomyState.js";
+import CompositionState from "./States/CompositionState.js";
+import Effects from "./Effects.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
-    let x = 3;
     let points = [];
-    let margin = 20;
-    let gridContext;
-    let mouseHandler;
-    let pointRenderer;
-    let possibleLinesRenderer;
+
     let lineManager;
-    let ephemeralLineAnimator;
-    let missRadius;
-    let currentGridType = "none"; // Track the current grid type
-    let displayGrid;
-    let compositionTool;
+
     let shapeGenerator;
     let mergedParams;
+    let toolConfig;
 
+    let effects;
+
+    // Instances of various states
+    let states = {};
+    let currentState;
 
 
     p.setup = () => {
@@ -38,68 +27,33 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         p.angleMode(p.RADIANS);
 
         mergedParams = mergedParamsRef.current;
+        toolConfig = toolConfigRef.current;
 
-        let xStart = margin;
-        let yStart = margin;
-        let gridSize = p.width - margin * 2;
+        //gridSize = p.width - margin * 2;
 
-        // Initialize the gridContext based on the default `currentGridType` ("none")
-        gridContext = new GridContext(NoGrid, p, xStart, yStart, gridSize);
-
-        // Init lineManager
         lineManager = new LineManager();
 
-        // Initialize the MouseEventHandler
-        mouseHandler = new MouseEventHandler(p, gridContext, points, lineManager);
+        effects = new Effects(p);
 
-        missRadius = mergedParamsRef.current.missArea;
-        pointRenderer = new PointRenderer(p, missRadius); // Initialize the PointRenderer
 
-        possibleLinesRenderer = new PossibleLinesRenderer(p); // Initialize PossibleLinesRenderer
-
-        //Animator
-        ephemeralLineAnimator = new EphemeralLineAnimator(p, lineManager);
-
-        ephemeralLineAnimator.start(); // Start the animation
-
-        displayGrid = new DisplayGrid(p, 3,3, xStart, yStart, gridSize, mergedParams);
-
-        compositionTool = new CompositionTool(p);
+        /** STATE MANAGEMENT */
+        // Pre-create each state and store them
+        states["Edit Skeleton"] = new SkeletonState(p, points, lineManager, mergedParams, toolConfig);
+        states["Anatomy"] = new AnatomyState(p, points, lineManager, shapeGenerator, mergedParamsRef);
+        states["Composition"] = new CompositionState(p);
+        currentState = "Edit Skeleton"
+        updateState("Edit Skeleton"); // Set the initial state
 
     };
 
-    const updateGridContext = () => {
-        let xStart = margin;
-        let yStart = margin;
-        let gridSize = p.width - margin * 2;
-
-        // Retrieve the latest grid type from toolConfigRef
-        const toolConfig = toolConfigRef.current;
-        const gridType = toolConfig?.grid || "none";
-        // Only update the gridContext if the gridType has changed
-        if (currentGridType !== gridType) {
-            if (gridType === "radial") {
-                gridContext.setGridType(RadialGrid,
-                    p,
-                    xStart,
-                    yStart,
-                    gridSize / 2,
-                    5,
-                    12
-                ); // Adjust parameters
-            } else if (gridType === "rect") {
-                gridContext.setGridType(RectGrid, p, 3, 3, xStart, yStart, gridSize);
-            } else if (gridType === "none") {
-                gridContext.setGridType(NoGrid, p, xStart, yStart, gridSize);
-            }
-            currentGridType = gridType; // Update current grid type
-        }
+    const updateState = (stateName) => {
+        if (currentState?.name === stateName) return; // Avoid unnecessary updates
+        console.log("STATE CHANGE", stateName);
+        currentState = states[stateName]; // Switch to the existing state instance
     };
 
-
+    /**
     p.mousePressed = () => {
-
-
         if (!mouseHandler) return;
         let knobDragged = gridContext.mousePressed(p.mouseX, p.mouseY);
         if (knobDragged) return;
@@ -140,8 +94,42 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         if (knobDragged) return;
         mouseHandler.handleMouseReleased();
     };
+        */
+
+    p.draw = () => {
+        /**Update variables*/
+        mergedParams = mergedParamsRef.current;
+        toolConfig = toolConfigRef.current;
+
+        if (currentState?.updateMergedParams) {
+            currentState.updateMergedParams(mergedParams);
+        }
+
+        if(currentState?.updateToolConfig){
+            currentState.updateToolConfig(toolConfig);
+        }
+
+        /**DRAWING*/
+        p.background(255); // Reset background each frame
+
+        const currentToolState = toolConfig.state;
+
+        if (currentToolState && currentToolState !== currentState?.name) {
+            updateState(currentToolState); // Update state when `toolConfigRef.state` changes
+        }
+        //effects.applyEffects(mergedParams.smoothAmount);
+        currentState?.draw();
 
 
+
+
+    };
+
+    p.applyEffects = () => {
+        effects.applyEffects(mergedParams.smoothAmount);
+    }
+
+    /**
     p.draw = () => {
 
         p.background(255); // Reset background each frame
@@ -204,11 +192,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
             const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);
             pointRenderer.draw(point, isHovered);
         });
-
-
-
     };
+     */
 
+    /**
     p.keyPressed = (evt) => {
 
 
@@ -226,6 +213,17 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         if(!displayGrid) return;
         displayGrid.handleScroll(event.delta); // Pass the scroll delta to the grid
     }
+        */
+
+    p.mousePressed = () => currentState?.mousePressed();
+    p.mouseDragged = () => currentState?.mouseDragged();
+    p.mouseReleased = () => currentState?.mouseReleased();
+    p.keyPressed = (evt) => currentState?.keyPressed?.(evt);
+    p.keyReleased = (evt) => currentState?.keyReleased?.(evt);
+    p.mouseWheel = (event) => {
+        if (currentState?.mouseWheel) currentState.mouseWheel(event);
+    };
+
 };
 
 export default defaultSketch;

@@ -490,7 +490,7 @@ class ShapeGenerator {
 
   drawPolygons() {
     this.p.fill(0);
-    this.p.stroke(255,0,0);
+    //this.p.stroke(255,0,0);
     this.p.strokeWeight(2);
     for (const polygon of this.polygons) {
       this.p.beginShape();
