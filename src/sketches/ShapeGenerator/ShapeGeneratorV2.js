@@ -1,14 +1,10 @@
-import {exampleConfig} from "./Constants.js";
 import ConfigParser from "./ConfigParser.js";
 import CustomNoise from "./CustomNoise.js";
 import LineGenerator from "./LineGenerator.js";
-import ShapeGenerator from "./ShapeGenerator.js";
 import SubShapeGenerator from "./SubShapeGenerator.js";
-import lineGenerator from "./LineGenerator.js";
-import subShapeGenerator from "./SubShapeGenerator.js";
 
 class ShapeGeneratorV2 {
-    constructor(p, config = exampleConfig) {
+    constructor(p, config) {
         this.p = p;
         this.configParser = new ConfigParser(p, config);
 
@@ -30,14 +26,15 @@ class ShapeGeneratorV2 {
         //Retrieve information for line generation
         const lineParams = this.configParser.getParameters();
         this.lineGenerator = new LineGenerator(this.p, lineParams, this.cNoise);
-        this.lineGenerator.generateLines(lineParams);
+        this.lineGenerator.generateLines();
 
         //Update endpoints so the subshapes know them
-        this.endPoints = lineGenerator.getEndpoints();
+        this.endPoints = this.lineGenerator.getEndpoints();
 
         /** SUBSHAPE GENERATION */
         //Retrieve Subshape information
-        this.subShapes = this.configParser.getSubShapes();
+        this.subShapes = this.configParser.getSubShapeConfigs();
+
         // Iterate through the subShapes
         for (const subShape of this.subShapes) {
             let subShapeGenerator = new SubShapeGenerator(this.p, subShape, this.endPoints, this.cNoise);
@@ -50,11 +47,11 @@ class ShapeGeneratorV2 {
 
     draw(){
         //Draw lines based on lineGenerator
-
-        //Draw all subShapes based on subShapeGenerators[]
-
-
-        return;
+        this.lineGenerator.draw();
+        // Draw all subShapes by iterating through subShapeGenerators
+        for (const subShapeGenerator of this.subShapeGenerators) {
+            subShapeGenerator.draw();
+        }
     }
 }
 export default ShapeGeneratorV2;
