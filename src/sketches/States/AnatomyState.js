@@ -26,7 +26,7 @@ class AnatomyState {
             points: this.points,
         };
         this.mergedParams = mergedParams;
-        this.displayGrid.updateMergedParams(this.mergedParams);
+        //this.displayGrid.updateMergedParams(this.mergedParams);
     }
 
     mousePressed() {
@@ -38,6 +38,7 @@ class AnatomyState {
     }
 
     mouseReleased() {
+        this.displayGrid.updateMergedParams(this.mergedParams);
         this.p.animateSmoothAmount();
     }
 
