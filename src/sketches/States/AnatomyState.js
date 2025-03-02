@@ -38,7 +38,7 @@ class AnatomyState {
     }
 
     mouseReleased() {
-
+        this.p.animateSmoothAmount();
     }
 
     mouseWheel(event) {

@@ -51,8 +51,8 @@ class CompositionTool {
     // Render the keyboard grid
     draw(p) {
         this.shapeInputField.draw();
-        p.filter(p.BLUR, 4);
-        p.filter(p.THRESHOLD, 0.5);
+
+        this.p.applyEffects();
 
         if (this.shapeInputField.cursorVisible) {      // Conditional logic for cursor
             const { x, y } = this.shapeInputField.getCursorPosition();

@@ -21,6 +21,7 @@ class CompositionState {
     }
 
     mouseReleased() {
+
         // Handle composition-specific mouse releasing if needed
     }
 
@@ -30,6 +31,7 @@ class CompositionState {
 
     keyReleased(evt) {
         this.compositionTool.keyReleased(evt.key);
+        this.p.animateSmoothAmount();
     }
 }
 export default CompositionState;

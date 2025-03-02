@@ -117,7 +117,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         if (currentToolState && currentToolState !== currentState?.name) {
             updateState(currentToolState); // Update state when `toolConfigRef.state` changes
         }
-        //effects.applyEffects(mergedParams.smoothAmount);
+        effects.setSmoothAmount(mergedParams.smoothAmount);
         currentState?.draw();
 
 
@@ -126,7 +126,12 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     };
 
     p.applyEffects = () => {
-        effects.applyEffects(mergedParams.smoothAmount);
+        effects.applyEffects();
+    }
+
+    p.animateSmoothAmount = () => {
+        if(!effects) return;
+        effects.animateSmoothAmount();
     }
 
     /**
