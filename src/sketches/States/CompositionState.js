@@ -1,4 +1,4 @@
-﻿import compositionTool from "../CompositionTool/CompositionTool.js";
+﻿
 import CompositionTool from "../CompositionTool/CompositionTool.js";
 
 class CompositionState {
@@ -10,8 +10,6 @@ class CompositionState {
 
     draw() {
         this.compositionTool.draw(this.p);
-        compositionTool.draw(this.p);
-
     }
 
     mousePressed() {

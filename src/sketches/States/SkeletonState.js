@@ -64,6 +64,7 @@ class SkeletonState {
             const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
             this.pointRenderer.draw(point, isHovered);
         });
+
     }
 
     updateMergedParams(newMergedParams) {
