@@ -11,25 +11,30 @@ class ShapeGeneratorV2 {
         //Noise X & Y
         this.noisePos = {x: 0, y: 0};
 
-        this.cNoise = new CustomNoise(p);
+        this.cNoise = new CustomNoise(p, this.noisePos);
 
         this.lineGenerator = null;
         this.subShapeGenerators = [];
 
-        this.endPoints = [];
-
-        this.usedEndpoints = new Set();
     }
 
     generate() {
+        console.log("Generating shape...");
+
         /** LINE GENERATION */
         //Retrieve information for line generation
         const lineParams = this.configParser.getParameters();
-        this.lineGenerator = new LineGenerator(this.p, lineParams, this.cNoise);
-        this.lineGenerator.generateLines();
+        const configuredLines = this.configParser.getConfiguredLines();
+        const lineType = this.configParser.getLineType();
+        const lineMode = this.configParser.getLineGenerationMode();
+        const points = this.configParser.getPoints();
+
+        this.lineGenerator = new LineGenerator(this.p, this.cNoise, this.noisePos);
+        this.lineGenerator.generateLines(lineParams, configuredLines, lineType, lineMode, points);
 
         //Update endpoints so the subshapes know them
-        this.endPoints = this.lineGenerator.getEndpoints();
+        const lines = this.lineGenerator.getLines();
+        const curves = this.lineGenerator.getCurves();
 
         /** SUBSHAPE GENERATION */
         //Retrieve Subshape information
@@ -37,21 +42,28 @@ class ShapeGeneratorV2 {
 
         // Iterate through the subShapes
         for (const subShape of this.subShapes) {
-            let subShapeGenerator = new SubShapeGenerator(this.p, subShape, this.endPoints, this.cNoise);
+            const placeAtPoints = this.configParser.getPlaceAtPoints(subShape.config);
+            const shapeSides = this.configParser.getShapeSides(subShape.config.subShape);
+            let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves, shapeSides);
             this.subShapeGenerators.push(subShapeGenerator);
-            subShapeGenerator.generate();
+            subShapeGenerator.generate(placeAtPoints);
         }
 
 
     }
 
-    draw(){
+    draw(xray = false){
         //Draw lines based on lineGenerator
-        this.lineGenerator.draw();
+        this.lineGenerator.draw(xray);
         // Draw all subShapes by iterating through subShapeGenerators
         for (const subShapeGenerator of this.subShapeGenerators) {
-            subShapeGenerator.draw();
+            subShapeGenerator.draw(xray);
         }
+    }
+
+    setNoisePosition(x, y) {
+        this.noisePos.x = x;
+        this.noisePos.y = y;
     }
 }
 export default ShapeGeneratorV2;

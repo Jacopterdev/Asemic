@@ -1,4 +1,5 @@
 import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
+import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 class DisplayGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
         this.p = p;
@@ -38,8 +39,9 @@ class DisplayGrid {
                 const letter = String.fromCharCode(letterCode);
                 letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
 
-                let shape = new ShapeGenerator(this.p, this.mergedParams);
-                shape.generateCompositeForms();
+                let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                shape.setNoisePosition(x,y);
+                shape.generate();
                 this.grid[j][i] = {
                     x: x,
                     y: y,
@@ -120,8 +122,7 @@ class DisplayGrid {
                     p.scale(0.28);
 
                     // Draw the shape relative to the translated origin (scaled to fit)
-                    cell.shape.drawLines();
-                    cell.shape.drawPolygons();
+                    cell.shape.draw();
 
                     p.pop(); // Restore the previous transformation state
                 }
@@ -133,8 +134,9 @@ class DisplayGrid {
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
-                cell.shape = new ShapeGenerator(this.p, this.mergedParams);
-                cell.shape.generateCompositeForms();
+                cell.shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                cell.shape.setNoisePosition(cell.x,cell.y);
+                cell.shape.generate();
             }
         }
     }
@@ -216,8 +218,9 @@ class DisplayGrid {
                 const letter = String.fromCharCode(letterCode);
                 letterCode = letterCode === 90 ? 65 : letterCode + 1;
 
-                let shape = new ShapeGenerator(this.p, this.mergedParams);
-                shape.generateCompositeForms();
+                let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                shape.setNoisePosition(x,y);
+                shape.generate();
 
                 newRow.push({
                     x: x,
