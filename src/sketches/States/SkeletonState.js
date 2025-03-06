@@ -28,6 +28,7 @@ class SkeletonState {
     }
 
     init(){
+        // Other initialization code...
 
         // Initialize the gridContext based on the default `currentGridType` ("none")
         this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, this.p.width - SPACING.MARGIN * 2);
@@ -41,8 +42,19 @@ class SkeletonState {
 
         this.ephemeralLineAnimator.start(); // Start the animation
 
-        //Mouse events:
-        this.mouseHandler = new MouseEventHandler(this.p, this.gridContext, this.points, this.lineManager);
+        // Create the possible lines renderer
+        this.possibleLinesRenderer = new PossibleLinesRenderer(this.p);
+
+        // Create the mouse handler and pass the linesRenderer
+        this.mouseHandler = new MouseEventHandler(
+            this.p, 
+            this.gridContext, 
+            this.points, 
+            this.lineManager,
+            this.possibleLinesRenderer // Pass the renderer
+        );
+
+        // Other initialization code...
     }
 
     // Modify the draw method to handle the null selectedPoint

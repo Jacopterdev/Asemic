@@ -17,6 +17,11 @@
         this.previousHoveredLine = null;
         this.hoverTransition = 0; // 0 to hoverAnimationDuration
         this.hoverFadeIn = false; // True when fading in, false when fading out
+        
+        // Hover timeout variables
+        this.hoverTimeout = 60; // Frames to wait before auto-fading (60 frames ≈ 1 second at 60fps)
+        this.hoverTimer = 0; // Current timer count
+        this.autoFadeTriggered = false; // Flag to track if auto-fade has been triggered
     }
 
     /**
@@ -99,12 +104,29 @@
                 this.currentHoveredLine = hoveredLine;
                 this.hoverTransition = 0;
                 this.hoverFadeIn = true;
+                this.hoverTimer = 0; // Reset timer
+                this.autoFadeTriggered = false; // Reset auto-fade flag
             } else {
                 // Start fade-out
                 this.previousHoveredLine = this.currentHoveredLine;
                 this.currentHoveredLine = null;
                 this.hoverTransition = this.hoverAnimationDuration;
                 this.hoverFadeIn = false;
+                this.hoverTimer = 0;
+                this.autoFadeTriggered = false;
+            }
+        }
+        
+        // If we're currently hovering a line and in the full hover state
+        if (hoveredLine && this.hoverFadeIn && this.hoverTransition >= this.hoverAnimationDuration) {
+            // Increment the hover timer
+            this.hoverTimer++;
+            
+            // If we've hovered long enough and haven't triggered auto-fade yet
+            if (this.hoverTimer >= this.hoverTimeout && !this.autoFadeTriggered) {
+                // Trigger fade-out
+                this.hoverFadeIn = false;
+                this.autoFadeTriggered = true;
             }
         }
         

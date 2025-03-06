@@ -1,9 +1,10 @@
 ﻿class MouseEventHandler {
-    constructor(p, gridContext, points, lineManager) {
+    constructor(p, gridContext, points, lineManager, possibleLinesRenderer) {
         this.p = p; // Reference to p5 instance
         this.gridContext = gridContext; // GridContext to handle snapping
         this.points = points; // Array to store points
         this.lineManager = lineManager; // Reference to the LineManager
+        this.possibleLinesRenderer = possibleLinesRenderer; // Reference to the PossibleLinesRenderer
         
         this.draggingPoint = null; // Currently dragged point
         this.mouseDragStart = null; // Start position of mouse drag
@@ -32,7 +33,10 @@
         } else {
             // Check if we're clicking on a line
             const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
-            if (hoveredLine) {
+            
+            // Only select the line if it's still visible (not faded out)
+            // We need to check with the PossibleLinesRenderer if the line is still in hover state
+            if (hoveredLine && this.isLineHoverActive(hoveredLine)) {
                 // Toggle line selection state
                 hoveredLine.selected = !hoveredLine.selected;
                 
@@ -41,7 +45,7 @@
                 return true;
             }
             
-            // If we're not clicking on a point or line, create a new point
+            // If we're not clicking on a point or an active hovered line, create a new point
             if (this.points.length < this.maxPoints) {
                 const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
                 const newPoint = this.createPoint(
@@ -262,6 +266,40 @@
             const distance = this.p.dist(point.x, point.y, mouseX, mouseY);
             return distance <= this.snapThreshold;
         }) || null;
+    }
+
+    /**
+     * Checks if a line's hover effect is still active (not faded out)
+     * @param {Object} line - The line to check
+     * @returns {Boolean} True if the line's hover is active
+     */
+    isLineHoverActive(line) {
+        // We need access to the PossibleLinesRenderer to check the hover state
+        if (!this.possibleLinesRenderer) {
+            return true; // Default to true if we can't check
+        }
+        
+        // Check if this line is the currently hovered line
+        const currentHoveredLine = this.possibleLinesRenderer.currentHoveredLine;
+        
+        if (!currentHoveredLine) {
+            return false; // No line is being hovered
+        }
+        
+        // Check if this is the line we're checking
+        const isThisLine = line.start.id === currentHoveredLine.start.id && 
+                           line.end.id === currentHoveredLine.end.id;
+        
+        if (!isThisLine) {
+            return false; // Not the hovered line
+        }
+        
+        // Check if it's in the fade-out state and animation is complete
+        const isFadingOut = !this.possibleLinesRenderer.hoverFadeIn;
+        const isCompletelyFaded = isFadingOut && this.possibleLinesRenderer.hoverTransition <= 0;
+        
+        // Line is active if it's not completely faded out
+        return !isCompletelyFaded;
     }
 }
 

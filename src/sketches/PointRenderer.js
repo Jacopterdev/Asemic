@@ -3,14 +3,16 @@
         this.p = p;
         this.missRadius = missRadius || 10;
         
-        // Only need normal and hover colors now
+        // Colors for points
         this.normalColor = this.p.color(250, 140, 0); // Orange for normal points
-        this.hoverColor = this.p.color(255, 165, 0); // Bright orange for hover
+        this.hoverColor = this.p.color(255, 255, 255); // White fill for hover
+        this.hoverBorderColor = this.p.color(250, 140, 0); // Orange border for hover
         this.missAreaColor = this.p.color(250, 140, 0, 50); // Semi-transparent orange for miss area
         
         // Point sizes
         this.normalSize = 12; 
-        this.hoverSize = 18;
+        this.hoverSize = 22;
+        this.hoverBorderWeight = 2; // Border thickness for hovered points
     }
 
     /**
@@ -41,9 +43,12 @@
         
         // Then draw the point on top
         if (isHovered) {
+            this.p.stroke(this.hoverBorderColor);
+            this.p.strokeWeight(this.hoverBorderWeight);
             this.p.fill(this.hoverColor);
             this.p.ellipse(point.x, point.y, this.hoverSize, this.hoverSize);
         } else {
+            this.p.noStroke();
             this.p.fill(this.normalColor);
             this.p.ellipse(point.x, point.y, this.normalSize, this.normalSize);
         }
