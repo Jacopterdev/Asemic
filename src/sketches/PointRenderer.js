@@ -1,11 +1,16 @@
 ﻿class PointRenderer {
-    constructor(p, missRadius, snapThreshold = 10, size = 16) {
-        this.p = p; // Reference to the p5 instance
-        this.snapThreshold = snapThreshold; // Hover distance threshold
-        this.size = size; // Point size
-        this.defaultColor = this.p.color(255, 150, 0); // Default fill color
-        this.hoverColor = this.p.color(255, 200, 0); // Hover fill color
-        this.missRadius = missRadius;
+    constructor(p, missRadius) {
+        this.p = p;
+        this.missRadius = missRadius || 10;
+        
+        // Only need normal and hover colors now
+        this.normalColor = this.p.color(250, 140, 0); // Orange for normal points
+        this.hoverColor = this.p.color(255, 165, 0); // Bright orange for hover
+        this.missAreaColor = this.p.color(250, 140, 0, 50); // Semi-transparent orange for miss area
+        
+        // Point sizes
+        this.normalSize = 12; 
+        this.hoverSize = 18;
     }
 
     /**
@@ -16,8 +21,7 @@
      * @returns {Boolean} True if hovering, otherwise false.
      */
     isHovered(point, mouseX, mouseY) {
-        const distance = this.p.dist(mouseX, mouseY, point.x, point.y);
-        return distance <= this.snapThreshold;
+        return this.p.dist(point.x, point.y, mouseX, mouseY) < this.missRadius;
     }
 
     setMissRadius(missRadius) {
@@ -25,20 +29,24 @@
     }
 
     /**
-     * Draws a single point with the appropriate hover color.
+     * Draws a single point with the appropriate hover color and miss area.
      * @param {Object} point - The point object { x, y }.
      * @param {Boolean} isHovered - Whether the point is currently hovered.
      */
     draw(point, isHovered) {
-        this.p.fill(255, 150, 0, 64);
+        // First draw the miss area (hover detection area)
         this.p.noStroke();
-        this.p.ellipse(point.x, point.y, this.missRadius, this.missRadius);
-
-        this.p.stroke(isHovered ? this.hoverColor : this.defaultColor);
-        this.p.strokeWeight(1);
-        //this.p.fill(isHovered ? this.hoverColor : this.defaultColor);
-        this.p.noFill();
-        this.p.ellipse(point.x, point.y, this.size, this.size); // Draw the point
+        this.p.fill(this.missAreaColor);
+        this.p.ellipse(point.x, point.y, this.missRadius * 2, this.missRadius * 2);
+        
+        // Then draw the point on top
+        if (isHovered) {
+            this.p.fill(this.hoverColor);
+            this.p.ellipse(point.x, point.y, this.hoverSize, this.hoverSize);
+        } else {
+            this.p.fill(this.normalColor);
+            this.p.ellipse(point.x, point.y, this.normalSize, this.normalSize);
+        }
     }
 }
 

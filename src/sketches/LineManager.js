@@ -34,6 +34,28 @@
     }
 
     /**
+     * Remove all lines connected to a specific point
+     * @param {Object} point - The point whose lines should be removed
+     */
+    removePointLines(point) {
+        // Filter out any lines connected to the point
+        this.lines = this.lines.filter(line => 
+            line.start.id !== point.id && line.end.id !== point.id
+        );
+    }
+
+    /**
+     * Gets all lines connected to a specific point
+     * @param {Object} point - The point to check connections for
+     * @returns {Array} Array of lines connected to the point
+     */
+    getLinesConnectedToPoint(point) {
+        return this.lines.filter(line => 
+            line.start.id === point.id || line.end.id === point.id
+        );
+    }
+
+    /**
      * Retrieves the current set of lines.
      * @returns {Array} The current array of line objects.
      */

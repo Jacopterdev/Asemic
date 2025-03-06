@@ -1,48 +1,106 @@
-﻿
-class MouseEventHandler {
+﻿class MouseEventHandler {
     constructor(p, gridContext, points, lineManager) {
         this.p = p; // Reference to p5 instance
         this.gridContext = gridContext; // GridContext to handle snapping
         this.points = points; // Array to store points
-        this.lineManager = lineManager // Unified list of all lines
-
+        this.lineManager = lineManager; // Reference to the LineManager
+        
         this.draggingPoint = null; // Currently dragged point
         this.mouseDragStart = null; // Start position of mouse drag
         this.snapThreshold = 10; // Hover distance to detect points
         this.maxPoints = 16;
-
-        this.toggledLines = new Set(); // Tracks toggled lines during a single drag
-
+        
+        // No more selectedPoint, we only track hover state
+        this.hoveredLine = null; // Currently hovered line
     }
-
+    
     /**
      * Handles mouse pressed event.
      */
     handleMousePressed() {
         if (!this.isInCanvas()) {return;}
+        
         // Determine if the mouse is over an existing point
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
 
         if (hoveredPoint) {
-            // Start dragging this point
+            // Start tracking for potential drag operation
             this.draggingPoint = hoveredPoint;
             this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
-
+            this.isDragging = false; // Initialize drag tracking flag
+            return true;
         } else {
-            // Reset toggled lines for toggling interactions
-            this.toggledLines.clear();
-            this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY }; // Track drag start position
-
+            // Check if we're clicking on a line
+            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+            if (hoveredLine) {
+                // Toggle line selection state
+                hoveredLine.selected = !hoveredLine.selected;
+                
+                // Clear hover state after clicking on a line
+                this.hoveredLine = null;
+                return true;
+            }
+            
+            // If we're not clicking on a point or line, create a new point
+            if (this.points.length < this.maxPoints) {
+                const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+                const newPoint = this.createPoint(
+                    snapPosition ? snapPosition.x : this.p.mouseX,
+                    snapPosition ? snapPosition.y : this.p.mouseY
+                );
+                
+                this.points.push(newPoint);
+                this.lineManager.addLinesForPoint(newPoint, this.points);
+            }
+            return true;
+        }
+    }
+    
+    /**
+     * Remove a point and its associated lines
+     * @param {Object} point - The point to remove
+     */
+    removePoint(point) {
+        // Find the index of the point in the points array
+        const pointIndex = this.points.findIndex(p => p.id === point.id);
+        
+        if (pointIndex !== -1) {
+            // Remove the point from the points array
+            this.points.splice(pointIndex, 1);
+            
+            // Remove any lines connected to this point
+            this.lineManager.removePointLines(point);
         }
     }
 
+    /**
+     * Handles mouse moved event.
+     */
+    handleMouseMoved() {
+        if (!this.isInCanvas()) {return;}
+        this.updateHoveredLine();
+    }
 
     /**
      * Handles mouse dragged event.
      */
     handleMouseDragged() {
         if (!this.isInCanvas()) {return;}
-        if (this.draggingPoint) {
+        
+        if (this.draggingPoint && this.mouseDragStart) {
+            // Calculate how far the mouse has moved
+            const dragDistance = this.p.dist(
+                this.mouseDragStart.x, 
+                this.mouseDragStart.y, 
+                this.p.mouseX, 
+                this.p.mouseY
+            );
+            
+            // If we've moved beyond a small threshold, consider this a drag operation
+            if (dragDistance > 3) {
+                this.isDragging = true;
+            }
+            
             // If a point is being dragged, update its position
             const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
 
@@ -53,20 +111,10 @@ class MouseEventHandler {
                 this.draggingPoint.x = this.p.mouseX;
                 this.draggingPoint.y = this.p.mouseY;
             }
-        } else{
-            // If no point is being dragged, toggle line selection
-            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
-            if (hoveredLine) {
-                // Use an identifier for toggling the selection state of lines
-                const lineId = `${hoveredLine.start.x},${hoveredLine.start.y}-${hoveredLine.end.x},${hoveredLine.end.y}`;
-
-                // Avoid toggling the same line multiple times during a single drag
-                if (!this.toggledLines.has(lineId)) {
-                    hoveredLine.selected = !hoveredLine.selected; // Toggle selection
-                    this.toggledLines.add(lineId); // Mark as toggled
-                }
-            }
         }
+        
+        // Keep updating hover state during drag
+        this.updateHoveredLine();
     }
 
     /**
@@ -74,89 +122,103 @@ class MouseEventHandler {
      */
     handleMouseReleased() {
         if (!this.isInCanvas()) {return;}
-        const movementThreshold = 5; // Threshold to decide between dragging and clicking
-
+        
         if (this.draggingPoint) {
-            // Check if a drag occurred or if it was just a click
-            const hasDragged = Math.sqrt(
-                Math.pow(this.mouseDragStart.x - this.p.mouseX, 2) +
-                Math.pow(this.mouseDragStart.y - this.p.mouseY, 2)
-            ) > movementThreshold;
-
-            if (!hasDragged) {
-                // If no significant drag, delete the clicked point
-                const index = this.points.indexOf(this.draggingPoint);
-                if (index !== -1) {
-                    // Remove lines involving this point
-                    this.lineManager.removeLinesForPoint(this.draggingPoint);
-                    this.points.splice(index, 1); // Remove the point
-                }
-            }
-
-
-            // Reset dragging state
-            this.draggingPoint = null;
-        } else {
-            /**
-             * / Check if the release was a significant drag
-            const hasDragged = Math.sqrt(
-                Math.pow(this.mouseDragStart.x - this.p.mouseX, 2) +
-                Math.pow(this.mouseDragStart.y - this.p.mouseY, 2)
-            ) > movementThreshold;
-            **/
-
-            const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
-            if (!hoveredPoint && this.toggledLines.size === 0) {
-                // Only add a new point if we didn't hover over an existing one
-                if (this.points.length < this.maxPoints) {
-                    const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
-                    const newPoint = snapPosition
-                        ? { x: snapPosition.x, y: snapPosition.y }
-                        : { x: this.p.mouseX, y: this.p.mouseY };
-                    this.points.push(newPoint);
-                    this.lineManager.addLinesForPoint(newPoint, this.points); // Add lines for the new point
+            // Only handle clicks (not drags)
+            if (!this.isDragging) {
+                // Check if any lines are connected to this point
+                const connectedLines = this.lineManager.getLinesConnectedToPoint(this.draggingPoint);
+                
+                // If point has connected lines, deselect them
+                if (connectedLines.length > 0) {
+                    // Check if any of the connected lines are selected
+                    const hasSelectedLines = connectedLines.some(line => line.selected);
+                    
+                    if (hasSelectedLines) {
+                        // Deselect all connected lines
+                        connectedLines.forEach(line => {
+                            line.selected = false;
+                        });
+                    } else {
+                        // If no connected lines are selected, delete the point
+                        this.removePoint(this.draggingPoint);
+                    }
+                } else {
+                    // If no lines are connected to this point, delete it directly
+                    this.removePoint(this.draggingPoint);
                 }
             }
         }
-        // Reset drag state and toggled lines
+        
+        // Reset dragging state
+        this.draggingPoint = null;
         this.mouseDragStart = null;
-        this.toggledLines.clear();
+        this.isDragging = false;
     }
-
-
-
+    
     /**
-     * Check if the mouse is hovering over a point.
-     * @param {number} mouseX - The x-coordinate of the mouse.
-     * @param {number} mouseY - The y-coordinate of the mouse.
-     * @returns {object|null} The hovered point or null if there is no point hovered.
+     * Updates the hoveredLine property for hover effects
      */
-    getHoveredPoint(mouseX, mouseY) {
-        return this.points.find((point) => {
-            const distance = Math.sqrt(
-                Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2)
-            );
-            return distance <= this.snapThreshold; // Check if mouse is within snap threshold
-        });
+    updateHoveredLine() {
+        this.hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+    }
+    
+    /**
+     * Get the currently hovered line for rendering hover effects
+     */
+    getHoveredLineForRendering() {
+        return this.hoveredLine;
     }
 
     /**
-     * Retrieves hovered line information by delegating to the LineManager.
+     * Get the line under the mouse cursor
+     * @param {Number} mouseX - Mouse x-coordinate
+     * @param {Number} mouseY - Mouse y-coordinate
+     * @returns {Object|null} The hovered line or null if none hovered
      */
     getHoveredLine(mouseX, mouseY) {
-        const threshold = 0.01;
-        const lines = this.lineManager.getLines(); // Get current lines from LineManager
-
-        return lines.find((line) => {
+        const threshold = 8; // Distance threshold for line detection
+        const lines = this.lineManager.getLines();
+        
+        // Find closest line to the mouse
+        let closestLine = null;
+        let minDistance = Infinity;
+        
+        lines.forEach(line => {
+            // Calculate distance from point to line
             const { x: x1, y: y1 } = line.start;
             const { x: x2, y: y2 } = line.end;
-
-            const d1 = this.p.dist(x1, y1, mouseX, mouseY);
-            const d2 = this.p.dist(x2, y2, mouseX, mouseY);
+            
+            // Distance from point to line segment using vector projection
             const lineLength = this.p.dist(x1, y1, x2, y2);
-
-            return Math.abs(d1 + d2 - lineLength) <= threshold; // Check if near line
+            if (lineLength === 0) return; // Skip zero-length lines
+            
+            const d1 = this.p.dist(mouseX, mouseY, x1, y1);
+            const d2 = this.p.dist(mouseX, mouseY, x2, y2);
+            
+            // Use the formula for distance from point to line segment
+            let distance;
+            
+            // If point is outside the line segment endpoints, use distance to closest endpoint
+            if (d1*d1 > lineLength*lineLength + d2*d2) {
+                distance = d2; // Point is beyond end point
+            } else if (d2*d2 > lineLength*lineLength + d1*d1) {
+                distance = d1; // Point is beyond start point
+            } else {
+                // Point is beside the line segment, use perpendicular distance
+                const dot = ((mouseX - x1) * (x2 - x1) + (mouseY - y1) * (y2 - y1)) / (lineLength * lineLength);
+                const closestX = x1 + dot * (x2 - x1);
+                const closestY = y1 + dot * (y2 - y1);
+                distance = this.p.dist(mouseX, mouseY, closestX, closestY);
+            }
+            
+            if (distance < minDistance && distance <= threshold) {
+                minDistance = distance;
+                closestLine = line;
+            }
         });
+        
+        return closestLine;
     }
 
     isInCanvas() {
@@ -170,7 +232,37 @@ class MouseEventHandler {
         );
     }
 
+    /**
+     * Get the selected point.
+     * @returns {Object|null} The selected point or null since we no longer have selection.
+     */
+    getSelectedPoint() {
+        return null; // We no longer track selected points
+    }
 
+    // Helper method to create a point with a unique ID
+    createPoint(x, y) {
+        return {
+            id: Date.now() + Math.random().toString(36).substr(2, 9), // Generate unique ID
+            x: x,
+            y: y,
+            selected: false // Points start unselected
+        };
+    }
+
+    /**
+     * Get the point under the mouse cursor
+     * @param {Number} mouseX - Mouse x-coordinate
+     * @param {Number} mouseY - Mouse y-coordinate
+     * @returns {Object|null} The hovered point or null if none hovered
+     */
+    getHoveredPoint(mouseX, mouseY) {
+        // Find the first point that is being hovered
+        return this.points.find(point => {
+            const distance = this.p.dist(point.x, point.y, mouseX, mouseY);
+            return distance <= this.snapThreshold;
+        }) || null;
+    }
 }
 
 export default MouseEventHandler;

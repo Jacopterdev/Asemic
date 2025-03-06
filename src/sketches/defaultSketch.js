@@ -228,6 +228,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     p.mouseWheel = (event) => {
         if (currentState?.mouseWheel) currentState.mouseWheel(event);
     };
+    p.mouseMoved = () => currentState?.mouseMoved();
 
 };
 

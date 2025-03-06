@@ -45,7 +45,8 @@ class SkeletonState {
         this.mouseHandler = new MouseEventHandler(this.p, this.gridContext, this.points, this.lineManager);
     }
 
-    draw(){
+    // Modify the draw method to handle the null selectedPoint
+    draw() {
         this.updateGridContext();
         const missRadius = this.mergedParams.missArea;
         this.pointRenderer.setMissRadius(missRadius);
@@ -53,18 +54,21 @@ class SkeletonState {
         this.p.noStroke();
         this.p.fill(0); // Color: black
 
-        this.ephemeralLineAnimator.updateAndDraw(); // Update and
+        this.ephemeralLineAnimator.updateAndDraw();
 
         this.gridContext.draw();
 
-        // Draw lines between all points
-        this.possibleLinesRenderer.drawLines(this.lineManager.getLines());
+        // Get the currently hovered line for the hover effect
+        const hoveredLine = this.mouseHandler.getHoveredLineForRendering();
+        
+        // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
+        this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
 
+        // Draw all points with hover effect
         this.points.forEach((point) => {
             const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
             this.pointRenderer.draw(point, isHovered);
         });
-
     }
 
     updateMergedParams(newMergedParams) {
@@ -98,7 +102,12 @@ class SkeletonState {
         console.log("Points: ", this.points);
     }
 
-
+    mouseMoved() {
+        if (this.mouseHandler) {
+            console.log("hahahhahah");
+            this.mouseHandler.handleMouseMoved();
+        }
+    }
 
     updateGridContext = () => {
         let xStart = LAYOUT.MARGIN;
