@@ -9,7 +9,7 @@ const svgMapping = {
     Square: "/shapes/square.svg",
 };
 
-const TabsWithPanes = ({subShapeParams, setParams}) => {
+const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
     const [activeTabData, updateParams] = useState(subShapeParams);
     // Updates the active tab's state and notifies the parent
     const updateParam = (key, value) => {
@@ -27,6 +27,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
             )
         );
 
+
         // Update the parent state to reflect changes
         setParams((prevParentParams) => ({
             ...prevParentParams,
@@ -35,6 +36,11 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
                 [key]: value,
             },
         }));
+
+        if (onParamChange) {
+            onParamChange(activeTab, { key, value }); // Provide the active tab ID and updated value
+        }
+
     };
     const [tabs, setTabs] = useState([
         {
@@ -62,7 +68,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
         tabs.forEach((tab) => {
             initialParams[tab.id] = tab.params;
         });
-        setParams(initialParams);
+        //setParams(initialParams);
     }, []);
 
 
@@ -84,6 +90,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
 
         // Update tabs state
         setTabs((prevTabs) => [...prevTabs, newTab]);
+
 
         // Update parent's state with the new tab's params
         setParams((prevParentParams) => ({
@@ -111,6 +118,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
         // Remove the tab from `tabs`
         const updatedTabs = tabs.filter((tab) => tab.id !== tabId);
         setTabs(updatedTabs);
+
 
         // Remove the tab's parameters from the parent's state
         setParams((prevParentParams) => {
@@ -236,6 +244,7 @@ const TabsWithPanes = ({subShapeParams, setParams}) => {
         // Update the parent state with the active tab's data
         const activeTabData = tabs.find((tab) => tab.id === activeTab);
         if (activeTabData) {
+
             setParams((prevParentParams) => ({
                 ...prevParentParams,
                 [activeTab]: activeTabData.params,

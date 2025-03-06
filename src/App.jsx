@@ -24,13 +24,27 @@ function App() {
     });
 
     const [subShapeParams, setSubShapeParams] = useState({});
+    const [lastUpdatedParam, setLastUpdatedParam] = useState(null); // Track last updated param
 
-    const handleSetParams = (updatedParams) => {
-        setSubShapeParams(updatedParams);
+
+    const handleSetParams = (tabId, updatedParam) => {
+        // Track the last updated tab and parameter
+        setLastUpdatedParam({ tabId, ...updatedParam });
     };
+
+
+    // Handle updates from TweakpaneComponent
+    const handleTweakpaneUpdates = (key, value) => {
+        setParams((prev) => ({ ...prev, [key]: value }));
+        setLastUpdatedParam({ key, value }); // Update last changed param
+    };
+
+
+
 
     const mergedParams = { ...params, ...subShapeParams };
     console.log("mergedParams: ", mergedParams);
+    console.log("lastupdated param",lastUpdatedParam);
 
 
     // NEW: State for managing selected buttons for each group
@@ -114,10 +128,13 @@ function App() {
                     <div className="basis-1/4 bg-gray-200 shadow p-4 rounded w-full overflow-hidden">
                         <div className="space-y-2">
                             <TweakpaneComponent
-                                defaultParams={params} setParams={setParams} />
+                                defaultParams={params}
+                                onParamChange={handleTweakpaneUpdates}
+                            />
                             <TabsWithPanes
                                 subShapeParams={subShapeParams}
-                                setParams={handleSetParams}
+                                setParams={setSubShapeParams}
+                                onParamChange={handleSetParams}
                             />
                         </div>
                     </div>
@@ -142,7 +159,11 @@ function App() {
                         </div>
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
-                            <P5Wrapper sketch={defaultSketch} mergedParams={mergedParams} toolConfig={toolConfig}/>
+                            <P5Wrapper sketch={defaultSketch}
+                                       mergedParams={mergedParams}
+                                       toolConfig={toolConfig}
+                                       lastUpdatedParam={lastUpdatedParam}
+                            />
                         </div>
                     </div>
                 </div>
