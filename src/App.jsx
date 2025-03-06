@@ -43,7 +43,6 @@ function App() {
 
 
     const mergedParams = { ...params, ...subShapeParams };
-    console.log("mergedParams: ", mergedParams);
     console.log("lastupdated param",lastUpdatedParam);
 
 

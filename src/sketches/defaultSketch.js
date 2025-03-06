@@ -4,7 +4,7 @@ import AnatomyState from "./States/AnatomyState.js";
 import CompositionState from "./States/CompositionState.js";
 import Effects from "./Effects.js";
 
-const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
+const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) => {
     let points = [];
 
     let lineManager;
@@ -12,7 +12,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
     let shapeGenerator;
     let mergedParams;
     let toolConfig;
-
+    let lastUpdatedParam;
+    let previousLastUpdatedParam;
     let effects;
 
     // Instances of various states
@@ -28,6 +29,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
         mergedParams = mergedParamsRef.current;
         toolConfig = toolConfigRef.current;
+        lastUpdatedParam = lastUpdatedParamRef.current;
+        previousLastUpdatedParam = null;
 
         //gridSize = p.width - margin * 2;
 
@@ -51,56 +54,17 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         currentState = states[stateName]; // Switch to the existing state instance
     };
 
-    /**
-    p.mousePressed = () => {
-        if (!mouseHandler) return;
-        let knobDragged = gridContext.mousePressed(p.mouseX, p.mouseY);
-        if (knobDragged) return;
-        // Delegate mousePressed logic to MouseEventHandler
-        mouseHandler.handleMousePressed();
-    };
-
-    p.mouseDragged = () => {
-        if (!mouseHandler) return;
-        let knobDragged = gridContext.mouseDragged(p.mouseX, p.mouseY);
-        if (knobDragged) return;
-        mouseHandler.handleMouseDragged();
-
-    };
-
-    p.mouseReleased = () => {
-        if(toolConfigRef.current.state === "Anatomy"){
-            if (!lineManager) return;
-            const lines = lineManager.getSelectedLines(); // Get the selected lines
-            mergedParams = mergedParamsRef.current; // Get the current mergedParams
-
-            // Merge lines, points, and mergedParams into one object
-            mergedParams = {
-                ...mergedParams, // Keep existing parameters
-                lines: lines, // Add lines array
-                points: points // Add points array
-            };
-
-
-            shapeGenerator = new ShapeGenerator(p, mergedParams);
-            // Automatically generate shapes when starting
-            shapeGenerator.generateCompositeForms();
-
-        }
-
-        if (!mouseHandler) return;
-        let knobDragged = gridContext.mouseReleased();
-        if (knobDragged) return;
-        mouseHandler.handleMouseReleased();
-    };
-        */
-
     p.draw = () => {
         /**Update variables*/
         mergedParams = mergedParamsRef.current;
         toolConfig = toolConfigRef.current;
+        lastUpdatedParam = lastUpdatedParamRef.current;
 
-        if (currentState?.updateMergedParams) {
+        let configUpdated = p.isConfigUpdated();
+
+
+        if (currentState?.updateMergedParams && configUpdated) {
+            console.log("Updating merged params");
             currentState.updateMergedParams(mergedParams);
         }
 
@@ -118,107 +82,27 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
         }
         effects.setSmoothAmount(mergedParams.smoothAmount);
         currentState?.draw();
-
-
-
-
     };
 
     p.applyEffects = () => {
         effects.applyEffects();
     }
-
     p.animateSmoothAmount = () => {
         if(!effects) return;
         effects.animateSmoothAmount();
     }
+    p.isConfigUpdated = () => {
+        if (!lastUpdatedParam) return true;
+        let configUpdated =
+            lastUpdatedParam &&
+            (!previousLastUpdatedParam ||
+                JSON.stringify(lastUpdatedParam) !== JSON.stringify(previousLastUpdatedParam));
 
-    /**
-    p.draw = () => {
-
-        p.background(255); // Reset background each frame
-        if(toolConfigRef.current.state === "Anatomy"){
-            mouseHandler = null;
-            //if(!shapeGenerator){return;}
-            // Draw all generative elements
-            //shapeGenerator.drawLines();
-            //shapeGenerator.drawPolygons();
-
-            displayGrid.drawShapes();
-
-            //shapeGenerator.applyEffects();
-            p.filter(p.BLUR, mergedParams.smoothAmount);
-
-            p.filter(p.THRESHOLD, 0.5);
-
-            displayGrid.drawGrid();
-
-
-
-            return;
-        } else if (toolConfigRef.current.state === "Composition"){
-            compositionTool.draw(p);
-            mouseHandler = null;
-            return;
-
-        } else if (toolConfigRef.current.state === "Edit Skeleton"){
-            if (!mouseHandler) mouseHandler = new MouseEventHandler(p, gridContext, points, lineManager);
-        }
-
-        updateGridContext();
-
-        const angle = 90;
-        const smoothAmount = mergedParams.smoothAmount;
-
-        missRadius = mergedParamsRef.current.missArea;
-        pointRenderer.setMissRadius(missRadius);
-
-
-        p.noStroke();
-        p.fill(0); // Color: black
-        //p.ellipse(x, p.height / 2, angle); // Draw a circle
-
-
-        // Apply filter dynamically based on smoothAmount
-        if (smoothAmount > 0) {
-            p.filter(p.BLUR, smoothAmount); // Apply smoothAmount as blur
-        }
-        p.filter(p.THRESHOLD, 0.5);
-
-        ephemeralLineAnimator.updateAndDraw(); // Update and
-
-        gridContext.draw();
-
-        // Draw lines between all points
-        possibleLinesRenderer.drawLines(lineManager.getLines());
-
-        points.forEach((point) => {
-            const isHovered = pointRenderer.isHovered(point, p.mouseX, p.mouseY);
-            pointRenderer.draw(point, isHovered);
-        });
-    };
-     */
-
-    /**
-    p.keyPressed = (evt) => {
-
-
-        if(!compositionTool) return;
-        console.log(evt.key);
-        compositionTool.keyPressed(evt.key);
+        previousLastUpdatedParam = lastUpdatedParam
+            ? JSON.parse(JSON.stringify(lastUpdatedParam))
+            : null;
+        return configUpdated;
     }
-
-    p.keyReleased = (evt) => {
-        if(!compositionTool) return;
-        compositionTool.keyReleased(evt.key);
-    }
-
-    p.mouseWheel = (event) => {
-        if(!displayGrid) return;
-        displayGrid.handleScroll(event.delta); // Pass the scroll delta to the grid
-    }
-        */
-
     p.mousePressed = () => currentState?.mousePressed();
     p.mouseDragged = () => currentState?.mouseDragged();
     p.mouseReleased = () => currentState?.mouseReleased();
