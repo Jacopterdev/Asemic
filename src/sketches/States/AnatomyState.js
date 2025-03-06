@@ -16,6 +16,7 @@ class AnatomyState {
         this.displayGrid.drawShapes();
         this.p.applyEffects();
         this.displayGrid.drawGrid();
+        this.displayGrid.drawShapes(true);
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;

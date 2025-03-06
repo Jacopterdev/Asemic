@@ -32,7 +32,7 @@ class LineGenerator {
 
     draw(xray = false){
         this.p.stroke(0);
-        if(xray) this.p.stroke(255,0,0);
+        if(xray) this.p.stroke(255,150,0, 127);
 
         // Draw straight lines
         for (const lineObj of this.lines) {

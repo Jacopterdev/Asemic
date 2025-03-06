@@ -103,7 +103,7 @@ class DisplayGrid {
         //console.log(`Rendered ${renderedCellCount} cells.`); // Debug the count
     }
 
-    drawShapes(){
+    drawShapes(xray = false){
         const p = this.p;
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
@@ -122,7 +122,7 @@ class DisplayGrid {
                     p.scale(0.28);
 
                     // Draw the shape relative to the translated origin (scaled to fit)
-                    cell.shape.draw();
+                    cell.shape.draw(xray);
 
                     p.pop(); // Restore the previous transformation state
                 }
