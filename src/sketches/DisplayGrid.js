@@ -189,7 +189,6 @@ class DisplayGrid {
 
         // Check if we need to add rows
         if (viewportBottomEdge + SCROLL_THRESHOLD > lastRowBottomEdge) {
-            console.log(`Adding new rows. Viewport bottom: ${viewportBottomEdge}, Last row bottom: ${lastRowBottomEdge}`);
             this.addRows(ADD_ROW_COUNT);
         }
 
@@ -240,7 +239,6 @@ class DisplayGrid {
         // Update row count dynamically
         this.rows += numRows;
 
-        console.log(`Added ${numRows} rows. Total rows in grid: ${this.grid.length}`);
     }
 
     // Add this helper method to get the last letter's ASCII code

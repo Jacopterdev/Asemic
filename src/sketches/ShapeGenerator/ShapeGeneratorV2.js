@@ -19,7 +19,6 @@ class ShapeGeneratorV2 {
     }
 
     generate() {
-        console.log("Generating shape...");
 
         /** LINE GENERATION */
         //Retrieve information for line generation

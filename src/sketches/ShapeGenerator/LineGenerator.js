@@ -119,7 +119,7 @@ class LineGenerator {
                         lineWidth
                     });
                 } else {
-                    console.log("Creating own midpoint for line: " + line.start + " -> " + line.end + "");
+                    //console.log("Creating own midpoint for line: " + line.start + " -> " + line.end + "");
                     // If no other points available, create a midpoint with offset
                     const midpoint = this.p.createVector(
                         (line.start.x + line.end.x) / 2,

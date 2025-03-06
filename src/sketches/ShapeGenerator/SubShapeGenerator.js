@@ -64,8 +64,9 @@ class SubShapeGenerator {
                 size: this.cNoise.noiseMap(this.noisePos, this.subShape.size.min, this.subShape.size.max),
                 sides: this.shapeSides,
                 rotation: this.subShape.rotationType === "relative" && direction
-                    ? this.p.atan2(direction.y, direction.x)
-                    : this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI/180),
+                    ? this.p.atan2(direction.y, direction.x) +
+                    this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180)
+                    : this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180),
                 distortion: this.cNoise.noiseMap(this.noisePos, this.subShape.distort.min, this.subShape.distort.max)
             };
             const polygonVertices = this.createPolygon(base, polygonParams);

@@ -48,7 +48,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef) => {
 
     const updateState = (stateName) => {
         if (currentState?.name === stateName) return; // Avoid unnecessary updates
-        console.log("STATE CHANGE", stateName);
         currentState = states[stateName]; // Switch to the existing state instance
     };
 
