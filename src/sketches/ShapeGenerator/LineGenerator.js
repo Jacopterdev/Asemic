@@ -155,7 +155,7 @@ class LineGenerator {
     // Get a position with random offset from the original point
     getOffsetPosition(point, missAreaRadius) {
         // If missArea is 0, return the original point
-        if (missAreaRadius <= 0) return point;
+        //if (missAreaRadius <= 0) return point;
 
         // Generate random offset within the miss area
         //const angle = this.p.random(this.p.TWO_PI);
