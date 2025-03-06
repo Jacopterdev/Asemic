@@ -32,17 +32,19 @@ class LineGenerator {
 
     draw(xray = false){
         this.p.stroke(0);
-        if(xray) this.p.stroke(255,150,0, 127);
+        if(xray) this.p.stroke(255,150,0);
 
         // Draw straight lines
         for (const lineObj of this.lines) {
             this.p.strokeWeight(lineObj.lineWidth);
+            if (xray) this.p.strokeWeight(3);
             this.p.line(lineObj.p1.x, lineObj.p1.y, lineObj.p2.x, lineObj.p2.y);
         }
 
         // Draw curved lines with control points
         for (const curveObj of this.curves) {
             this.p.strokeWeight(curveObj.lineWidth);
+            if (xray) this.p.strokeWeight(3);
             this.p.noFill();
 
             this.p.beginShape();

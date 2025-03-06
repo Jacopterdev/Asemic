@@ -59,17 +59,17 @@ function App() {
 
     const secondGroupButtons = [
         {
-            label: "./public/radial.svg",
+            label: "./radial.svg",
             type: "radial",
             onClick: () => console.log("Secondary Button 1 clicked"),
         },
         {
-            label: "./public/rect.svg",
+            label: "./rect.svg",
             type: "rect",
             onClick: () => console.log("Secondary Button 2 clicked"),
         },
         {
-            label: "./public/noGrid.svg",
+            label: "./noGrid.svg",
             type: "none",
             onClick: () => console.log("Secondary Button 2 clicked"),
         },
