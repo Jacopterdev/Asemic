@@ -3,7 +3,7 @@ import * as Tweakpane from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 import '../index.css';
 
-const TweakpaneComponent = ({ defaultParams, setParams }) => {
+const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
     const paneRef = useRef(null);
     const paneContainerRef = useRef(null); // The actual DOM container for Tweakpane
 
@@ -17,11 +17,11 @@ const TweakpaneComponent = ({ defaultParams, setParams }) => {
             [key]: value,
         }));
 
-        // Only update the parent state when the parameter changes
-        setParams((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+        // Notify parent about the parameter change
+        if (onParamChange) {
+            onParamChange(key, value); // Send the updated key and value only
+        }
+
     };
 
     useEffect(() => {
