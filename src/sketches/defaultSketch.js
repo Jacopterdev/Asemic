@@ -84,8 +84,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         currentState?.draw();
     };
 
-    p.applyEffects = () => {
-        effects.applyEffects();
+    p.applyEffects = (blurScale) => {
+        effects.applyEffects(blurScale);
     }
     p.animateSmoothAmount = () => {
         if(!effects) return;

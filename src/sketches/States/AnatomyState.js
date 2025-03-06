@@ -10,6 +10,7 @@ class AnatomyState {
         this.shapeGenerator = shapeGenerator;
         this.mergedParams = mergedParams;
         this.displayGrid = new DisplayGrid(p, 3,3, LAYOUT.MARGIN, LAYOUT.MARGIN, p.width - LAYOUT.MARGIN * 2, this.mergedParams);
+        this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray
 
@@ -17,7 +18,7 @@ class AnatomyState {
 
     draw() {
         this.displayGrid.drawShapes();
-        this.p.applyEffects();
+        this.p.applyEffects(this.blurScale);
         this.displayGrid.drawGrid();
         if (this.xray) this.displayGrid.drawShapes(true);
     }
@@ -30,6 +31,7 @@ class AnatomyState {
             points: this.points,
         };
         this.mergedParams = mergedParams;
+        this.blurScale = this.displayGrid.scale;
         //this.displayGrid.updateMergedParams(this.mergedParams);
 
         this.displayGrid.updateMergedParams(this.mergedParams);

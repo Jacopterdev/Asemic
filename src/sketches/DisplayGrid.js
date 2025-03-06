@@ -17,6 +17,7 @@ class DisplayGrid {
         this.scrollOffset = 0;
 
         this.mergedParams = mergedParams;
+        this.scale = 1/rows;
 
         this.initGrid();
 
@@ -119,7 +120,7 @@ class DisplayGrid {
                     // Scale down the shape to fit within the cell dimensions
                     const scaleX = (p.w / cell.w) * 0.1;
                     const scaleY = (p.h / cell.h) * 0.1;
-                    p.scale(0.28);
+                    p.scale(this.scale);
 
                     // Draw the shape relative to the translated origin (scaled to fit)
                     cell.shape.draw(xray);
