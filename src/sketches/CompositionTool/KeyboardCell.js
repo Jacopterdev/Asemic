@@ -45,7 +45,6 @@
     checkKeyPressed(key) {
         // Check if the key matches the cell's character (case-insensitive)
         if (key.toLowerCase() === this.char.toLowerCase()) {
-            console.log(`Key "${this.char}" pressed!`);
 
             // Activate the cell (change its state)
             this.isActive = true;
@@ -60,7 +59,6 @@
     checkKeyReleased(key) {
         // Check if the key matches the cell's character (case-insensitive)
         if (key.toLowerCase() === this.char.toLowerCase()) {
-            console.log(`Key "${this.char}" released!`);
 
             // Deactivate the cell (reset its state)
             this.isActive = false;

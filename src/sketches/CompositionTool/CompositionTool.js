@@ -46,7 +46,6 @@ class CompositionTool {
 
     // Callback for when a key is pressed (add custom behavior here)
     onKeyPress(key) {
-        console.log(`Key "${key}" pressed in CompositionTool!`);
     }
 
     // Render the keyboard grid

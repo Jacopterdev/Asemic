@@ -7,16 +7,20 @@ class ShapeInputField {
         this.mergedParams = mergedParams;
         this.x = x;                // X coordinate of the input field
         this.y = y;                // Y coordinate of the input field
-        this.kerning = 30;          // Default distance between shapes
+
+        // Default distance between shapes
         this.width = width;        // Width of the input field
         this.height = height;      // Height of the input field
         this.shapes = [];          // Array to store the shapes
-        this.maxShapes = 10;    // Maximum number of shapes that fit in the field
+        this.maxShapes = 12;    // Maximum number of shapes that fit in the field
         this.cursorVisible = true; // Visibility flag for the blinking cursor
         this.lastBlinkTime = 0;    // Timer for managing cursor blinking
         this.cursorBlinkInterval = 500; // Blinking interval in milliseconds
 
-        this.scale = 1*(this.width/p.width)/this.maxShapes; // Scale factor
+        this.kerning = 20;
+        this.defaultOverlap = 0.33;
+
+        this.scale = (this.width/p.width)/this.maxShapes / this.defaultOverlap; // Scale factor
 
     }
 
@@ -62,13 +66,21 @@ class ShapeInputField {
     }
 
     // Render all the shapes
-    // Draw the shapes (use ShapeGeneratorV2 instances)
     drawShapes() {
         const p = this.p;
 
-        // Calculate the starting X position to center-align the shapes
-        const totalShapesWidth = this.shapes.length * this.kerning;
-        let startX = this.x + (this.width - totalShapesWidth) / 2;
+        // Calculate the base width available for each shape
+        const baseShapeWidth = this.width / this.maxShapes * this.defaultOverlap;
+
+        // Adjust kerning: influences the spacing between shapes
+        const kerningOffset = this.kerning; // `kerning` ranges from -100 to 100
+
+        // Calculate the actual spacing between shapes
+        const adjustedSpacing = baseShapeWidth + kerningOffset;
+
+        // Calculate starting X position to align shapes evenly, considering adjusted spacing
+        const totalShapesWidth = this.shapes.length * adjustedSpacing;
+        let startX = this.x + (this.width - (totalShapesWidth + baseShapeWidth)) / 2;
 
         // Draw each ShapeGeneratorV2 shape
         this.shapes.forEach((shapeInstance) => {
@@ -76,8 +88,9 @@ class ShapeInputField {
             p.push();
 
             // Translate to the starting position of the current shape
-            p.translate(startX, this.y + this.height / 2);
+            p.translate(startX - baseShapeWidth, this.y);
 
+            // Scale the shape to fit appropriately
             p.scale(this.scale);
 
             // Use the `draw` method of ShapeGeneratorV2 to render the shape
@@ -86,10 +99,11 @@ class ShapeInputField {
             // Restore p5 context
             p.pop();
 
-            // Advance position based on kerning
-            startX += this.kerning;
+            // Advance position by dynamically adjusted spacing
+            startX += adjustedSpacing;
         });
     }
+
 
 
     // Render both the shapes and the cursor (optional combined method)
@@ -99,16 +113,6 @@ class ShapeInputField {
 
         // Draw the shapes
         this.drawShapes();
-
-        // Draw the cursor (if it's visible)
-        if (this.cursorVisible) {
-            const cursorPos = this.getCursorPosition();
-            this.drawCursor(cursorPos.x, cursorPos.y);
-        }
-        this.p.fill(0,0,0,0);
-        this.p.stroke(64);
-        this.p.strokeWeight(2);
-        this.p.rect(this.x, this.y, this.width, this.height);
     }
 
 
