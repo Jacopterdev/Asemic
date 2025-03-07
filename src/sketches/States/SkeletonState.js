@@ -64,13 +64,10 @@ class SkeletonState {
         // Other initialization code...
     }
 
-    // Add this method to draw the button with grayscale colors
+    // Update delete button method
     drawDeleteButton() {
-        const { x, y } = this.deleteButtonPosition;
-        const { width, height } = this.deleteButtonSize;
-        
-        // Update button size to be square for an icon (adjust dimensions as needed)
-        const size = 40;
+        // Make button smaller
+        const size = 30; // Reduced from 40
         const iconX = this.p.width - size - LAYOUT.MARGIN;
         const iconY = this.p.height - size - LAYOUT.MARGIN;
         
@@ -81,32 +78,32 @@ class SkeletonState {
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
         
-        // Draw button background with grayscale colors
+        // Draw button background with lighter grayscale colors
         this.p.strokeWeight(0);
-        // Use darker gray when hovered, lighter gray when not
-        this.p.fill(this.isDeleteButtonHovered ? 100 : 150);
-        this.p.rect(iconX, iconY, size, size, 5); // Rounded corners
+        // Use lighter grays for both states
+        this.p.fill(this.isDeleteButtonHovered ? 180 : 210);
+        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
         
-        // Draw trash can icon
+        // Draw trash can icon - slightly smaller proportions
         this.p.noStroke();
-        this.p.fill(240); // Light gray/almost white for the icon
+        this.p.fill(100); // Darker gray for icon (less contrast)
         
-        // Draw trash can body
+        // Draw trash can body - slightly smaller
         const margin = size * 0.2;
-        const trashWidth = size * 0.6;
-        const trashHeight = size * 0.5;
+        const trashWidth = size * 0.5; // Reduced width
+        const trashHeight = size * 0.45; // Reduced height
         const trashX = iconX + (size - trashWidth) / 2;
         const trashY = iconY + margin + size * 0.15;
         
         // Trash can body
         this.p.rect(trashX, trashY, trashWidth, trashHeight, 2);
         
-        // Trash can lid
-        const lidWidth = trashWidth * 1.2;
-        const lidHeight = size * 0.1;
+        // Trash can lid - slightly smaller
+        const lidWidth = trashWidth * 1.1; // Less exaggerated
+        const lidHeight = size * 0.08;
         const lidX = iconX + (size - lidWidth) / 2;
-        const lidY = trashY - lidHeight - 2;
-        this.p.rect(lidX, lidY, lidWidth, lidHeight, 1);
+        const lidY = trashY - lidHeight - 1;
+        this.p.rect(lidX, lidY, lidWidth, lidHeight);
         
         // Handle on lid
         const handleWidth = lidWidth * 0.2;
@@ -134,11 +131,9 @@ class SkeletonState {
 
     // Add new method to draw the fill grid button
     drawFillGridButton() {
-        const { x, y } = this.fillGridButtonPosition;
-        const { width, height } = this.fillGridButtonSize;
-        
-        const size = 40;
-        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 2; // Position it to the left of the delete button
+        // Make button smaller - same size as delete button
+        const size = 30; // Reduced from 40
+        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 1.5; // Position it to the left of the delete button
         const iconY = this.p.height - size - LAYOUT.MARGIN;
         
         // Check if mouse is hovering over button
@@ -148,29 +143,29 @@ class SkeletonState {
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
         
-        // Draw button background with grayscale colors
+        // Draw button background with lighter grayscale colors - same as delete button
         this.p.strokeWeight(0);
-        // Use darker gray when hovered, lighter gray when not
-        this.p.fill(this.isFillGridButtonHovered ? 100 : 150);
-        this.p.rect(iconX, iconY, size, size, 5); // Rounded corners
+        // Use lighter grays for both states
+        this.p.fill(this.isFillGridButtonHovered ? 180 : 210);
+        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
         
-        // Draw grid fill icon
+        // Draw grid fill icon with less contrast
         this.p.noStroke();
-        this.p.fill(240); // Light gray/almost white for the icon
+        this.p.fill(100); // Darker gray for icon (less contrast)
         
-        // Draw grid representation
+        // Draw grid representation - slightly smaller
         const margin = size * 0.2;
-        const gridSize = size * 0.6;
+        const gridSize = size * 0.55; // Reduced size
         const gridX = iconX + (size - gridSize) / 2;
         const gridY = iconY + (size - gridSize) / 2;
         
         // Draw grid outline
-        this.p.strokeWeight(2);
-        this.p.stroke(240);
+        this.p.strokeWeight(1);
+        this.p.stroke(100);
         this.p.noFill();
-        this.p.rect(gridX, gridY, gridSize, gridSize);
+        this.p.rect(gridX, gridY, gridSize, gridSize, 2);
         
-        // Draw grid lines
+        // Draw grid lines - thinner
         const cellSize = gridSize / 2;
         
         // Vertical line
@@ -179,12 +174,12 @@ class SkeletonState {
         // Horizontal line
         this.p.line(gridX, gridY + cellSize, gridX + gridSize, gridY + cellSize);
         
-        // Draw points at the intersections
+        // Draw points at the intersections - smaller
         this.p.noStroke();
-        this.p.fill(240);
-        const dotSize = 5;
+        this.p.fill(100); // Darker gray
+        const dotSize = 3; // Smaller dots
         
-        // Draw 4 points (one at each corner and center intersections)
+        // Draw points at intersections
         for (let i = 0; i <= 2; i++) {
             for (let j = 0; j <= 2; j++) {
                 this.p.ellipse(
