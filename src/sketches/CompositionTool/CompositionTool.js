@@ -66,6 +66,7 @@ class CompositionTool {
     updateMergedParams(mergedParams){
         this.mergedParams = mergedParams;
         this.shapeInputField.updateMergedParams(mergedParams);
+        this.keyboardGrid.updateMergedParams(mergedParams);
     }
 
 }

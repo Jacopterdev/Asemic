@@ -1,4 +1,7 @@
 ﻿import KeyboardCell from "./KeyboardCell.js";
+import Effects from "../Effects.js";
+import {defaultConfig as mergedParams} from "../ShapeGenerator/Constants.js";
+import effects from "../Effects.js";
 
 class KeyboardGrid {
     constructor(p, x, y, cellSize, rows, cols, alphabet, callback) {
@@ -11,16 +14,22 @@ class KeyboardGrid {
         this.cells = []; // Array to hold all Cell instances
         this.alphabet = alphabet.split(""); // Ensure alphabet is an array
 
+
         let index = 0;
+
+        // Create a p5 graphics buffer for the entire grid
+        this.buffer = p.createGraphics(this.cols * this.cellSize, this.rows * this.cellSize);
+        this.effect = new Effects(this.buffer);
 
         // Create the cells
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const char = this.alphabet[index];
                 // Create a new Cell object
-                const cell = new KeyboardCell(
-                    this.x + col * this.cellSize, // x position
-                    this.y + row * this.cellSize, // y position
+                const cell = new KeyboardCell(this.p,
+                    this.buffer,
+                    col * this.cellSize, // x position
+                    row * this.cellSize, // y position
                     this.cellSize, // Size of the cell
                     char, // Alphabet character
                     callback // Callback to handle key press
@@ -30,11 +39,23 @@ class KeyboardGrid {
                 index = (index + 1) % this.alphabet.length; // Loop through the alphabet
             }
         }
+
+
     }
 
-    draw(p) {
+    draw() {
+        this.buffer.clear();
+        this.buffer.background(255);
+
+        this.cells.forEach((cell) => cell.drawShape());
+        const scaleFactor =  this.cellSize / this.p.width; // Adjust scale factor to fit the cell size
+        this.effect.applyEffects(scaleFactor);
+
         // Draw all cells in the grid
-        this.cells.forEach((cell) => cell.draw(p));
+        this.cells.forEach((cell) => cell.draw(this.buffer));
+
+        // Draw the buffer to the main canvas at the grid's position
+        this.p.image(this.buffer, this.x, this.y);
     }
 
     keyPressed(key) {
@@ -43,6 +64,11 @@ class KeyboardGrid {
     }
     keyReleased(key){
         this.cells.forEach((cell) => cell.checkKeyReleased(key));
+    }
+
+    updateMergedParams(newParams){
+        this.effect.setSmoothAmount(mergedParams.smoothAmount);
+        this.cells.forEach((cell) => cell.updateMergedParams(newParams));
     }
 }
 export default KeyboardGrid;

@@ -17,7 +17,7 @@ class ShapeInputField {
         this.lastBlinkTime = 0;    // Timer for managing cursor blinking
         this.cursorBlinkInterval = 500; // Blinking interval in milliseconds
 
-        this.kerning = 20;
+        this.kerning = 80;
         this.defaultOverlap = 0.33;
 
         this.scale = (this.width/p.width)/this.maxShapes / this.defaultOverlap; // Scale factor
