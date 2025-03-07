@@ -34,8 +34,13 @@ button, .button{
 
 .mini-delete{
     @apply right-1 ml-6 absolute hover:bg-gray-200 bg-gray-300 text-xs text-gray-600 font-light py-0.5 px-1 rounded transition duration-100 ease-in-out font-mono cursor-pointer select-none;
-    font-size: 0.5rem;
+    font-size: 0.8rem;
 }
+
+.tab {
+    @apply rounded-t-lg rounded-b-none;
+}
+
 
 .slider {
     position: relative;

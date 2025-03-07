@@ -1,13 +1,14 @@
 ﻿import KeyboardGrid from "./KeyboardGrid.js";
 import ShapeInputField from "./ShapeInputField.js";
-import shapeInputField from "./ShapeInputField.js";
 
 class CompositionTool {
-    constructor(p) {
+    constructor(p, mergedParams) {
         this.p = p;
+        this.mergedParams = mergedParams;
         // Create the ShapeInputField
         this.shapeInputField = new ShapeInputField(
             p,
+            this.mergedParams,
             50,           // X position
             50,           // Y position (above the keyboard)
             p.width - 100, // Width of the input field
@@ -52,7 +53,7 @@ class CompositionTool {
     draw(p) {
         this.shapeInputField.draw();
 
-        this.p.applyEffects();
+        this.p.applyEffects(this.shapeInputField.scale);
 
         if (this.shapeInputField.cursorVisible) {      // Conditional logic for cursor
             const { x, y } = this.shapeInputField.getCursorPosition();
@@ -61,6 +62,11 @@ class CompositionTool {
 
         this.keyboardGrid.draw(p);
 
+    }
+
+    updateMergedParams(mergedParams){
+        this.mergedParams = mergedParams;
+        this.shapeInputField.updateMergedParams(mergedParams);
     }
 
 }
