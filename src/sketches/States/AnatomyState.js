@@ -24,13 +24,7 @@ class AnatomyState {
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
-        const lines = this.lineManager.getSelectedLines();
-        const mergedParams = {
-            ...this.mergedParams,
-            lines: lines,
-            points: this.points,
-        };
-        this.mergedParams = mergedParams;
+
         this.blurScale = this.displayGrid.scale;
         //this.displayGrid.updateMergedParams(this.mergedParams);
 

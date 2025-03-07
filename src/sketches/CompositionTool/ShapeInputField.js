@@ -1,31 +1,39 @@
-﻿class ShapeInputField {
-    constructor(p, x, y, width, height) {
+﻿import shapeDictionary from "../ShapeDictionary.js";
+import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
+
+class ShapeInputField {
+    constructor(p, mergedParams, x, y, width, height) {
         this.p = p;                // p5 instance
+        this.mergedParams = mergedParams;
         this.x = x;                // X coordinate of the input field
         this.y = y;                // Y coordinate of the input field
         this.kerning = 30;          // Default distance between shapes
         this.width = width;        // Width of the input field
         this.height = height;      // Height of the input field
         this.shapes = [];          // Array to store the shapes
-        this.maxShapes = width/this.kerning;    // Maximum number of shapes that fit in the field
+        this.maxShapes = 10;    // Maximum number of shapes that fit in the field
         this.cursorVisible = true; // Visibility flag for the blinking cursor
         this.lastBlinkTime = 0;    // Timer for managing cursor blinking
         this.cursorBlinkInterval = 500; // Blinking interval in milliseconds
+
+        this.scale = 1*(this.width/p.width)/this.maxShapes; // Scale factor
+
     }
 
-    // Add a shape based on a key
+    // Add a new shape based on a key/letter
     addShape(key) {
         if (this.shapes.length >= this.maxShapes) {
             this.shapes.shift(); // Remove the oldest shape if maximum is reached
         }
         const shape = this.createShape(key);
         if (shape) {
-            this.shapes.push(shape); // Add new shape
+            this.shapes.push(shape); // Add the new `ShapeGeneratorV2` object
         }
 
-        this.lastBlinkTime = this.p.millis();  // Reset the timer
-        this.cursorVisible = false;
+        this.lastBlinkTime = this.p.millis(); // Reset cursor blink timer
+        this.cursorVisible = false; // Hide the cursor when typing
     }
+
 
     // Remove the last shape from the input field
     removeLastShape() {
@@ -54,6 +62,7 @@
     }
 
     // Render all the shapes
+    // Draw the shapes (use ShapeGeneratorV2 instances)
     drawShapes() {
         const p = this.p;
 
@@ -61,44 +70,47 @@
         const totalShapesWidth = this.shapes.length * this.kerning;
         let startX = this.x + (this.width - totalShapesWidth) / 2;
 
-        // Draw each shape
-        this.shapes.forEach((shape) => {
-            p.fill(shape.color);
-            if (shape.type === "circle") {
-                p.circle(startX + shape.size / 2, this.y + this.height / 2, shape.size);
-            } else if (shape.type === "square") {
-                p.square(startX, this.y + this.height / 2 - shape.size / 2, shape.size);
-            } else if (shape.type === "triangle") {
-                const halfSize = shape.size / 2;
-                p.triangle(
-                    startX, // Left vertex (center point of the base)
-                    this.y + this.height / 2 - halfSize, // Top point of the triangle
-                    startX, // Left vertex (center point of the base)
-                    this.y + this.height / 2 + halfSize, // Bottom point of the triangle
-                    startX + shape.size, // Far-right tip of the triangle
-                    this.y + this.height / 2 // Center point
-                );
+        // Draw each ShapeGeneratorV2 shape
+        this.shapes.forEach((shapeInstance) => {
+            // Push p5 context to handle individual transformations safely
+            p.push();
 
+            // Translate to the starting position of the current shape
+            p.translate(startX, this.y + this.height / 2);
 
-            }
-            startX += this.kerning; // Advance position based on kerning
+            p.scale(this.scale);
+
+            // Use the `draw` method of ShapeGeneratorV2 to render the shape
+            shapeInstance.draw();
+
+            // Restore p5 context
+            p.pop();
+
+            // Advance position based on kerning
+            startX += this.kerning;
         });
     }
 
+
     // Render both the shapes and the cursor (optional combined method)
+    // Render the shapes and the cursor
     draw() {
-        const p = this.p;
-        this.manageCursorBlinking(); // Check if the cursor should blink
+        this.manageCursorBlinking();
 
         // Draw the shapes
         this.drawShapes();
 
-        // Draw the blinking cursor, if visible
+        // Draw the cursor (if it's visible)
         if (this.cursorVisible) {
-            const { x, y } = this.getCursorPosition(); // Get the cursor position
-            this.drawCursor(x, y); // Draw the cursor at its position
+            const cursorPos = this.getCursorPosition();
+            this.drawCursor(cursorPos.x, cursorPos.y);
         }
+        this.p.fill(0,0,0,0);
+        this.p.stroke(64);
+        this.p.strokeWeight(2);
+        this.p.rect(this.x, this.y, this.width, this.height);
     }
+
 
     // Manage the blinking behavior for the cursor
     manageCursorBlinking() {
@@ -114,23 +126,33 @@
         this.kerning = value; // Update the kerning (distance) between shapes
     }
 
-    // Create a shape based on the key pressed
+    // Create a ShapeGeneratorV2 instance for a letter or key
     createShape(key) {
-        const shapeTypeMap = {
-            Q: "circle",
-            W: "square",
-            E: "triangle",
-            // Map other keys to shapes
-        };
+        // Create a new instance of ShapeGeneratorV2
+        let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
 
-        const shapeType = shapeTypeMap[key.toUpperCase()] || "circle"; // Default to 'circle'
+        // Get noise position for the key/letter from the ShapeDictionary
+        const noisePosition = shapeDictionary.getValue(key);
 
-        return {
-            type: shapeType,
-            size: 50, // Size of the shape
-            color: this.p.color(0), // Example color
-        };
+        // Check if a noise position was retrieved
+        if (!noisePosition) {
+            return null; // Or handle the case differently if needed
+        }
+
+        // Destructure noise position if valid
+        const { x: noiseX, y: noiseY } = noisePosition;
+
+        // Set the noise position and generate the shape
+        shape.setNoisePosition(noiseX, noiseY);
+        shape.generate();
+
+        return shape;
     }
+
+    updateMergedParams(mergedParams){
+        this.mergedParams = mergedParams;
+    }
+
 }
 
 export default ShapeInputField;

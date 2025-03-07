@@ -44,7 +44,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         // Pre-create each state and store them
         states["Edit Skeleton"] = new SkeletonState(p, points, lineManager, mergedParams, toolConfig);
         states["Anatomy"] = new AnatomyState(p, points, lineManager, shapeGenerator, mergedParamsRef);
-        states["Composition"] = new CompositionState(p);
+        states["Composition"] = new CompositionState(p, mergedParams);
         currentState = "Edit Skeleton"
         updateState("Edit Skeleton"); // Set the initial state
 
@@ -65,7 +65,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
 
         if (currentState?.updateMergedParams && configUpdated) {
-            console.log("Updating merged params");
+            p.rebuildSkeleton();
             currentState.updateMergedParams(mergedParams);
         }
 
@@ -79,12 +79,23 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         const currentToolState = toolConfig.state;
 
         if (currentToolState && currentToolState !== currentState?.name) {
+
             updateState(currentToolState); // Update state when `toolConfigRef.state` changes
+            p.rebuildSkeleton();
             if (currentState?.updateMergedParams) currentState.updateMergedParams(mergedParams);
         }
         effects.setSmoothAmount(mergedParams.smoothAmount);
         currentState?.draw();
     };
+
+    p.rebuildSkeleton = () => {
+        const lines = lineManager.getSelectedLines();
+        mergedParams = {
+            ...mergedParams,
+            lines: lines,
+            points: points,
+        };
+    }
 
     p.applyEffects = (blurScale) => {
         effects.applyEffects(blurScale);

@@ -2,10 +2,11 @@
 import CompositionTool from "../CompositionTool/CompositionTool.js";
 
 class CompositionState {
-    constructor(p) {
+    constructor(p, mergedParams) {
         this.p = p;
+        this.mergedParams = mergedParams;
         this.name = "Composition";
-        this.compositionTool = new CompositionTool(p);
+        this.compositionTool = new CompositionTool(p, this.mergedParams);
     }
 
     draw() {
@@ -32,6 +33,11 @@ class CompositionState {
     keyReleased(evt) {
         this.compositionTool.keyReleased(evt.key);
         this.p.animateSmoothAmount();
+    }
+
+    updateMergedParams(mergedParams) {
+        this.mergedParams = mergedParams;
+        this.compositionTool.updateMergedParams(mergedParams);
     }
 }
 export default CompositionState;
