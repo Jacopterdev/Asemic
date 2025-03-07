@@ -219,6 +219,71 @@ class RadialGrid extends BaseGrid {
         return wasDraggingKnob;
     }
 
+/**
+     * Check if a line follows the grid lines
+     * @param {Object} point1 - First point {x, y}
+     * @param {Object} point2 - Second point {x, y}
+     * @returns {boolean} - True if the line follows a grid line
+     */
+isValidGridLine(point1, point2) {
+    // For a radial grid, lines are valid if:
+    // 1. They lie on the same radius (same angle from center)
+    // 2. They lie on the same concentric circle
+
+    // Calculate distances from center for both points
+    const dist1 = Math.sqrt(Math.pow(point1.x - this.xCenter, 2) + Math.pow(point1.y - this.yCenter, 2));
+    const dist2 = Math.sqrt(Math.pow(point2.x - this.xCenter, 2) + Math.pow(point2.y - this.yCenter, 2));
+    
+    // Calculate angles from center for both points
+    const angle1 = Math.atan2(point1.y - this.yCenter, point1.x - this.xCenter);
+    const angle2 = Math.atan2(point2.y - this.yCenter, point2.x - this.xCenter);
+    
+    // Find closest angle division
+    const angleStep = 2 * Math.PI / this.angularDivisions;
+    const roundedAngle1 = Math.round(angle1 / angleStep) * angleStep;
+    const roundedAngle2 = Math.round(angle2 / angleStep) * angleStep;
+    
+    // Find closest radial division
+    const radiusStep = this.radius / this.radialDivisions;
+    const roundedDist1 = Math.round(dist1 / radiusStep) * radiusStep;
+    const roundedDist2 = Math.round(dist2 / radiusStep) * radiusStep;
+    
+    // Line is valid if both points are on the same angle or same radius
+    return Math.abs(roundedAngle1 - roundedAngle2) < 0.01 || Math.abs(roundedDist1 - roundedDist2) < 0.01;
+}
+
+/**
+ * Get all grid intersection points
+ * @returns {Array} - Array of points {x, y}
+ */
+getIntersections() {
+    const intersections = [];
+    
+    // For each radius division
+    for (let r = 1; r <= this.radialDivisions; r++) {
+        const radius = (this.radius / this.radialDivisions) * r;
+        
+        // For each angular division
+        for (let a = 0; a < this.angularDivisions; a++) {
+            const angle = (2 * Math.PI / this.angularDivisions) * a;
+            
+            intersections.push({
+                x: this.xCenter + Math.cos(angle) * radius,
+                y: this.yCenter + Math.sin(angle) * radius
+            });
+        }
+    }
+    
+    // Add the center point
+    intersections.push({
+        x: this.xCenter,
+        y: this.yCenter
+    });
+    
+    return intersections;
+}
+
+
 }
 
 export default RadialGrid;

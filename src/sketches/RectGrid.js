@@ -202,6 +202,41 @@ class RectGrid extends BaseGrid{
 
     }
 
+   
+ /**
+     * Check if a line follows the grid lines
+     * @param {Object} point1 - First point {x, y}
+     * @param {Object} point2 - Second point {x, y}
+     * @returns {boolean} - True if the line follows a grid line
+     */
+   isValidGridLine(point1, point2) {
+       // Check if both points are on the same horizontal or vertical grid line
+       const col1 = Math.round((point1.x - this.xStart) / this.cellWidth);
+       const row1 = Math.round((point1.y - this.yStart) / this.cellHeight);
+       const col2 = Math.round((point2.x - this.xStart) / this.cellWidth);
+       const row2 = Math.round((point2.y - this.yStart) / this.cellHeight);
+       
+       // Points are on the same row or column (horizontal or vertical line)
+       return row1 === row2 || col1 === col2;
+   }
+
+   /**
+    * Get all grid intersection points
+    * @returns {Array} - Array of points {x, y}
+    */
+   getIntersections() {
+       const intersections = [];
+       for (let col = 0; col <= this.cols; col++) {
+           for (let row = 0; row <= this.rows; row++) {
+               intersections.push({
+                   x: this.xStart + col * this.cellWidth,
+                   y: this.yStart + row * this.cellHeight
+               });
+           }
+       }
+       return intersections;
+   }
+
 
 }
 export default RectGrid;

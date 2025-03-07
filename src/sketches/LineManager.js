@@ -73,6 +73,10 @@
             .map(({ start, end }) => ({ start, end })); // Remove 'selected' property
     }
 
+    clearAllLines() {
+        this.lines = [];
+    }
+
 }
 
 export default LineManager;
