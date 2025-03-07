@@ -1,5 +1,6 @@
 import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
 import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
+import shapeDictionary from "./ShapeDictionary.js";
 class DisplayGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
         this.p = p;
@@ -41,7 +42,13 @@ class DisplayGrid {
                 letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
-                shape.setNoisePosition(x,y);
+
+                // Get noise position for the letter from the ShapeDictionary
+                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+
+                // Set the noise position for the shape
+                shape.setNoisePosition(noiseX, noiseY);
+
                 shape.generate();
                 this.grid[j][i] = {
                     x: x,
@@ -136,7 +143,13 @@ class DisplayGrid {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 cell.shape = new ShapeGeneratorV2(this.p, this.mergedParams);
-                cell.shape.setNoisePosition(cell.x,cell.y);
+
+                // Get noise position for the letter from the ShapeDictionary
+                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(cell.letter);
+
+                // Set the noise position for the shape
+                cell.shape.setNoisePosition(noiseX, noiseY);
+
                 cell.shape.generate();
             }
         }
@@ -219,7 +232,12 @@ class DisplayGrid {
                 letterCode = letterCode === 90 ? 65 : letterCode + 1;
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
-                shape.setNoisePosition(x,y);
+                // Get noise position for the letter from the ShapeDictionary
+                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+
+                // Set the noise position for the shape
+                shape.setNoisePosition(noiseX, noiseY);
+
                 shape.generate();
 
                 newRow.push({
