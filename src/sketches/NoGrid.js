@@ -24,5 +24,23 @@ class NoGrid extends BaseGrid {
     mousePressed(x,y) {return;}
     mouseReleased() {return;}
     mouseDragged(x,y) {return;}
+
+    /**
+     * Check if a line follows the grid lines - always return true for NoGrid
+     * @returns {boolean} - Always true since there are no grid lines
+     */
+    isValidGridLine(point1, point2) {
+        // For NoGrid, any line is valid
+        return true;
+    }
+
+    /**
+     * Get all grid intersection points - return empty array for NoGrid
+     * @returns {Array} - Empty array since there are no grid intersections
+     */
+    getIntersections() {
+        // For NoGrid, there are no intersections
+        return [];
+    }
 }
 export default NoGrid;

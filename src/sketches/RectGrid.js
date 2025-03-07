@@ -1,6 +1,7 @@
 import BaseGrid from "./BaseGrid.js";
 import KnobLabel from "./KnobLabel.js";
-class RectGrid extends BaseGrid{
+
+class RectGrid extends BaseGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize) {
         super(p, xStart, yStart, gridSize);
 
@@ -12,196 +13,392 @@ class RectGrid extends BaseGrid{
 
         this.initGrid();
 
-        // Knob positions (start near the top-left of the grid)
-        this.colsKnob = { x: xStart + this.gridSize - 50, y: yStart, size: 15 };
-        this.rowsKnob = { x: xStart + this.gridSize, y: yStart + 50, size: 15 };
+        // Smaller knob size
+        const knobSize = 20; // Reduced from 24
+
+        // Position knobs directly on the grid edges
+        this.colsKnob = { 
+            x: xStart + this.gridSize / 2, // Center horizontally
+            y: yStart + this.gridSize, // Exactly on the bottom grid line
+            size: knobSize
+        };
+        
+        // Row knob goes on right edge
+        this.rowsKnob = { 
+            x: xStart + this.gridSize, // Exactly on the right grid line
+            y: yStart + this.gridSize / 2, // Center vertically
+            size: knobSize
+        };
 
         // Tracking dragging state
         this.draggingColsKnob = false;
         this.draggingRowsKnob = false;
+        
+        // To track mouse offset when dragging starts
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
+        
         // To track the initial counts when dragging starts
         this.initialCols = this.cols;
         this.initialRows = this.rows;
 
-        this.knobLabel = new KnobLabel(p); // Create an instance of KnobLabel
-
-
+        // Create knob label
+        this.knobLabel = new KnobLabel(p);
+        
+        // Update knob positions based on current grid settings
+        this.updateKnobPositions();
     }
 
-    // Initialize the grid with GenShape objects
+    // New method to update knob positions based on grid settings
+    updateKnobPositions() {
+        // Calculate position for column knob (moves horizontally)
+        const colFraction = (this.cols - 1) / 9; // 1-10 range mapped to 0-1
+        this.colsKnob.x = this.xStart + colFraction * this.gridSize;
+        
+        // Calculate position for row knob (moves vertically)
+        const rowFraction = (this.rows - 1) / 9; // 1-10 range mapped to 0-1
+        this.rowsKnob.y = this.yStart + rowFraction * this.gridSize;
+    }
+
     initGrid() {
         this.grid = [];
         for (let i = 0; i < this.cols; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.rows; j++) {
-                let x = this.xStart + i * this.cellWidth;
-                let y = this.yStart + j * this.cellHeight;
-
                 this.grid[i][j] = {
-                    x: x,
-                    y: y,
+                    x: this.xStart + i * this.cellWidth,
+                    y: this.yStart + j * this.cellHeight,
                     w: this.cellWidth,
-                    h: this.cellHeight,
+                    h: this.cellHeight
                 };
             }
         }
     }
 
-    draw(){
+    getIntersections() {
+        let intersections = [];
+        
+        for (let i = 0; i <= this.cols; i++) {
+            for (let j = 0; j <= this.rows; j++) {
+                intersections.push({
+                    x: this.xStart + i * this.cellWidth,
+                    y: this.yStart + j * this.cellHeight
+                });
+            }
+        }
+        
+        return intersections;
+    }
+
+    // Helper method to draw improved round knobs with better hover/drag effects
+    drawKnob(knob, isDragging) {
         const p = this.p;
+        
+        // Check if mouse is hovering over this knob
+        const distToKnob = p.dist(p.mouseX, p.mouseY, knob.x, knob.y);
+        const isHovered = distToKnob < knob.size / 2 * 1.2;
+        
+        // Determine visual state (normal, hover, active) - using darker grays
+        let knobColor, knobSize;
+        
+        if (isDragging) {
+            // Active state
+            knobColor = 120; // Darker gray when dragging
+            knobSize = knob.size * 1.1; // Slightly larger
+        } else if (isHovered) {
+            // Hover state
+            knobColor = 140; // Medium gray when hovered (darker)
+            knobSize = knob.size * 1.05; // Very slightly larger
+        } else {
+            // Normal state
+            knobColor = 180; // Darker gray than before
+            knobSize = knob.size; // Normal size
+        }
+        
+        // Draw knob with no stroke
+        p.noStroke();
+        p.fill(knobColor);
+        p.ellipse(knob.x, knob.y, knobSize);
+        
+        p.stroke(255); // White lines
+        p.strokeWeight(1.5);
+        
+        // Draw the three lines based on knob type (columns or rows)
+        p.push();
+        p.translate(knob.x, knob.y);
+        
+        const lineLength = knobSize * 0.6;
+        const spacing = knobSize * 0.2;
+        
+        if (knob === this.colsKnob) {
+            // For columns knob, draw three vertical lines
+            // (rotated 90° so they align with vertical column lines)
+            p.line(-spacing, -lineLength/2, -spacing, lineLength/2); // Left line
+            p.line(0, -lineLength/2, 0, lineLength/2); // Middle line
+            p.line(spacing, -lineLength/2, spacing, lineLength/2); // Right line
+        } else if (knob === this.rowsKnob) {
+            // For rows knob, draw three horizontal lines
+            // (rotated 90° so they align with horizontal row lines)
+            p.line(-lineLength/2, -spacing, lineLength/2, -spacing); // Top line
+            p.line(-lineLength/2, 0, lineLength/2, 0); // Middle line
+            p.line(-lineLength/2, spacing, lineLength/2, spacing); // Bottom line
+        }
+        
+        p.pop();
+        
+        // Draw directional arrow indicators only when hovering or dragging
+        if (isHovered || isDragging) {
+            const arrowSize = knobSize * 0.5;
+            
+            p.push();
+            p.noStroke();
+            p.fill(knobColor); // Use the same color as the knob itself
+            
+            if (knob === this.colsKnob) {
+                // Position arrows with slight overlap
+                const arrowDistance = knobSize * 0.9;
+                
+                // Left arrow (decrease columns)
+                p.push();
+                p.translate(knob.x - arrowDistance, knob.y);
+                p.triangle(
+                    0, 0,
+                    arrowSize, -arrowSize/2,
+                    arrowSize, arrowSize/2
+                );
+                p.pop();
+                
+                // Right arrow (increase columns)
+                p.push();
+                p.translate(knob.x + arrowDistance, knob.y);
+                p.triangle(
+                    0, 0,
+                    -arrowSize, -arrowSize/2,
+                    -arrowSize, arrowSize/2
+                );
+                p.pop();
+            } else if (knob === this.rowsKnob) {
+                // Position arrows with slight overlap
+                const arrowDistance = knobSize * 0.9;
+                
+                // Up arrow (decrease rows)
+                p.push();
+                p.translate(knob.x, knob.y - arrowDistance);
+                p.triangle(
+                    0, 0,
+                    -arrowSize/2, arrowSize,
+                    arrowSize/2, arrowSize
+                );
+                p.pop();
+                
+                // Down arrow (increase rows)
+                p.push();
+                p.translate(knob.x, knob.y + arrowDistance);
+                p.triangle(
+                    0, 0,
+                    -arrowSize/2, -arrowSize,
+                    arrowSize/2, -arrowSize
+                );
+                p.pop();
+            }
+            
+            p.pop();
+        }
+    }
+
+    draw() {
+        const p = this.p;
+        
+        // Draw grid cells
+        p.noFill();
+        p.stroke(this.strokeColor);
+        p.strokeWeight(this.strokeWeight);
+        
         for (let i = 0; i < this.cols; i++) {
             for (let j = 0; j < this.rows; j++) {
                 let cell = this.grid[i][j];
-                p.noFill();
-                p.stroke(this.strokeColor);
-                p.strokeWeight(this.strokeWeight);
                 p.rect(cell.x, cell.y, cell.w, cell.h);
             }
         }
-        // Columns knob
-        p.fill(255);
-        p.strokeWeight(2);
-        p.ellipse(this.colsKnob.x, this.colsKnob.y, this.colsKnob.size);
-
-        // Rows knob
-        p.ellipse(this.rowsKnob.x, this.rowsKnob.y, this.rowsKnob.size);
-
+        
+        // Draw grid border lines with slightly highlighted stroke
+        p.stroke(this.strokeColor);
+        p.strokeWeight(this.strokeWeight * 1.5);
+        
+        // Bottom line (for columns knob)
+        p.line(
+            this.xStart, 
+            this.yStart + this.gridSize, 
+            this.xStart + this.gridSize, 
+            this.yStart + this.gridSize
+        );
+        
+        // Right line (for rows knob)
+        p.line(
+            this.xStart + this.gridSize, 
+            this.yStart,
+            this.xStart + this.gridSize, 
+            this.yStart + this.gridSize
+        );
+        
+        // Reset stroke weight for later elements
+        p.strokeWeight(this.strokeWeight);
+        
+        // Draw the knobs with the new helper method
+        this.drawKnob(this.colsKnob, this.draggingColsKnob);
+        this.drawKnob(this.rowsKnob, this.draggingRowsKnob);
+        
+        // Update cursor when hovering over knobs
+        const distToColsKnob = p.dist(p.mouseX, p.mouseY, this.colsKnob.x, this.colsKnob.y);
+        const distToRowsKnob = p.dist(p.mouseX, p.mouseY, this.rowsKnob.x, this.rowsKnob.y);
+        
+        if (distToColsKnob < this.colsKnob.size / 2) {
+            p.cursor(p.HAND);
+        } else if (distToRowsKnob < this.rowsKnob.size / 2) {
+            p.cursor(p.HAND);
+        } else {
+            p.cursor(p.ARROW);
+        }
+        
+        // Draw the knob label
         this.knobLabel.draw();
-
     }
 
-    // Dynamically set grid size and reinitialize
-    setGridSize(cols, rows) {
-        this.cols = Math.max(1, Math.floor(cols)); // Ensure at least 1 column
-        this.rows = Math.max(1, Math.floor(rows)); // Ensure at least 1 row
-
-        this.cellWidth = this.gridSize / cols; // Recalculate cell width
-        this.cellHeight = this.gridSize / rows; // Recalculate cell height
-        this.initGrid(); // Reinitialize the grid
-    }
-
-    /**
-     * Determines snap position based on mouse coordinates, respecting the snap threshold.
-     * @param {number} mouseX - The x-coordinate of the mouse.
-     * @param {number} mouseY - The y-coordinate of the mouse.
-     * @returns {object|null} An object with the snapped x and y position, or null if no snapping occurs.
-     */
-    getSnapPosition(mouseX, mouseY) {
-        // Ensure the mouse is within the bounds of the grid
-        if (mouseX < this.xStart || mouseY < this.yStart ||
-            mouseX > this.xStart + this.cols * this.cellWidth ||
-            mouseY > this.yStart + this.rows * this.cellHeight) {
-            return null; // Out of bounds
-        }
-
-        // Calculate the closest corner in the grid
-        const col = Math.round((mouseX - this.xStart) / this.cellWidth); // Closest column index
-        const row = Math.round((mouseY - this.yStart) / this.cellHeight); // Closest row index
-
-        // Calculate the corner position
-        const snapX = this.xStart + col * this.cellWidth;
-        const snapY = this.yStart + row * this.cellHeight;
-
-        // Calculate the distance between the mouse position and the snapped position
-        const distance = Math.sqrt(Math.pow(mouseX - snapX, 2) + Math.pow(mouseY - snapY, 2));
-
-        // Snap only if within the defined threshold
-        if (distance <= this.snapThreshold) {
-            return { x: snapX, y: snapY };
-        }
-
-        // Otherwise, return null (no snapping)
-        return null;
-
-    }
-
-    // Handle mouse press events to check if knobs are clicked
     mousePressed(mouseX, mouseY) {
         const distToColsKnob = this.p.dist(mouseX, mouseY, this.colsKnob.x, this.colsKnob.y);
         const distToRowsKnob = this.p.dist(mouseX, mouseY, this.rowsKnob.x, this.rowsKnob.y);
 
+        // Slightly larger hitboxes for better UX
+        const hitboxMultiplier = 1.3;
+
         // Check if either knob is clicked
-        if (distToColsKnob < this.colsKnob.size / 2) {
+        if (distToColsKnob < (this.colsKnob.size / 2) * hitboxMultiplier) {
             this.draggingColsKnob = true;
+            this.dragOffsetX = mouseX - this.colsKnob.x; // Record drag offset
             this.initialCols = this.cols; // Save the starting number of columns
+            this.knobLabel.update(this.cols, this.colsKnob.x, this.colsKnob.y - 20); // Show initial value
+            return true;
         }
-        if (distToRowsKnob < this.rowsKnob.size / 2) {
+        
+        if (distToRowsKnob < (this.rowsKnob.size / 2) * hitboxMultiplier) {
             this.draggingRowsKnob = true;
+            this.dragOffsetY = mouseY - this.rowsKnob.y; // Record drag offset
             this.initialRows = this.rows; // Save the starting number of rows
+            this.knobLabel.update(this.rows, this.rowsKnob.x - 20, this.rowsKnob.y); // Show initial value
+            return true;
         }
 
-        return this.draggingColsKnob || this.draggingRowsKnob;
-
+        return false;
     }
-    // Handle mouse dragging
+
     mouseDragged(mouseX, mouseY) {
-        const dragRange = 100; // Range in pixels for full change (-100 to 100 for max scaling)
-        const maxCols = 12;
-        const minCols = 2;
-        const maxRows = 12;
-        const minRows = 2;
+        if (!this.draggingColsKnob && !this.draggingRowsKnob) {
+            return false;
+        }
 
         if (this.draggingColsKnob) {
-            // Calculate relative horizontal drag distance
-            const deltaX = mouseX - this.colsKnob.x;
-
-            // Scale deltaX to a change in columns
-            const change = Math.round(deltaX / dragRange * (maxCols - minCols));
-
-            // Apply the change to the starting number of columns
-            const newCols = this.initialCols + change;
-
-            // Clamp the value
-            const clampedCols = Math.min(maxCols, Math.max(minCols, newCols));
-
-            // Update grid temporarily
-            this.setGridSize(clampedCols, this.rows);
-
-            // Update the label for columns
-            this.knobLabel.update(clampedCols, this.colsKnob.x + 20, this.colsKnob.y);
+            // Move knob horizontally along the bottom edge
+            const newX = mouseX - this.dragOffsetX;
+            
+            // Constrain knob to grid width
+            const constrainedX = Math.max(
+                this.xStart, 
+                Math.min(this.xStart + this.gridSize, newX)
+            );
+            
+            // Update knob position
+            this.colsKnob.x = constrainedX;
+            
+            // Calculate new column count based on position (1-10 range)
+            const fraction = (constrainedX - this.xStart) / this.gridSize;
+            const newCols = Math.max(1, Math.min(10, Math.round(fraction * 9) + 1));
+            
+            // Only update if the value changed
+            if (newCols !== this.cols) {
+                this.cols = newCols;
+                this.cellWidth = this.gridSize / this.cols;
+                this.initGrid();
+                
+                // Update label with new value
+                this.knobLabel.update(this.cols, this.colsKnob.x, this.colsKnob.y - 20);
+            }
+            
+            return true;
         }
-
+        
         if (this.draggingRowsKnob) {
-            // Calculate relative vertical drag distance
-            const deltaY = mouseY - this.rowsKnob.y;
-
-            // Scale deltaY to a change in rows
-            const change = Math.round(deltaY / dragRange * (maxRows - minRows));
-
-            // Apply the change to the starting number of rows
-            const newRows = this.initialRows + change;
-
-            // Clamp the value
-            const clampedRows = Math.min(maxRows, Math.max(minRows, newRows));
-
-            // Update grid temporarily
-            this.setGridSize(this.cols, clampedRows);
-
-            // Update the label for rows
-            this.knobLabel.update(clampedRows, this.rowsKnob.x, this.rowsKnob.y + 20);
-
+            // Move knob vertically along the right edge
+            const newY = mouseY - this.dragOffsetY;
+            
+            // Constrain knob to grid height
+            const constrainedY = Math.max(
+                this.yStart, 
+                Math.min(this.yStart + this.gridSize, newY)
+            );
+            
+            // Update knob position
+            this.rowsKnob.y = constrainedY;
+            
+            // Calculate new row count based on position (1-10 range)
+            const fraction = (constrainedY - this.yStart) / this.gridSize;
+            const newRows = Math.max(1, Math.min(10, Math.round(fraction * 9) + 1));
+            
+            // Only update if the value changed
+            if (newRows !== this.rows) {
+                this.rows = newRows;
+                this.cellHeight = this.gridSize / this.rows;
+                this.initGrid();
+                
+                // Update label with new value
+                this.knobLabel.update(this.rows, this.rowsKnob.x - 20, this.rowsKnob.y);
+            }
+            
+            return true;
         }
-
-        return this.draggingColsKnob || this.draggingRowsKnob;
+        
+        return false;
     }
 
-// Handle mouse release events
     mouseReleased() {
         const wasDraggingKnob = this.draggingColsKnob || this.draggingRowsKnob;
+        
         // Stop dragging and finalize the columns/rows
         this.draggingColsKnob = false;
         this.draggingRowsKnob = false;
 
-        // Finalize the column and row count by setting them to the grid (already done in dragging)
+        // Finalize the column and row count
         this.initialCols = this.cols;
         this.initialRows = this.rows;
 
         // Hide the label when dragging stops
         this.knobLabel.hide();
+        
         return wasDraggingKnob;
-
     }
 
-
+    // Method to get a snapped position (nearest grid intersection)
+    getSnapPosition(mouseX, mouseY) {
+        // Find nearest column
+        const colWidth = this.gridSize / this.cols;
+        const rowHeight = this.gridSize / this.rows;
+        
+        const relX = mouseX - this.xStart;
+        const relY = mouseY - this.yStart;
+        
+        // Calculate the nearest grid line indices
+        const colIndex = Math.round(relX / colWidth);
+        const rowIndex = Math.round(relY / rowHeight);
+        
+        // Constrain to grid boundaries
+        const constrainedColIndex = Math.max(0, Math.min(this.cols, colIndex));
+        const constrainedRowIndex = Math.max(0, Math.min(this.rows, rowIndex));
+        
+        // Calculate the actual position
+        return {
+            x: this.xStart + constrainedColIndex * colWidth,
+            y: this.yStart + constrainedRowIndex * rowHeight
+        };
+    }
 }
+
 export default RectGrid;
