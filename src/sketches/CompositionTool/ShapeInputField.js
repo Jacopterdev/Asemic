@@ -29,14 +29,16 @@ class ShapeInputField {
         if (this.shapes.length >= this.maxShapes) {
             this.shapes.shift(); // Remove the oldest shape if maximum is reached
         }
+
         const shape = this.createShape(key);
         if (shape) {
-            this.shapes.push(shape); // Add the new `ShapeGeneratorV2` object
+            this.shapes.push({ letter: key, shape }); // Store both letter and shape
         }
 
         this.lastBlinkTime = this.p.millis(); // Reset cursor blink timer
         this.cursorVisible = false; // Hide the cursor when typing
     }
+
 
 
     // Remove the last shape from the input field
@@ -73,7 +75,7 @@ class ShapeInputField {
         const baseShapeWidth = this.width / this.maxShapes * this.defaultOverlap;
 
         // Adjust kerning: influences the spacing between shapes
-        const kerningOffset = this.kerning; // `kerning` ranges from -100 to 100
+        const kerningOffset = this.kerning;
 
         // Calculate the actual spacing between shapes
         const adjustedSpacing = baseShapeWidth + kerningOffset;
@@ -82,9 +84,8 @@ class ShapeInputField {
         const totalShapesWidth = this.shapes.length * adjustedSpacing;
         let startX = this.x + (this.width - (totalShapesWidth + baseShapeWidth)) / 2;
 
-        // Draw each ShapeGeneratorV2 shape
-        this.shapes.forEach((shapeInstance) => {
-            // Push p5 context to handle individual transformations safely
+        // Draw each shape
+        this.shapes.forEach(({ shape }) => {
             p.push();
 
             // Translate to the starting position of the current shape
@@ -94,9 +95,8 @@ class ShapeInputField {
             p.scale(this.scale);
 
             // Use the `draw` method of ShapeGeneratorV2 to render the shape
-            shapeInstance.draw();
+            shape.draw();
 
-            // Restore p5 context
             p.pop();
 
             // Advance position by dynamically adjusted spacing
@@ -153,9 +153,16 @@ class ShapeInputField {
         return shape;
     }
 
-    updateMergedParams(mergedParams){
-        this.mergedParams = mergedParams;
+    updateMergedParams(newParams) {
+        this.mergedParams = newParams;
+
+        // Regenerate all shapes based on stored letters
+        this.shapes = this.shapes.map(({ letter }) => ({
+            letter, // Keep the original letter
+            shape: this.createShape(letter) // Regenerate the shape
+        }));
     }
+
 
 }
 
