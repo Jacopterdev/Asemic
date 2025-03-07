@@ -253,7 +253,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
     }, [activeTab, tabs]);
 
     return (
-        <div className="tabs-with-panes w-full">
+        <div className="tabs-with-panes w-full !mt-2">
             {/* Tabs List */}
             <div className="tabs-list flex space-x-2 h-10">
                 {tabs.length > 0 ? (
@@ -280,7 +280,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
 
                             {/* Delete Button */}
                             <button
-                                className="mini-delete absolute top-0 right-0 hidden group-hover:inline"
+                                className="mini-delete absolute top-1 right-0 hidden group-hover:inline"
                                 onClick={() => deleteTab(tab.id)}
                             >
                                 -
