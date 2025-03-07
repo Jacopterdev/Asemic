@@ -3,6 +3,7 @@ import SkeletonState from "./States/SkeletonState.js";
 import AnatomyState from "./States/AnatomyState.js";
 import CompositionState from "./States/CompositionState.js";
 import Effects from "./Effects.js";
+import shapeDictionary from "./ShapeDictionary.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) => {
     let points = [];
@@ -37,7 +38,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         lineManager = new LineManager();
 
         effects = new Effects(p);
-
+        console.log(shapeDictionary.getDictionary());
 
         /** STATE MANAGEMENT */
         // Pre-create each state and store them
@@ -79,6 +80,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
         if (currentToolState && currentToolState !== currentState?.name) {
             updateState(currentToolState); // Update state when `toolConfigRef.state` changes
+            if (currentState?.updateMergedParams) currentState.updateMergedParams(mergedParams);
         }
         effects.setSmoothAmount(mergedParams.smoothAmount);
         currentState?.draw();
@@ -92,7 +94,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         effects.animateSmoothAmount();
     }
     p.isConfigUpdated = () => {
-        if (!lastUpdatedParam) return true;
         let configUpdated =
             lastUpdatedParam &&
             (!previousLastUpdatedParam ||
@@ -111,7 +112,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     p.mouseWheel = (event) => {
         if (currentState?.mouseWheel) currentState.mouseWheel(event);
     };
-    p.mouseMoved = () => currentState?.mouseMoved();
+    p.mouseMoved = () => {
+        if(currentState?.mouseMoved) currentState?.mouseMoved();
+    }
 
 };
 
