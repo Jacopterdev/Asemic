@@ -81,12 +81,13 @@ class SkeletonState {
         // Draw button background with lighter grayscale colors
         this.p.strokeWeight(0);
         // Use lighter grays for both states
-        this.p.fill(this.isDeleteButtonHovered ? 180 : 210);
+        const buttonColor = this.isDeleteButtonHovered ? 180 : 210;
+        this.p.fill(buttonColor);
         this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
         
         // Draw trash can icon - slightly smaller proportions
         this.p.noStroke();
-        this.p.fill(100); // Darker gray for icon (less contrast)
+        this.p.fill(255); // Changed to white instead of dark gray
         
         // Draw trash can body - slightly smaller
         const margin = size * 0.2;
@@ -112,9 +113,9 @@ class SkeletonState {
         const handleY = lidY - handleHeight;
         this.p.rect(handleX, handleY, handleWidth, handleHeight, 1);
         
-        // Draw vertical lines inside trash can to create the classic trash can look
+        // Draw vertical lines inside trash can - use the same light gray color as the background
         this.p.strokeWeight(1);
-        this.p.stroke(240);
+        this.p.stroke(buttonColor); // Changed to use the same color as the button background
         
         const lineCount = 3;
         const lineSpacing = trashWidth / (lineCount + 1);
@@ -149,9 +150,9 @@ class SkeletonState {
         this.p.fill(this.isFillGridButtonHovered ? 180 : 210);
         this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
         
-        // Draw grid fill icon with less contrast
+        // Draw grid fill icon with white instead of dark gray
         this.p.noStroke();
-        this.p.fill(100); // Darker gray for icon (less contrast)
+        this.p.fill(255); // Changed to white
         
         // Draw grid representation - slightly smaller
         const margin = size * 0.2;
@@ -161,11 +162,11 @@ class SkeletonState {
         
         // Draw grid outline
         this.p.strokeWeight(1);
-        this.p.stroke(100);
+        this.p.stroke(255); // Changed to white
         this.p.noFill();
         this.p.rect(gridX, gridY, gridSize, gridSize, 2);
         
-        // Draw grid lines - thinner
+        // Draw grid lines - thinner, in white
         const cellSize = gridSize / 2;
         
         // Vertical line
@@ -174,9 +175,9 @@ class SkeletonState {
         // Horizontal line
         this.p.line(gridX, gridY + cellSize, gridX + gridSize, gridY + cellSize);
         
-        // Draw points at the intersections - smaller
+        // Draw points at the intersections - smaller, in white
         this.p.noStroke();
-        this.p.fill(100); // Darker gray
+        this.p.fill(255); // Changed to white
         const dotSize = 3; // Smaller dots
         
         // Draw points at intersections
