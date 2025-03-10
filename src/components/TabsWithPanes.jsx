@@ -213,7 +213,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.addInput(activeTabData.params, "size", {
                 view: "interval",
                 min: 0,
-                max: 300,
+                max: 200,
                 step: 1,
                 label: "Size",
             }).on('change', (event) => {

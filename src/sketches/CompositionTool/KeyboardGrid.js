@@ -49,7 +49,6 @@ class KeyboardGrid {
         this.cells.forEach((cell) => cell.drawShape());
         const scaleFactor =  this.cellSize / this.p.width; // Adjust scale factor to fit the cell size
         this.effect.applyEffects(scaleFactor);
-        console.log(scaleFactor);
 
         // Draw all cells in the grid
         this.cells.forEach((cell) => cell.draw(this.buffer));
