@@ -56,8 +56,6 @@ class KeyboardCell {
 
             this.buffer.translate(-this.size / 2, -this.size / 2); // Move origin back to the original position
 
-
-
             // Render the shape
             this.shape.draw();
 
