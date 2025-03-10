@@ -19,6 +19,7 @@ class CompositionTool {
         // including a callback function bound to this instance
         this.keyboardGrid = new KeyboardGrid(
             p,         // Pass the p5 instance
+            mergedParams,
             50,        // x-coordinate of the grid's top-left corner
             p.height/2,        // y-coordinate of the grid's top-left corner
             (p.width - (2*50))/10,        // Size of each cell
@@ -65,6 +66,7 @@ class CompositionTool {
 
     updateMergedParams(mergedParams){
         this.mergedParams = mergedParams;
+        console.log(mergedParams);
         this.shapeInputField.updateMergedParams(mergedParams);
         this.keyboardGrid.updateMergedParams(mergedParams);
     }

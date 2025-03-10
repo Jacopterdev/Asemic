@@ -66,6 +66,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
         if (currentState?.updateMergedParams && configUpdated) {
             p.rebuildSkeleton();
+            effects.setSmoothAmount(mergedParams.smoothAmount);
             currentState.updateMergedParams(mergedParams);
         }
 
@@ -84,7 +85,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             p.rebuildSkeleton();
             if (currentState?.updateMergedParams) currentState.updateMergedParams(mergedParams);
         }
-        effects.setSmoothAmount(mergedParams.smoothAmount);
+
         currentState?.draw();
     };
 
