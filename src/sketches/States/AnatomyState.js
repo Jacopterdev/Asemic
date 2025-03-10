@@ -1,5 +1,6 @@
 ﻿import DisplayGrid from "../DisplayGrid.js";
 import {SPACING as LAYOUT} from "./LayoutConstants.js";
+import shapeSaver from "../ShapeSaver.js";
 
 class AnatomyState {
     constructor(p, points, lineManager, shapeGenerator, mergedParams) {
@@ -42,9 +43,17 @@ class AnatomyState {
 
     }
 
+    // Update the mousePressed method to handle button clicks
     mousePressed() {
-        this.xray = true;
-        // No mouse interaction in this state
+        // Delegate button handling to DisplayGrid
+        const buttonClicked = this.displayGrid.handleMousePressed();
+        
+        // If no button was clicked, set xray mode
+        if (!buttonClicked) {
+            this.xray = true;
+        }
+        
+        return buttonClicked;
     }
 
     mouseDragged() {

@@ -1,6 +1,9 @@
 import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
 import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary.js";
+import Effects from "./Effects.js";
+import shapeSaver from "./ShapeSaver.js";
+
 class DisplayGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
         this.p = p;
@@ -22,6 +25,8 @@ class DisplayGrid {
 
         this.initGrid();
 
+        // Initialize downloadButtons array
+        this.downloadButtons = [];
     }
 
     // Initialize the grid and assign letters
@@ -66,49 +71,97 @@ class DisplayGrid {
         const p = this.p;
 
         // Use absolute rendering bounds for visibility calculations
-        const renderTop = this.yStart + this.scrollOffset - this.cellHeight * 2;
-        const renderBottom = this.yStart + this.scrollOffset + p.height + this.cellHeight * 2;
+        const renderTop = Math.abs(this.scrollOffset) - this.cellHeight * 2;
+        const renderBottom = Math.abs(this.scrollOffset) + p.height + this.cellHeight * 2;
 
-        let renderedCellCount = 0;
-
+        // Initialize downloadButtons array if it doesn't exist
+        if (!this.downloadButtons) this.downloadButtons = [];
+        
+        // Draw grid cells
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
-
                 const cellYWithScroll = cell.y + this.scrollOffset;
-
-                // Check if the cell falls within the renderable area
-                if (cellYWithScroll + cell.h < renderTop || cellYWithScroll > renderBottom) {
-                    //continue; // Skip cells outside the visible area
+                
+                // Only draw cells that are visible
+                if (cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > p.height) {
+                    continue;
                 }
-
-
-
-
-                // Draw cell
-                if (this.hoveredCell === cell) {
-                    p.fill(200, 200, 255, 20);
-                } else {
-                    p.noFill();
-                }
-
+                
+                // Draw cell borders and letter
+                p.noFill();
                 p.stroke(200);
-                p.strokeWeight(1);
-                p.rect(cell.x, cellYWithScroll, cell.w, cell.h);
-
-                // Draw the letter inside the cell
+                p.rect(cell.x, cellYWithScroll, this.cellWidth, this.cellHeight);
+                
+                // Draw letter in corner
+                p.fill(0);
                 p.noStroke();
-                p.fill(50);
-                p.textFont("Roboto Mono");
                 p.textSize(12);
-                p.textAlign(p.RIGHT, p.BOTTOM);
-                p.text(cell.letter, cell.x + cell.w - 6, cellYWithScroll + cell.h - 4);
-
-                renderedCellCount++;
+                p.text(cell.letter, cell.x + 5, cellYWithScroll + 15);
             }
         }
+        
+        // Draw buttons for ALL cells, not just visible ones
+        // This ensures that buttons exist for all cells even if not visible yet
+        for (let j = 0; j < this.grid.length; j++) {
+            if (!this.downloadButtons[j]) this.downloadButtons[j] = [];
+            
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                const cellYWithScroll = cell.y + this.scrollOffset;
+                
+                // Only draw buttons for visible cells to save rendering performance
+                if (cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > p.height) {
+                    // Still create a button object for non-visible cells to maintain array structure
+                    this.downloadButtons[j][i] = {
+                        x: cell.x + (this.cellWidth - 80) / 2,
+                        y: cell.y + this.cellHeight - 34,
+                        width: 80,
+                        height: 24,
+                        isVisible: false
+                    };
+                    continue;
+                }
+                
+                // Draw the download button
+                this.drawDownloadButton(cell.x, cellYWithScroll, this.cellWidth, this.cellHeight, i, j);
+            }
+        }
+    }
 
-        //console.log(`Rendered ${renderedCellCount} cells.`); // Debug the count
+    // New method to draw download buttons
+    drawDownloadButton(x, y, width, height, col, row) {
+        const buttonWidth = 80;
+        const buttonHeight = 24;
+        const buttonX = x + (width - buttonWidth) / 2;
+        const buttonY = y + height - buttonHeight - 10; // Position at bottom with 10px margin
+        
+        // Check if mouse is over this button
+        const isHovered = this.p.mouseX > buttonX && this.p.mouseX < buttonX + buttonWidth &&
+                         this.p.mouseY > buttonY && this.p.mouseY < buttonY + buttonHeight;
+        
+        // Store button position data for click detection
+        if (!this.downloadButtons) this.downloadButtons = [];
+        if (!this.downloadButtons[row]) this.downloadButtons[row] = [];
+        
+        this.downloadButtons[row][col] = {
+            x: buttonX,
+            y: buttonY,
+            width: buttonWidth,
+            height: buttonHeight,
+            isVisible: true  // Mark as visible
+        };
+        
+        // Draw button
+        this.p.noStroke();
+        this.p.fill(isHovered ? '#4285F4' : '#5A9AF8');
+        this.p.rect(buttonX, buttonY, buttonWidth, buttonHeight, 4);
+        
+        // Draw button text
+        this.p.fill(255);
+        this.p.textSize(12);
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text('Download', buttonX + buttonWidth/2, buttonY + buttonHeight/2);
     }
 
     drawShapes(xray = false){
@@ -209,6 +262,8 @@ class DisplayGrid {
         // Purge rows above the visible area
         this.purgeOffscreenRows();
 
+        // Reset download buttons array since positions will change
+        this.downloadButtons = [];
     }
 
     // Add Rows dynamically
@@ -289,6 +344,40 @@ class DisplayGrid {
         if (purgedRowCount > 0) {
             console.log(`Purged ${purgedRowCount} rows.`);
         }
+    }
+
+    // Add method to handle download of a specific cell
+    handleMousePressed() {
+        // Check if any download button was clicked
+        if (this.downloadButtons) {
+            for (let row = 0; row < this.downloadButtons.length; row++) {
+                if (!this.downloadButtons[row]) continue;
+                
+                for (let col = 0; col < this.downloadButtons[row].length; col++) {
+                    const button = this.downloadButtons[row][col];
+                    if (!button || !button.isVisible) continue;  // Skip non-visible buttons
+                    
+                    if (
+                        this.p.mouseX >= button.x && 
+                        this.p.mouseX <= button.x + button.width &&
+                        this.p.mouseY >= button.y && 
+                        this.p.mouseY <= button.y + button.height
+                    ) {
+                        // Download the shape for this cell
+                        if (!this.grid[row] || !this.grid[row][col]) return false;
+            
+                        const cell = this.grid[row][col];
+                        const letter = cell.letter;
+                        
+                        // Initialize shapeSaver before using it
+                        shapeSaver.init(this.p, this.mergedParams).download(letter);
+                        return true; // Button was clicked
+                    }
+                }
+            }
+        }
+        
+        return false; // No button was clicked
     }
 
 }
