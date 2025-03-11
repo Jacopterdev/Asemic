@@ -24,6 +24,7 @@ class SubShapeGenerator {
 
     draw(xray = false){
         this.p.fill(0);
+        this.p.strokeWeight(0);
 
         if(xray){
             this.p.strokeWeight(3);this.p.stroke(255,150,0); this.p.noFill();

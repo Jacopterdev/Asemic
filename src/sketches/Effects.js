@@ -13,7 +13,7 @@ class Effects {
     }
 
 
-    applyEffects(blurScale){
+    applyEffects(blurScale = 1){
         this.p.filter(this.p.BLUR, this.smoothAmount * blurScale);
         this.p.filter(this.p.THRESHOLD, 0.5);
     }

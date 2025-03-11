@@ -43,10 +43,18 @@ class KeyboardCell {
         if (this.shape) {
             this.buffer.push();
 
+            console.log(this.p.getShapeScale());
+            const shapeScale = this.p.getShapeScale();
+
             // Translate to the center of the cell
             this.buffer.translate(this.x, this.y);
 
-            this.buffer.scale(scaleFactor);
+            // Center the scale behavior
+            this.buffer.translate(this.size / 2, this.size / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
+
+            this.buffer.scale(scaleFactor * shapeScale);
+
+            this.buffer.translate(-this.size / 2, -this.size / 2); // Move origin back to the original position
 
             // Render the shape
             this.shape.draw();

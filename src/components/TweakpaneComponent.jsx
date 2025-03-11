@@ -36,7 +36,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         const skeletonFolder = pane.addFolder({ title: 'Skeleton' });
         skeletonFolder.addInput(params, 'missArea', {
             min: 0,
-            max: 500,
+            max: 100,
             step: 1,
         }).on('change', (event) => {
             updateParam('missArea', event.value); // Update React state and parent state
@@ -55,7 +55,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         anatomyFolder.addInput(params, 'lineWidth', {
             view: "interval",
             min: 0,
-            max: 300,
+            max: 100,
             step: 1,
         }).on('change', (event) => {
             updateParam('lineWidth', event.value);
@@ -85,7 +85,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         anatomyFolder.addInput(params, 'smoothAmount', {
             step: 1,
             min: 0,
-            max: 50,
+            max: 30,
         }).on('change', (event) => {
             updateParam('smoothAmount', event.value);
         });

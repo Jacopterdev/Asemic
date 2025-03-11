@@ -1,10 +1,8 @@
 ﻿import KeyboardCell from "./KeyboardCell.js";
 import Effects from "../Effects.js";
-import {defaultConfig as mergedParams} from "../ShapeGenerator/Constants.js";
-import effects from "../Effects.js";
 
 class KeyboardGrid {
-    constructor(p, x, y, cellSize, rows, cols, alphabet, callback) {
+    constructor(p, mergedParams, x, y, cellSize, rows, cols, alphabet, callback) {
         this.p = p; // p5 instance
         this.x = x; // Top-left x position of the grid
         this.y = y; // Top-left y position of the grid
@@ -14,6 +12,7 @@ class KeyboardGrid {
         this.cells = []; // Array to hold all Cell instances
         this.alphabet = alphabet.split(""); // Ensure alphabet is an array
 
+        this.mergedParams = mergedParams;
 
         let index = 0;
 
@@ -67,7 +66,8 @@ class KeyboardGrid {
     }
 
     updateMergedParams(newParams){
-        this.effect.setSmoothAmount(mergedParams.smoothAmount);
+        this.mergedParams = newParams;
+        this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
         this.cells.forEach((cell) => cell.updateMergedParams(newParams));
     }
 }
