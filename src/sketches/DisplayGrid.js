@@ -4,6 +4,7 @@ import shapeDictionary from "./ShapeDictionary.js";
 import Effects from "./Effects.js";
 import shapeSaver from "./ShapeSaver.js";
 import DownloadButton from "./DownloadButton.js";
+import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 
 class DisplayGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
@@ -178,6 +179,17 @@ class DisplayGrid {
                 if (cell.shape !== null) {
                     p.push(); // Save current transformation state
 
+                    //Scale the shape
+                    const shapeScale = this.p.getShapeScale();
+                    const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
+                    const space = cell.w;
+
+                    //Find the new margin offset.
+                    this.p.translate(cell.x - ((spacedShapeScale*cell.w)/2) + (space/2), cellYWithScroll - ((spacedShapeScale*cell.w)/2) + (space/2));
+
+                    this.p.scale(this.scale * spacedShapeScale);
+
+                    /**
                     // Translate to the top-left corner of the current cell
                     p.translate(cell.x, cellYWithScroll);
 
@@ -185,6 +197,8 @@ class DisplayGrid {
                     const scaleX = (p.w / cell.w) * 0.1;
                     const scaleY = (p.h / cell.h) * 0.1;
                     p.scale(this.scale);
+                    */
+
 
                     // Draw the shape relative to the translated origin (scaled to fit)
                     cell.shape.draw(xray);
