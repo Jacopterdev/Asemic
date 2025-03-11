@@ -1,15 +1,11 @@
 import Header from "./components/Header";
-import Button from "./components/Button";
-import {IntervalSlider} from "./components/IntervalSlider.jsx";
-import PriceRangeSlider from "./components/PriceRangeSlider.jsx";
 import { useState } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
 import P5Wrapper from "./components/P5Wrapper"; // Import the wrapper
 import defaultSketch from "./sketches/defaultSketch";
 import TabsWithPanes from "./components/TabsWithPanes.jsx";
-import ButtonGroup from "./components/ButtonGroup.jsx"; // Import your sketch
-
-
+import ButtonGroup from "./components/ButtonGroup.jsx";
+import TabGroup from "./components/TabGroup.jsx"; // Import your sketch
 
 
 function App() {
@@ -138,12 +134,12 @@ function App() {
                         </div>
                     </div>
 
-                    <div className="flex-1 bg-gray-200 shadow p-4 rounded">
-                        <div className="flex justify-between items-center">
-                            <ButtonGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
+                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                        <div className="flex justify-between items-center h-6">
+                            <TabGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
 
                             {isSecondGroupVisible && (
-                                <div className="mt-4">
+                                <div>
                                     <ButtonGroup buttons={secondGroupButtons} onButtonSelect={handleSecondGroupSelection}
                                     />
                                 </div>
@@ -151,9 +147,6 @@ function App() {
 
                             <div className="flex items-center space-x-4">
 
-
-                                <div className="button">Grid Type</div>
-                                <div className="button">Export</div>
                             </div>
                         </div>
                         <div className="flex space-y-2 bg-white">
@@ -163,6 +156,7 @@ function App() {
                                        toolConfig={toolConfig}
                                        lastUpdatedParam={lastUpdatedParam}
                             />
+                            <div className="bg-gray-50 flex-1 rounded m-4"></div>
                         </div>
                     </div>
                 </div>

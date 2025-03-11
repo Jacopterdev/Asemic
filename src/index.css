@@ -1,9 +1,19 @@
-@import "tailwindcss";
+/*@import "tailwindcss";
 @import "tailwindcss/preflight";
-@tailwind utilities;
 
-main{
+@tailwind utilities;*/
+
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+
+/*main{
     margin: auto !important;
+}*/
+*{
+    @apply p-0;
 }
 
 header{
@@ -39,6 +49,10 @@ button, .button{
 
 .tab {
     @apply rounded-t-lg rounded-b-none;
+}
+
+.statetab{
+    @apply border-b-2 border-b-orange-500 box-border;
 }
 
 
