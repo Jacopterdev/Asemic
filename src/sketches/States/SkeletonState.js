@@ -381,12 +381,10 @@ class SkeletonState {
         const knobDragged = this.gridContext.mouseReleased();
         if (knobDragged) return;
         this.mouseHandler.handleMouseReleased();
-        console.log("Points: ", this.points);
     }
 
     mouseMoved() {
         if (this.mouseHandler) {
-            console.log("hahahhahah");
             this.mouseHandler.handleMouseMoved();
         }
     }

@@ -1,5 +1,6 @@
 ﻿import shapeDictionary from "../ShapeDictionary.js";
 import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
+import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class KeyboardCell {
     constructor(p, buffer, x, y, size, char, callback, fontSize = 8, fontType = "Roboto Mono", fontFillColor = 128) {
@@ -43,16 +44,16 @@ class KeyboardCell {
         if (this.shape) {
             this.buffer.push();
 
-            console.log(this.p.getShapeScale());
             const shapeScale = this.p.getShapeScale();
+            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
 
             // Translate to the center of the cell
-            this.buffer.translate(this.x, this.y);
+            this.buffer.translate(this.x - (spacedShapeScale*this.size/2), this.y - (spacedShapeScale*this.size/2));
 
             // Center the scale behavior
             this.buffer.translate(this.size / 2, this.size / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
 
-            this.buffer.scale(scaleFactor * shapeScale);
+            this.buffer.scale(scaleFactor * spacedShapeScale);
 
             this.buffer.translate(-this.size / 2, -this.size / 2); // Move origin back to the original position
 
