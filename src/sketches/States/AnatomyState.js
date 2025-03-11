@@ -46,14 +46,13 @@ class AnatomyState {
     // Update the mousePressed method to handle button clicks
     mousePressed() {
         // Delegate button handling to DisplayGrid
-        const buttonClicked = this.displayGrid.handleMousePressed();
+        this.displayGrid.handleMousePressed();
         
         // If no button was clicked, set xray mode
-        if (!buttonClicked) {
+        //if (!buttonClicked) {
             this.xray = true;
-        }
-        
-        return buttonClicked;
+        //}
+
     }
 
     mouseDragged() {
