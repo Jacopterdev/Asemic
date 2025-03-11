@@ -367,23 +367,27 @@ class DisplayGrid {
                 
                 for (let col = 0; col < this.downloadButtons[row].length; col++) {
                     const button = this.downloadButtons[row][col];
-                    if (!button || !button.isVisible) continue;  // Skip non-visible buttons
+                    if (!button || !button.isVisible) continue;
                     
-                    if (
-                        this.p.mouseX >= button.x && 
-                        this.p.mouseX <= button.x + button.width &&
-                        this.p.mouseY >= button.y && 
-                        this.p.mouseY <= button.y + button.height
-                    ) {
-                        // Download the shape for this cell
-                        if (!this.grid[row] || !this.grid[row][col]) return false;
+                    if (button.isClicked(this.p.mouseX, this.p.mouseY)) {
+                        // Make sure we have a valid cell
+                        if (!this.grid[row] || !this.grid[row][col] || !this.grid[row][col].shape) {
+                            console.error("Invalid grid cell or missing shape");
+                            return false;
+                        }
             
                         const cell = this.grid[row][col];
                         const letter = cell.letter;
                         
-                        // Initialize shapeSaver before using it
-                        shapeSaver.init(this.p, this.mergedParams).download(letter);
-                        return true; // Button was clicked
+                        console.log("Download button clicked for letter:", letter);
+                        
+                        try {
+                            // Initialize shapeSaver before using it
+                            shapeSaver.init(this.p, this.mergedParams).download(letter);
+                            return true;
+                        } catch (error) {
+                            console.error("Error downloading shape:", error);
+                        }
                     }
                 }
             }
