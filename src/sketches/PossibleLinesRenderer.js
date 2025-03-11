@@ -7,12 +7,12 @@
         this.disabledLineColor = this.p.color(...disabledLineColor); 
         this.hoveredLineColor = this.p.color(...hoveredLineColor);
         this.strokeWeight = 1; // Base stroke weight for selected lines
-        this.disabledStrokeWeight = 8; // Thick stroke for non-selected lines
-        this.hoveredStrokeWeight = 8; // Thick stroke for hovered lines
+        this.disabledStrokeWeight = 6; // Thick stroke for non-selected lines
+        this.hoveredStrokeWeight = 6; // Thick stroke for hovered lines
         this.minStrokeWeight = 0; // Minimum stroke weight (invisible)
         
         // Animation variables
-        this.hoverAnimationDuration = 15; // Frames for animation
+        this.hoverAnimationDuration = 6; // Frames for animation
         this.currentHoveredLine = null;
         this.previousHoveredLine = null;
         this.hoverTransition = 0; // 0 to hoverAnimationDuration

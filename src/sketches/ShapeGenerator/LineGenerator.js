@@ -175,56 +175,75 @@ class LineGenerator {
             return [];
         }
 
-        // Start with a random line
-        const startLineIndex = this.p.floor(this.cNoise.noiseMap(this.noisePos, 0, allLines.length));
-        const selectedLines = [allLines[startLineIndex]];
+        const selectedLines = [];
+        const usedLines = new Set(); // Keep track of lines that have already been used
+        let remainingLines = [...allLines]; // Clone allLines for processing
 
-        // Track points that have been used as endpoints
-        const usedPoints = new Set();
-        usedPoints.add(this.pointToString(selectedLines[0].start));
+        while (selectedLines.length < numOfLines && remainingLines.length > 0) {
+            // If no lines are selected yet OR no continuation is possible, start a new sequence
+            let currentSequence = [];
+            let usedPoints = new Set();
 
-        // Track the current endpoint that we need to connect from
-        let currentEndPoint = selectedLines[0].end;
-        let currentEndPointStr = this.pointToString(currentEndPoint);
-        usedPoints.add(currentEndPointStr);
+            // Start a new random line
+            const randomIndex = this.p.floor(this.cNoise.noiseMap(this.noisePos, 0, remainingLines.length));
+            const currentLine = remainingLines[randomIndex];
+            currentSequence.push(currentLine);
+            usedLines.add(currentLine);
+            remainingLines = remainingLines.filter(line => !usedLines.has(line));
 
-        // Try to find a sequence of connected lines
-        while (selectedLines.length < numOfLines && selectedLines.length < allLines.length) {
-            let foundNextLine = false;
+            // Track the new start and end points
+            usedPoints.add(this.pointToString(currentLine.start));
+            let currentEndPoint = currentLine.end;
+            let currentEndPointStr = this.pointToString(currentEndPoint);
+            usedPoints.add(currentEndPointStr);
 
-            // Shuffle the remaining lines to avoid predictable patterns
-            const remainingLines = allLines.filter(line => !selectedLines.includes(line));
-            this.shuffleArray(remainingLines);
+            let foundNextLine = true; // Assume we can continue the sequence
 
-            // Find a line that connects to our current endpoint and leads to a new point
-            for (const line of remainingLines) {
-                const startPointStr = this.pointToString(line.start);
-                const endPointStr = this.pointToString(line.end);
+            // Try to find and extend this sequence
+            while (
+                currentSequence.length < numOfLines &&
+                remainingLines.length > 0 &&
+                foundNextLine
+                ) {
+                foundNextLine = false; // Reset for this iteration
 
-                // Check if this line starts at our current endpoint
-                if (startPointStr === currentEndPointStr && !usedPoints.has(endPointStr)) {
-                    selectedLines.push(line);
-                    usedPoints.add(endPointStr);
-                    currentEndPoint = line.end;
-                    currentEndPointStr = endPointStr;
-                    foundNextLine = true;
-                    break;
-                }
+                // Shuffle the remaining lines to reduce predictable patterns
+                this.shuffleArray(remainingLines);
 
-                // Check if this line ends at our current endpoint
-                else if (endPointStr === currentEndPointStr && !usedPoints.has(startPointStr)) {
-                    selectedLines.push(line);
-                    usedPoints.add(startPointStr);
-                    currentEndPoint = line.start;
-                    currentEndPointStr = startPointStr;
-                    foundNextLine = true;
-                    break;
+                // Look for a connecting line
+                for (const line of remainingLines) {
+                    const startPointStr = this.pointToString(line.start);
+                    const endPointStr = this.pointToString(line.end);
+
+                    if (startPointStr === currentEndPointStr && !usedPoints.has(endPointStr)) {
+                        currentSequence.push(line);
+                        usedPoints.add(endPointStr);
+                        currentEndPoint = line.end;
+                        currentEndPointStr = endPointStr;
+                        usedLines.add(line);
+                        remainingLines = remainingLines.filter(l => !usedLines.has(l));
+                        foundNextLine = true;
+                        break;
+                    } else if (endPointStr === currentEndPointStr && !usedPoints.has(startPointStr)) {
+                        currentSequence.push(line);
+                        usedPoints.add(startPointStr);
+                        currentEndPoint = line.start;
+                        currentEndPointStr = startPointStr;
+                        usedLines.add(line);
+                        remainingLines = remainingLines.filter(l => !usedLines.has(l));
+                        foundNextLine = true;
+                        break;
+                    }
                 }
             }
 
-            // If we couldn't find a connecting line to a new point, we're done
-            // Priority is to avoid revisiting points rather than using exact number of lines
-            if (!foundNextLine) break;
+            // Add the completed sequence to the output
+            selectedLines.push(...currentSequence);
+
+            // If we reached the target number of lines, stop early
+            if (selectedLines.length >= numOfLines) {
+                break;
+            }
         }
 
         return selectedLines;
