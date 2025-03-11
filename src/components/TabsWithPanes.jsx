@@ -98,6 +98,10 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             [newTabId]: newTab.params,
         }));
 
+        // Notify parent about the added tab
+        if (onParamChange) onParamChange(newTabId, newTab.params);
+
+
         // Set the newly added tab as active
         setActiveTab(newTabId);
 
@@ -125,6 +129,9 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             const { [tabId]: _, ...remainingParams } = prevParentParams;
             return remainingParams;
         });
+
+        if (onParamChange) onParamChange(tabId, null);
+
 
         // Update the active tab
         if (tabId === activeTab && updatedTabs.length > 0) {
@@ -251,6 +258,16 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             }));
         }
     }, [activeTab, tabs]);
+
+    useEffect(() => {
+        const updatedParams = {};
+        tabs.forEach((tab) => {
+            updatedParams[tab.id] = tab.params;
+        });
+
+        // Update parent's state with the current tabs' params
+        setParams(updatedParams);
+    }, [tabs, setParams]);
 
     return (
         <div className="tabs-with-panes w-full !mt-2">
