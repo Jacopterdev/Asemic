@@ -3,6 +3,7 @@ import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary.js";
 import Effects from "./Effects.js";
 import shapeSaver from "./ShapeSaver.js";
+import DownloadButton from "./DownloadButton.js";
 
 class DisplayGrid {
     constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
@@ -27,6 +28,9 @@ class DisplayGrid {
 
         // Initialize downloadButtons array
         this.downloadButtons = [];
+        
+        // Create initial buttons for all cells
+        this.createDownloadButtons();
     }
 
     // Initialize the grid and assign letters
@@ -67,6 +71,26 @@ class DisplayGrid {
         }
     }
 
+    // New method to create buttons for all grid cells
+    createDownloadButtons() {
+        this.downloadButtons = [];
+        
+        for (let j = 0; j < this.grid.length; j++) {
+            this.downloadButtons[j] = [];
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                const pos = DownloadButton.positionInCell(cell);
+                
+                this.downloadButtons[j][i] = new DownloadButton(
+                    this.p, 
+                    pos.x, 
+                    pos.y, 
+                    cell.letter
+                );
+            }
+        }
+    }
+
     drawGrid() {
         const p = this.p;
 
@@ -101,8 +125,7 @@ class DisplayGrid {
             }
         }
         
-        // Draw buttons for ALL cells, not just visible ones
-        // This ensures that buttons exist for all cells even if not visible yet
+        // Draw buttons for visible cells
         for (let j = 0; j < this.grid.length; j++) {
             if (!this.downloadButtons[j]) this.downloadButtons[j] = [];
             
@@ -110,58 +133,33 @@ class DisplayGrid {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
                 
-                // Only draw buttons for visible cells to save rendering performance
-                if (cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > p.height) {
-                    // Still create a button object for non-visible cells to maintain array structure
-                    this.downloadButtons[j][i] = {
-                        x: cell.x + (this.cellWidth - 80) / 2,
-                        y: cell.y + this.cellHeight - 34,
-                        width: 80,
-                        height: 24,
-                        isVisible: false
-                    };
-                    continue;
+                // Check if cell is visible
+                const isVisible = !(cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > this.p.height);
+                
+                // Create button if it doesn't exist
+                if (!this.downloadButtons[j][i]) {
+                    const pos = DownloadButton.positionInCell(cell);
+                    this.downloadButtons[j][i] = new DownloadButton(
+                        this.p, 
+                        pos.x, 
+                        pos.y, 
+                        cell.letter
+                    );
                 }
                 
-                // Draw the download button
-                this.drawDownloadButton(cell.x, cellYWithScroll, this.cellWidth, this.cellHeight, i, j);
+                // Update button position with scroll and visibility
+                const pos = DownloadButton.positionInCell(cell, this.scrollOffset);
+                
+                const button = this.downloadButtons[j][i];
+                button.update(pos.x, pos.y);
+                button.isVisible = isVisible;
+                
+                // Draw the button if visible
+                if (isVisible) {
+                    button.draw();
+                }
             }
         }
-    }
-
-    // New method to draw download buttons
-    drawDownloadButton(x, y, width, height, col, row) {
-        const buttonWidth = 80;
-        const buttonHeight = 24;
-        const buttonX = x + (width - buttonWidth) / 2;
-        const buttonY = y + height - buttonHeight - 10; // Position at bottom with 10px margin
-        
-        // Check if mouse is over this button
-        const isHovered = this.p.mouseX > buttonX && this.p.mouseX < buttonX + buttonWidth &&
-                         this.p.mouseY > buttonY && this.p.mouseY < buttonY + buttonHeight;
-        
-        // Store button position data for click detection
-        if (!this.downloadButtons) this.downloadButtons = [];
-        if (!this.downloadButtons[row]) this.downloadButtons[row] = [];
-        
-        this.downloadButtons[row][col] = {
-            x: buttonX,
-            y: buttonY,
-            width: buttonWidth,
-            height: buttonHeight,
-            isVisible: true  // Mark as visible
-        };
-        
-        // Draw button
-        this.p.noStroke();
-        this.p.fill(isHovered ? '#4285F4' : '#5A9AF8');
-        this.p.rect(buttonX, buttonY, buttonWidth, buttonHeight, 4);
-        
-        // Draw button text
-        this.p.fill(255);
-        this.p.textSize(12);
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text('Download', buttonX + buttonWidth/2, buttonY + buttonHeight/2);
     }
 
     drawShapes(xray = false){
@@ -312,7 +310,21 @@ class DisplayGrid {
 
         // Update row count dynamically
         this.rows += numRows;
-
+            // Create download buttons for the new rows
+        for (let j = this.grid.length - numRows; j < this.grid.length; j++) {
+            this.downloadButtons[j] = [];
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                const pos = DownloadButton.positionInCell(cell);
+                
+                this.downloadButtons[j][i] = new DownloadButton(
+                    this.p, 
+                    pos.x, 
+                    pos.y, 
+                    cell.letter
+                );
+            }
+        }
     }
 
     // Add this helper method to get the last letter's ASCII code
