@@ -31,6 +31,9 @@ class DisplayGrid {
         
         // Create initial buttons for all cells
         this.createDownloadButtons();
+
+        this.hoveredCellRow = -1;
+        this.hoveredCellCol = -1;
     }
 
     // Initialize the grid and assign letters
@@ -94,6 +97,9 @@ class DisplayGrid {
     drawGrid() {
         const p = this.p;
 
+        // First check which cell is being hovered
+        this.updateHoveredCell();
+
         // Use absolute rendering bounds for visibility calculations
         const renderTop = Math.abs(this.scrollOffset) - this.cellHeight * 2;
         const renderBottom = Math.abs(this.scrollOffset) + p.height + this.cellHeight * 2;
@@ -152,10 +158,10 @@ class DisplayGrid {
                 
                 const button = this.downloadButtons[j][i];
                 button.update(pos.x, pos.y);
-                button.isVisible = isVisible;
+                button.isVisible = (j === this.hoveredCellRow && i === this.hoveredCellCol && isVisible);
                 
                 // Draw the button if visible
-                if (isVisible) {
+                if (button.isVisible) {
                     button.draw();
                 }
             }
@@ -394,6 +400,34 @@ class DisplayGrid {
         }
         
         return false; // No button was clicked
+    }
+
+    updateHoveredCell() {
+        const p = this.p;
+        
+        // Reset hovered cell
+        this.hoveredCellRow = -1;
+        this.hoveredCellCol = -1;
+        
+        // Check if mouse is over any cell
+        for (let j = 0; j < this.grid.length; j++) {
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                const cellYWithScroll = cell.y + this.scrollOffset;
+                
+                // Check if mouse is over this cell
+                if (
+                    p.mouseX >= cell.x && 
+                    p.mouseX <= cell.x + cell.w &&
+                    p.mouseY >= cellYWithScroll && 
+                    p.mouseY <= cellYWithScroll + cell.h
+                ) {
+                    this.hoveredCellRow = j;
+                    this.hoveredCellCol = i;
+                    return; // Exit the loop once we found the hovered cell
+                }
+            }
+        }
     }
 
 }
