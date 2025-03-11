@@ -12,12 +12,12 @@ function Header() {
     return (
         <>
             {/* Header */}
-            <header className="flex justify-between items-center h-8 bg-gray-100 text-gray-800 drop-shadow-xs">
+            <header className="flex justify-between items-center h-12 bg-gray-50 text-gray-800">
                 {/* Left-aligned burger menu */}
                 <div className="flex items-center gap-3 pl-4">
                     <div
                         onClick={toggleMenu}
-                        className="focus:outline-none bg-gray-100 cursor-pointer text-sm text-gray-500"
+                        className="focus:outline-none  cursor-pointer text-sm text-gray-500"
                     >
                         &#9776;
                     </div>
@@ -27,12 +27,12 @@ function Header() {
                 <div className="container mx-auto flex items-center gap-3 px-6">
                     {/* Small SVG Logo */}
                     <div>
-                        <img src="/S.svg" alt="S icon" className="h-5 w-5" />
+                        <img src="/shapes/circle.svg" alt="S icon" className="h-5 w-5" />
                     </div>
 
                     {/* Title */}
-                    <h1 className="text-lg font-medium text-gray-600 font-mono font-bold select-none">
-                        ShapeLangGen
+                    <h1 className="text-sm font-medium text-gray-600 font-light select-none">
+                        Form Language Generator
                     </h1>
                 </div>
 

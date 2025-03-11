@@ -17,7 +17,7 @@
 }
 
 header{
-    @apply mb-3 mx-auto;
+    @apply mx-auto;
 }
 
 /* Apply the new font-sans (Arial) globally */

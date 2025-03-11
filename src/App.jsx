@@ -113,7 +113,7 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
-            <header className="bg-gray-50 text-gray-800 p-4 text-center mx-auto">
+            <header>
                 <Header />
             </header>
 
