@@ -9,7 +9,7 @@ class DownloadButton {
         this.size = 24;
         this.margin = 8;
         
-        this.isVisible = true;
+        this.isVisible = false; // Default to not visible
         this.isHovered = false;
     }
     
@@ -27,11 +27,11 @@ class DownloadButton {
     draw() {
         if (!this.isVisible) return;
         
-        const p = this.p;
+        const p = this.p;''
         
-        // Draw circular button background
+        // Draw circular button background - grey by default
         p.noStroke();
-        p.fill(this.isHovered ? '#4285F4' : '#5A9AF8');
+        p.fill(this.isHovered ? '#FFA500' : '#888888'); // Grey when not hovered
         p.ellipse(this.x + this.size/2, this.y + this.size/2, this.size, this.size);
         
         // Draw download icon (arrow pointing down)
