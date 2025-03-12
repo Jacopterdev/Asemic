@@ -58,7 +58,7 @@ class CompositionTool {
             }
             return true; // Event handled
         }
-        return false; // Event not handled
+        //return false; // Event not handled
     }
     
     // Draw method to render the CompositionTool components

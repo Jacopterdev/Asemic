@@ -1,6 +1,7 @@
 import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary";
 import Effects from "./Effects.js";
+import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 
 class ShapeSaver {
     static #instance;
@@ -36,11 +37,13 @@ class ShapeSaver {
         buffer.background(255);
         
         // Calculate a more appropriate scale factor
-        const displayScale = 1; // Adjust this value to size the shape appropriately 
+        const displayScale = LAYOUT.SHAPE_SCALE * this.p.getShapeScale(); // Adjust this value to size the shape appropriately
         
         // Draw the shape centered in the buffer
         buffer.push();
-        //buffer.translate(80, 80); // Center properly in buffer
+
+        buffer.translate((1-displayScale) * outputSize / 2, (1-displayScale) * outputSize / 2);
+
         buffer.scale(displayScale); // Use a fixed display scale
         
         // Create a fresh shape instance for the buffer
@@ -56,7 +59,7 @@ class ShapeSaver {
          // Apply the same effects as in the main canvas
          let effect = new Effects(buffer);
          effect.setSmoothAmount(this.mergedParams.smoothAmount);
-        effect.applyEffects(1);
+        effect.applyEffects(displayScale);
 
         // Save the buffer as PNG
         buffer.save(`shape_${letter}.png`);

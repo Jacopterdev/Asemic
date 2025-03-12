@@ -14,7 +14,7 @@ class CompositionState {
 
     mousePressed() {
         // Forward mouse pressed events to CompositionTool
-        return this.compositionTool.handleMousePressed();
+        this.compositionTool.handleMousePressed();
     }
 
     mouseDragged() {
