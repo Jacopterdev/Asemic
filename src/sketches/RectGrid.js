@@ -378,7 +378,8 @@ class RectGrid extends BaseGrid {
 
     // Method to get a snapped position (nearest grid intersection)
     getSnapPosition(mouseX, mouseY) {
-        // Find nearest column
+        
+        // Find nearest column and row grid lines
         const colWidth = this.gridSize / this.cols;
         const rowHeight = this.gridSize / this.rows;
         
@@ -393,11 +394,20 @@ class RectGrid extends BaseGrid {
         const constrainedColIndex = Math.max(0, Math.min(this.cols, colIndex));
         const constrainedRowIndex = Math.max(0, Math.min(this.rows, rowIndex));
         
-        // Calculate the actual position
-        return {
-            x: this.xStart + constrainedColIndex * colWidth,
-            y: this.yStart + constrainedRowIndex * rowHeight
-        };
+        // Calculate the actual grid intersection position
+        const gridX = this.xStart + constrainedColIndex * colWidth;
+        const gridY = this.yStart + constrainedRowIndex * rowHeight;
+        
+        // Calculate distance to nearest grid intersection
+        const distToGridPoint = this.p.dist(mouseX, mouseY, gridX, gridY);
+        
+        // Only snap if we're close enough to a grid point
+        if (distToGridPoint <= this.snapThreshold) {
+            return { x: gridX, y: gridY };
+        } else {
+            // Otherwise return the original mouse position
+            return { x: mouseX, y: mouseY };
+        }
     }
 }
 
