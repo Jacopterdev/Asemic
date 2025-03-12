@@ -102,7 +102,8 @@ class ShapeSaver {
         
         // Use the passed scale value instead of hardcoding it
         const shapeScale = scale;
-        
+
+
         // Draw each letter in the composition
         for (let i = 0; i < composition.length; i++) {
             const letter = composition[i];
@@ -140,7 +141,7 @@ class ShapeSaver {
             // Advance position for next letter
             xPosition += kerning;
         }
-        
+
         // Apply effects to the entire composition
         let effect = new Effects(buffer);
         effect.setSmoothAmount(this.mergedParams.smoothAmount);
@@ -148,7 +149,7 @@ class ShapeSaver {
         
         // Save the composition
         buffer.save(`composition_${Date.now()}.png`);
-        
+
         // Clean up
         buffer.remove();
         
@@ -202,7 +203,8 @@ class ShapeSaver {
             
             buffer.push();
             // Position properly in buffer
-            buffer.translate(startX, bufferHeight / 2);
+            //buffer.translate(startX, bufferHeight / 2);
+            buffer.translate(startX, (bufferHeight / 2) - (bufferHeight * shapeInputField.scale));
             // Apply scale
             buffer.scale(shapeInputField.scale);
             
