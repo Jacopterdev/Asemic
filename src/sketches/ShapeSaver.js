@@ -68,6 +68,167 @@ class ShapeSaver {
         return true;
     }
 
+    // Add this method to the ShapeSaver class
+
+    downloadComposition(composition, kerning = 350, scale = 0.4) {
+        // Check if properly initialized
+        if (!this.p || !this.mergedParams) {
+            console.error("ShapeSaver not properly initialized. Call init() first.");
+            return false;
+        }
+        
+        // Check if composition is empty
+        if (!composition || composition.length === 0) {
+            console.warn("Cannot download empty composition");
+            return false;
+        }
+        
+        console.log(`Downloading composition: ${composition} with kerning=${kerning}, scale=${scale}`);
+        
+        // Calculate dimensions for the composition
+        const letterHeight = 800;
+        const bufferWidth = composition.length * kerning + 400; // Add padding
+        const bufferHeight = letterHeight;
+        
+        // Create graphics buffer
+        const buffer = this.p.createGraphics(bufferWidth, bufferHeight);
+        buffer.background(255);
+        
+        // Start position for drawing (center the composition)
+        let xPosition = 100; // Starting padding
+        
+        // Use the passed scale value instead of hardcoding it
+        const shapeScale = scale;
+        
+        // Draw each letter in the composition
+        for (let i = 0; i < composition.length; i++) {
+            const letter = composition[i];
+            
+            // Skip spaces but advance the position
+            if (letter === ' ') {
+                xPosition += kerning;
+                continue;
+            }
+            
+            // Get noise position from dictionary
+            const noisePosition = shapeDictionary.getValue(letter);
+            if (!noisePosition) {
+                console.warn(`No shape data found for letter: ${letter}`);
+                xPosition += kerning;
+                continue;
+            }
+            
+            const { x: noiseX, y: noiseY } = noisePosition;
+            
+            // Draw the shape at the current position
+            buffer.push();
+            buffer.translate(xPosition, bufferHeight/2); // Center vertically
+            buffer.scale(shapeScale); // Scale down the shape
+            
+            // Create shape instance for this letter
+            const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
+            bufferShape.setNoisePosition(noiseX, noiseY);
+            bufferShape.generate();
+            
+            // Draw to the buffer
+            bufferShape.draw(false);
+            buffer.pop();
+            
+            // Advance position for next letter
+            xPosition += kerning;
+        }
+        
+        // Apply effects to the entire composition
+        let effect = new Effects(buffer);
+        effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        effect.applyEffects(1);
+        
+        // Save the composition
+        buffer.save(`composition_${Date.now()}.png`);
+        
+        // Clean up
+        buffer.remove();
+        
+        console.log(`Downloaded composition: ${composition}`);
+        return true;
+    }
+
+    downloadFromInputField(shapeInputField) {
+        // Check if properly initialized
+        if (!this.p || !this.mergedParams) {
+            console.error("ShapeSaver not properly initialized. Call init() first.");
+            return false;
+        }
+        
+        // Check if shapeInputField has shapes
+        if (!shapeInputField.shapes || shapeInputField.shapes.length === 0) {
+            console.warn("Cannot download empty composition");
+            return false;
+        }
+        
+        // Get composition as string of letters
+        const composition = shapeInputField.shapes.map(item => item.letter).join('');
+        console.log(`Downloading composition: ${composition}`);
+        
+        // Calculate dimensions based on input field parameters
+        const bufferWidth = shapeInputField.width * 2;
+        const bufferHeight = shapeInputField.height * 1.5;
+        
+        // Create buffer with white background
+        const buffer = this.p.createGraphics(bufferWidth, bufferHeight);
+        buffer.background(255);
+        
+        // Get values needed for layout
+        const baseShapeWidth = shapeInputField.width / shapeInputField.maxShapes * shapeInputField.defaultOverlap;
+        const kerningOffset = shapeInputField.kerning;
+        const adjustedSpacing = baseShapeWidth + kerningOffset;
+        
+        // Calculate starting X position to center shapes
+        const totalShapesWidth = shapeInputField.shapes.length * adjustedSpacing;
+        let startX = (bufferWidth - totalShapesWidth) / 2;
+        
+        // Draw each shape to buffer
+        for (let i = 0; i < shapeInputField.shapes.length; i++) {
+            const { letter } = shapeInputField.shapes[i];
+            
+            // Get noise position for this letter
+            const noisePosition = shapeDictionary.getValue(letter);
+            if (!noisePosition) continue;
+            
+            const { x: noiseX, y: noiseY } = noisePosition;
+            
+            buffer.push();
+            // Position properly in buffer
+            buffer.translate(startX, bufferHeight / 2);
+            // Apply scale
+            buffer.scale(shapeInputField.scale);
+            
+            // Create a new shape instance for the buffer
+            const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
+            bufferShape.setNoisePosition(noiseX, noiseY);
+            bufferShape.generate();
+            
+            // Draw to buffer
+            bufferShape.draw();
+            
+            buffer.pop();
+            
+            // Advance position
+            startX += adjustedSpacing;
+        }
+        
+        // Apply effects to the composition
+        const effect = new Effects(buffer);
+        effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        effect.applyEffects(shapeInputField.scale);
+        
+        // Save the composition
+        buffer.save(`composition_${Date.now()}.png`);
+        
+        console.log("Downloaded composition successfully");
+        return true;
+    }
+
 }   // This static property will hold the singleton instance of ShapeDictionary
 
 

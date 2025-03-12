@@ -21,7 +21,6 @@ class ShapeInputField {
         this.defaultOverlap = 0.33;
 
         this.scale = (this.width/p.width)/this.maxShapes / this.defaultOverlap; // Scale factor
-
     }
 
     // Add a new shape based on a key/letter

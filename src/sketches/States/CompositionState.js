@@ -1,5 +1,4 @@
-﻿
-import CompositionTool from "../CompositionTool/CompositionTool.js";
+﻿import CompositionTool from "../CompositionTool/CompositionTool.js";
 
 class CompositionState {
     constructor(p, mergedParams) {
@@ -14,7 +13,8 @@ class CompositionState {
     }
 
     mousePressed() {
-        // Handle composition-specific mouse interactions if needed
+        // Forward mouse pressed events to CompositionTool
+        return this.compositionTool.handleMousePressed();
     }
 
     mouseDragged() {
