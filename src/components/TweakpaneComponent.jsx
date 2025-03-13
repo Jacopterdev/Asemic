@@ -65,6 +65,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             options: {
                 Straight: 'straight',
                 Curved: 'curved',
+                Both: 'both',
             },
         }).on('change', (event) => {
             updateParam('lineType', event.value);
