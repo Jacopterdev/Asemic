@@ -306,7 +306,14 @@ class DisplayGrid {
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
                 // Get noise position for the letter from the ShapeDictionary
-                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+                //const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+
+                const value = shapeDictionary.getValue(letter);
+                if (!value) {return;}
+                const { x: noiseX, y: noiseY } = value;
+
+                // Set the noise position for the shape
+                shape.setNoisePosition(noiseX, noiseY);
 
                 // Set the noise position for the shape
                 shape.setNoisePosition(noiseX, noiseY);
