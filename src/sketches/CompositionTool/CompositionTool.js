@@ -32,11 +32,11 @@ class CompositionTool {
             (key) => this.onKeyPress(key) // Callback for key presses
         );
 
-        // Add download button in the top-right corner of the input field area
+        // Add download button in the bottom-right corner of the input field area
         this.downloadButton = new DownloadButton(
             p,
             50 + (p.width - 100) - 40, // Position at right edge of input field, offset by button width
-            50 + 10,                   // Position near top of input field
+            50 + 200 - 40,            // Position at bottom edge of input field, offset by button height
             30,                        // Button width
             30                         // Button height
         );
@@ -72,7 +72,18 @@ class CompositionTool {
             this.shapeInputField.drawCursor(x, y);
         }
         
-        // Draw the download button
+        // Update download button visibility based on mouse position
+        this.downloadButton.isVisible = this.isMouseOverInputField();
+        
+        // Update hover state - this line was missing
+        if (this.downloadButton.isVisible) {
+            this.downloadButton.update(
+                this.downloadButton.x, 
+                this.downloadButton.y
+            );
+        }
+        
+        // Draw the download button (will only draw if isVisible is true)
         this.downloadButton.draw();
         
         // Draw the keyboard
@@ -101,6 +112,17 @@ class CompositionTool {
         this.mergedParams = mergedParams;
         this.shapeInputField.updateMergedParams(mergedParams);
         this.keyboardGrid.updateMergedParams(mergedParams);
+    }
+
+    // Add this method to CompositionTool class
+    isMouseOverInputField() {
+        const inputField = this.shapeInputField;
+        return (
+            this.p.mouseX >= 50 && 
+            this.p.mouseX <= 50 + (this.p.width - 100) &&
+            this.p.mouseY >= 50 && 
+            this.p.mouseY <= 50 + 200
+        );
     }
 }
 

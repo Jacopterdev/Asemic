@@ -9,7 +9,7 @@ class DownloadButton {
         this.size = 24;
         this.margin = 8;
         
-        this.isVisible = true; // Default to not visible
+        this.isVisible = false; // Default to not visible
         this.isHovered = false;
     }
     
