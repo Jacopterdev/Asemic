@@ -25,28 +25,25 @@
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
 
         if (hoveredPoint) {
-            // Start tracking for potential drag operation
+            // Set up for potential drag operation
             this.draggingPoint = hoveredPoint;
             this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
-            this.isDragging = false; // Initialize drag tracking flag
+            this.isDragging = false;
             return true;
         } else {
             // Check if we're clicking on a line
             const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
             
             // Only select the line if it's still visible (not faded out)
-            // We need to check with the PossibleLinesRenderer if the line is still in hover state
             if (hoveredLine && this.isLineHoverActive(hoveredLine)) {
-                // Toggle line selection state
                 hoveredLine.selected = !hoveredLine.selected;
-                
-                // Clear hover state after clicking on a line
                 this.hoveredLine = null;
                 return true;
             }
             
-            // If we're not clicking on a point or an active hovered line, create a new point
+            // If we're not clicking on a point or line, create a new point
             if (this.points.length < this.maxPoints) {
+                // Rest of your point creation code remains the same...
                 const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
                 const newPoint = this.createPoint(
                     snapPosition ? snapPosition.x : this.p.mouseX,
@@ -54,7 +51,37 @@
                 );
                 
                 this.points.push(newPoint);
-                this.lineManager.addLinesForPoint(newPoint, this.points);
+                
+                // Get the most recent point (exclude the one we just added)
+                const previousPoints = this.points.filter(p => p.id !== newPoint.id);
+                const mostRecentPoint = previousPoints.length > 0 ? 
+                    previousPoints[previousPoints.length - 1] : null;
+                
+                // If shift is pressed, only connect visibly to the last added point
+                if (this.p.keyIsDown(16)) { // 16 is the keyCode for shift
+                    if (mostRecentPoint) {
+                        // Connect to most recent point with visible line
+                        this.lineManager.lines.push({
+                            start: newPoint,
+                            end: mostRecentPoint,
+                            selected: true
+                        });
+                        
+                        // Connect to all other points with invisible lines
+                        previousPoints.forEach(point => {
+                            if (point.id !== mostRecentPoint.id) {
+                                this.lineManager.lines.push({
+                                    start: newPoint,
+                                    end: point,
+                                    selected: false // Invisible line
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    // Normal behavior: connect to all points with visible lines
+                    this.lineManager.addLinesForPoint(newPoint, previousPoints);
+                }
             }
             return true;
         }
@@ -128,35 +155,15 @@
         if (!this.isInCanvas()) {return;}
         
         if (this.draggingPoint) {
-            // Only handle clicks (not drags)
+            // If we didn't drag the point (just clicked it), delete it
             if (!this.isDragging) {
-                // Check if any lines are connected to this point
-                const connectedLines = this.lineManager.getLinesConnectedToPoint(this.draggingPoint);
-                
-                // If point has connected lines, deselect them
-                if (connectedLines.length > 0) {
-                    // Check if any of the connected lines are selected
-                    const hasSelectedLines = connectedLines.some(line => line.selected);
-                    
-                    if (hasSelectedLines) {
-                        // Deselect all connected lines
-                        connectedLines.forEach(line => {
-                            line.selected = false;
-                        });
-                    } else {
-                        // If no connected lines are selected, delete the point
-                        this.removePoint(this.draggingPoint);
-                    }
-                } else {
-                    // If no lines are connected to this point, delete it directly
-                    this.removePoint(this.draggingPoint);
-                }
+                this.removePoint(this.draggingPoint);
             }
         }
         
         // Reset dragging state
         this.draggingPoint = null;
-        this.mouseDragStart = null;
+        this.mouseDragStart = null; 
         this.isDragging = false;
     }
     
