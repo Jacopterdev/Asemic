@@ -88,6 +88,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             if (currentState?.updateMergedParams) {
                 currentState.updateMergedParams(mergedParams);
                 effects.setSmoothAmount(mergedParams.smoothAmount);
+                p.animateSmoothAmount();
+
             }
         }
 
@@ -108,9 +110,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     p.applyEffects = (blurScale) => {
         effects.applyEffects(blurScale);
     }
-    p.animateSmoothAmount = () => {
+    p.animateSmoothAmount = (duration = 400) => {
         if(!effects) return;
-        effects.animateSmoothAmount();
+        effects.animateSmoothAmount(duration);
     }
     p.isConfigUpdated = () => {
         let configUpdated =

@@ -26,7 +26,7 @@ class Effects {
 
         this.isAnimating = true;
 
-        const startAmount = this.smoothAmount + 2;  // Start at the current smoothAmount + 5
+        const startAmount = this.smoothAmount + 6;  // Start at the current smoothAmount + 5
         const targetAmount = this.smoothAmount;    // Original smoothAmount to return to
         const startTime = this.p.millis();         // Reset start time for the new animation
 
