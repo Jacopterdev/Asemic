@@ -26,7 +26,8 @@ class AnatomyState {
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
 
-        this.blurScale = this.displayGrid.scale;
+        this.blurScale = this.displayGrid.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE;
+
         //this.displayGrid.updateMergedParams(this.mergedParams);
 
         this.displayGrid.updateMergedParams(this.mergedParams);

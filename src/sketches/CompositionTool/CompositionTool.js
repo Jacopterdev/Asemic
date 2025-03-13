@@ -3,6 +3,7 @@ import ShapeInputField from "./ShapeInputField.js";
 import DownloadButton from "../DownloadButton.js";
 // Import the shapeSaver utility
 import shapeSaver from "../ShapeSaver.js";
+import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class CompositionTool {
     constructor(p, mergedParams) {
@@ -57,7 +58,7 @@ class CompositionTool {
             }
             return true; // Event handled
         }
-        return false; // Event not handled
+        //return false; // Event not handled
     }
     
     // Draw method to render the CompositionTool components

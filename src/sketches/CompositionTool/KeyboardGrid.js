@@ -1,5 +1,6 @@
 ﻿import KeyboardCell from "./KeyboardCell.js";
 import Effects from "../Effects.js";
+import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class KeyboardGrid {
     constructor(p, mergedParams, x, y, cellSize, rows, cols, alphabet, callback) {
@@ -48,7 +49,7 @@ class KeyboardGrid {
 
         this.cells.forEach((cell) => cell.drawShape());
         const scaleFactor =  this.cellSize / this.p.width; // Adjust scale factor to fit the cell size
-        this.effect.applyEffects(scaleFactor);
+        this.effect.applyEffects(scaleFactor * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
 
         // Draw all cells in the grid
         this.cells.forEach((cell) => cell.draw(this.buffer));
