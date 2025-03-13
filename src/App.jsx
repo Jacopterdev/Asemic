@@ -12,9 +12,9 @@ function App() {
 
     const [params, setParams] = useState({
         missArea: 10,
-        numberOfLines: {min: 5, max: 5},
-        smoothAmount: 5,
-        lineWidth: {min: 2, max: 30},
+        numberOfLines: {min: 4, max: 8},
+        smoothAmount: 10,
+        lineWidth: {min: 8, max: 24},
         lineType: 'straight',
         lineComposition: 'Branched',
     });

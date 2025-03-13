@@ -50,7 +50,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         states["Composition"] = new CompositionState(p, mergedParams);
         currentState = "Edit Skeleton"
         updateState("Edit Skeleton"); // Set the initial state
-
     };
 
     const updateState = (stateName) => {
@@ -86,7 +85,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
             updateState(currentToolState); // Update state when `toolConfigRef.state` changes
             p.rebuildSkeleton();
-            if (currentState?.updateMergedParams) currentState.updateMergedParams(mergedParams);
+            if (currentState?.updateMergedParams) {
+                currentState.updateMergedParams(mergedParams);
+                effects.setSmoothAmount(mergedParams.smoothAmount);
+            }
         }
 
         currentState?.draw();
