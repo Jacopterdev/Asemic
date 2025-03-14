@@ -9,10 +9,10 @@ class CompositionTool {
     constructor(p, mergedParams) {
         this.p = p;
         this.mergedParams = mergedParams;
-        // Create the ShapeInputField
+        
         this.shapeInputField = new ShapeInputField(
             p,
-            this.mergedParams,
+            mergedParams,  // Make sure this is correctly passed
             50,           // X position
             50,           // Y position (above the keyboard)
             p.width - 100, // Width of the input field
@@ -45,6 +45,7 @@ class CompositionTool {
     
     // Handle mouse presses for the download button
     handleMousePressed() {
+        // First check if the download button was clicked
         if (this.downloadButton && this.downloadButton.isClicked(this.p.mouseX, this.p.mouseY)) {
             console.log("Download button clicked in CompositionTool");
             
@@ -58,7 +59,13 @@ class CompositionTool {
             }
             return true; // Event handled
         }
-        //return false; // Event not handled
+        
+        // Let the keyboard grid handle the mouse press
+        if (this.keyboardGrid.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
+            return true; // Event handled by keyboard grid
+        }
+        
+        return false; // Event not handled
     }
     
     // Draw method to render the CompositionTool components
@@ -106,7 +113,8 @@ class CompositionTool {
     }
 
     onKeyPress(key) {
-        // Add any custom behavior for key presses here
+        // When a key in the keyboard grid is clicked, add the shape to the input field
+        this.shapeInputField.addShape(key);
     }
     
     updateMergedParams(mergedParams) {

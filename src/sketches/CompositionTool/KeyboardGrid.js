@@ -12,6 +12,7 @@ class KeyboardGrid {
         this.cols = cols; // Number of columns
         this.cells = []; // Array to hold all Cell instances
         this.alphabet = alphabet.split(""); // Ensure alphabet is an array
+        this.callback = callback; // Store the callback function - THIS LINE WAS MISSING
 
         this.mergedParams = mergedParams;
 
@@ -70,6 +71,44 @@ class KeyboardGrid {
         this.mergedParams = newParams;
         this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
         this.cells.forEach((cell) => cell.updateMergedParams(newParams));
+    }
+
+    handleMousePressed(mouseX, mouseY) {
+        // Check if the click is within the grid bounds
+        if (mouseX < this.x || mouseX > this.x + this.cols * this.cellSize ||
+            mouseY < this.y || mouseY > this.y + this.rows * this.cellSize) {
+            return false; // Click is outside the grid
+        }
+        
+        // Translate mouse coordinates to be relative to the grid
+        const relativeX = mouseX - this.x;
+        const relativeY = mouseY - this.y;
+        
+        // Calculate which cell was clicked
+        const col = Math.floor(relativeX / this.cellSize);
+        const row = Math.floor(relativeY / this.cellSize);
+        
+        // Make sure we're within bounds
+        if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+            // Get the index in our keyboard layout
+            const index = row * this.cols + col;
+            
+            // Make sure the index exists in our alphabet
+            if (index < this.alphabet.length) {
+                const key = this.alphabet[index];
+                
+                // Only process non-space keys
+                if (key !== ' ') {
+                    // Call the callback function provided during construction
+                    if (this.callback) {
+                        this.callback(key);
+                    }
+                    return true; // Click was handled
+                }
+            }
+        }
+        
+        return false; // Click was not on a valid key
     }
 }
 export default KeyboardGrid;
