@@ -108,7 +108,7 @@ class RadialGrid extends BaseGrid {
         // Check if mouse is hovering over this knob
         const distToKnob = p.dist(p.mouseX, p.mouseY, knob.x, knob.y);
         const isHovered = distToKnob < knob.size / 2 * 1.2;
-        
+        if (isHovered) this.p.cursor(this.p.HAND);
         // Determine visual state (normal, hover, active) - using darker grays
         let knobColor, knobSize;
         

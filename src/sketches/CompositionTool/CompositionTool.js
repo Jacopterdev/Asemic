@@ -41,8 +41,8 @@ class CompositionTool {
             p,
             50 + (p.width - 100) - 40, // Position at right edge of input field, offset by button width
             50 + 200 - 40,            // Position at bottom edge of input field, offset by button height
-            30,                        // Button width
-            30                         // Button height
+            "",                        // Button width
+            false                         // Button height
         );
 
         // Add a download all button at the bottom of the KeyboardGrid
@@ -50,8 +50,8 @@ class CompositionTool {
             p,
             p.width - 80,           // Position at right side
             p.height/2 + (3 * ((p.width - (2*50))/10)) + 20, // Position below the keyboard grid
-            40,                     // Button width
-            40                      // Button height (larger than standard)
+            "",                     // Button width
+            false                      // Button height (larger than standard)
         );
         this.backspaceTimer = null;
         this.initialDelayTimer = null; // Timer for the initial delay
@@ -145,7 +145,7 @@ class CompositionTool {
 
     // Existing methods remain unchanged
     keyPressed(key) {
-        this.keyboardGrid.keyPressed(key);
+        //this.keyboardGrid.keyPressed(key);
         if (key === "Backspace") {
             // Call `removeLastShape()` immediately
             this.shapeInputField.removeLastShape();
@@ -184,7 +184,7 @@ class CompositionTool {
 
     onKeyPress(key) {
         // When a key in the keyboard grid is clicked, add the shape to the input field
-        //this.shapeInputField.addShape(key);
+        this.shapeInputField.addShape(key);
     }
     
     updateMergedParams(mergedParams) {
