@@ -3,7 +3,6 @@ import p5 from "p5";
 
 const P5Wrapper = ({ sketch, mergedParams, toolConfig, lastUpdatedParam }) => {
     const p5Ref = useRef();
-    //const smoothAmountRef = useRef(smoothAmount); // Keep track of smoothAmount changes
     const mergedParamsRef = useRef(mergedParams);
     const toolConfigRef = useRef(toolConfig); // Reference to track toolConfig
     const lastUpdatedParamRef = useRef(lastUpdatedParam);
@@ -14,16 +13,21 @@ const P5Wrapper = ({ sketch, mergedParams, toolConfig, lastUpdatedParam }) => {
             // Pass a setup function and dynamically update smoothAmount during runtime
             sketch(p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef);
         }, p5Ref.current);
+        
+        // Add this one line to expose p5 instance to window object
+        window.p5Instance = p5Instance;
+        console.log("P5 instance exposed to window.p5Instance");
 
         // Cleanup on component unmount
         return () => {
             p5Instance.remove();
+            window.p5Instance = null; // Clean up reference when component unmounts
         };
     }, [sketch]); // Initialize only once when the sketch is provided
 
     useEffect(() => {
         mergedParamsRef.current = mergedParams;
-    }, [mergedParams]); // Update smoothAmountRef whenever smoothAmount changes
+    }, [mergedParams]); // Update when mergedParams changes
 
     useEffect(() => {
         // Update toolConfigRef whenever toolConfig changes

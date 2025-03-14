@@ -104,6 +104,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             points: points,
         };
         shapeScale = p.calculateOuterScale(points, p.width - (2*LAYOUT.MARGIN), p.height - (2*LAYOUT.MARGIN));
+        
+        // Make sure to update the React ref
+        mergedParamsRef.current = mergedParams;
     }
     p.getShapeScale = () => shapeScale;
 
@@ -176,6 +179,141 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         return 1/scaleFactor;
      }
 
+    // Method to get the current state as JSON
+    p.getShapeLanguageAsJSON = () => {
+        // Make sure we rebuild skeleton first to get the latest points and lines
+        p.rebuildSkeleton();
+        
+        // Create a deep copy to avoid any reference issues
+        const exportData = JSON.parse(JSON.stringify(mergedParams));
+        
+        return exportData;
+    };
+
+    // Method to get the current state as a JSON string
+    p.getShapeLanguageAsJSONString = () => {
+        return JSON.stringify(p.getShapeLanguageAsJSON());
+    };
+
+    // Method to save current state to file
+    p.saveShapeLanguage = (filename = `shape_language_${Date.now()}.json`) => {
+        const jsonString = p.getShapeLanguageAsJSONString();
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create and trigger download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log("Shape language saved successfully as", filename);
+        return true;
+    };
+
+    // Method to load state from JSON string - updated to handle subshapes
+    p.loadShapeLanguageFromJSON = (jsonString) => {
+        try {
+            const loadedData = JSON.parse(jsonString);
+            
+            // Get a clean version of params (exclude points and lines)
+            const uiParams = {};
+            
+            // Copy ALL parameters except points and lines to ensure we don't miss any subshape parameters
+            Object.keys(loadedData).forEach(key => {
+                if (key !== 'points' && key !== 'lines') {
+                    uiParams[key] = loadedData[key];
+                }
+            });
+            
+            console.log("UI params to update:", uiParams);
+            
+            // Update mergedParams with loaded data
+            Object.keys(loadedData).forEach(key => {
+                mergedParamsRef.current[key] = loadedData[key];
+            });
+            
+            // Update local mergedParams
+            mergedParams = mergedParamsRef.current;
+            
+            // Handle points and lines specially
+            if (loadedData.points && Array.isArray(loadedData.points)) {
+                points.length = 0; // Clear existing points
+                loadedData.points.forEach(point => points.push({...point})); // Create fresh objects
+                console.log(`Loaded ${points.length} points`);
+            }
+            
+            if (loadedData.lines && Array.isArray(loadedData.lines)) {
+                lineManager.clearAllLines();
+                
+                // Check if all loaded lines have selected property
+                const allHaveSelectedProp = loadedData.lines.every(line => 'selected' in line);
+                console.log(`All lines have selected property: ${allHaveSelectedProp}`);
+                
+                loadedData.lines.forEach(line => {
+                    // Find the actual point objects in our points array
+                    const startPoint = points.find(p => p.id === line.start.id);
+                    const endPoint = points.find(p => p.id === line.end.id);
+                    
+                    if (startPoint && endPoint) {
+                        // Explicitly set selected to true
+                        lineManager.lines.push({
+                            start: startPoint,
+                            end: endPoint,
+                            selected: true // Force lines to be selected
+                        });
+                    }
+                });
+                
+                console.log(`Loaded ${lineManager.lines.length} lines`);
+                console.log(`Selected lines after push: ${lineManager.getSelectedLines().length}`);
+            }
+            
+            // Rebuild the skeleton with loaded data
+            p.rebuildSkeleton();
+            
+            // Force selection of all lines in case the line manager has internal state
+            if (lineManager && typeof lineManager.selectAllLines === 'function') {
+                lineManager.selectAllLines();
+                console.log(`Selected lines after selectAllLines: ${lineManager.getSelectedLines().length}`);
+            } else {
+                // If no selectAllLines method, manually set all to selected
+                lineManager.lines.forEach(line => line.selected = true);
+                console.log(`Manually set all lines to selected: ${lineManager.getSelectedLines().length}`);
+            }
+            
+            // Update current state
+            if (currentState?.updateMergedParams) {
+                currentState.updateMergedParams(mergedParams);
+            }
+            
+            // If we're in the Edit Skeleton state, make sure it knows about the new points and lines
+            if (currentState?.name === "Edit Skeleton" && currentState.updatePointsAndLines) {
+                currentState.updatePointsAndLines(points, lineManager);
+            }
+            
+            // IMPORTANT: Dispatch event to update Tweakpane UI
+            const tweakpaneUpdateEvent = new CustomEvent('tweakpane-update', {
+                detail: uiParams
+            });
+            window.dispatchEvent(tweakpaneUpdateEvent);
+            
+            // Debug logging
+            console.log("State after loading:", currentState?.name);
+            console.log("Points loaded:", points.length);
+            console.log("Lines loaded:", lineManager.lines.length);
+            console.log("Selected lines:", lineManager.getSelectedLines().length);
+            
+            console.log("Shape language loaded successfully");
+            return true;
+        } catch (error) {
+            console.error("Failed to load shape language:", error);
+            return false;
+        }
+    };
 };
 
 export default defaultSketch;

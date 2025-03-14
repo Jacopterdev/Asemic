@@ -21,8 +21,33 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         if (onParamChange) {
             onParamChange(key, value); // Send the updated key and value only
         }
-
     };
+
+    // Add event listener for tweakpane-update
+    useEffect(() => {
+        const handleTweakpaneUpdate = (event) => {
+            if (event.detail) {
+                console.log("TweakpaneComponent received update event:", event.detail);
+                
+                // Update React state with new values
+                updateParams(prev => ({
+                    ...prev,
+                    ...event.detail
+                }));
+                
+                // Update Tweakpane UI
+                if (paneRef.current) {
+                    paneRef.current.importPreset(event.detail);
+                }
+            }
+        };
+        
+        window.addEventListener('tweakpane-update', handleTweakpaneUpdate);
+        
+        return () => {
+            window.removeEventListener('tweakpane-update', handleTweakpaneUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         if (!paneContainerRef.current || paneRef.current) return;

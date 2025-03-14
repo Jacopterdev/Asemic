@@ -269,6 +269,99 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         setParams(updatedParams);
     }, [tabs, setParams]);
 
+    useEffect(() => {
+        const handleTweakpaneUpdate = (event) => {
+            if (!event.detail) return;
+            
+            console.log("TabsWithPanes received update event:", event.detail);
+            
+            // Check if we have any subshape data in the loaded parameters
+            const subShapeData = {};
+            let hasSubShapeData = false;
+            
+            // Look for tab IDs in the event.detail
+            Object.keys(event.detail).forEach(key => {
+                // Try to parse the key as a number to see if it's a tab ID
+                const tabId = parseInt(key);
+                if (!isNaN(tabId)) {
+                    subShapeData[tabId] = event.detail[key];
+                    hasSubShapeData = true;
+                }
+            });
+            
+            if (hasSubShapeData) {
+                console.log("Found subshape data in loaded file:", subShapeData);
+                
+                // Update the tabs with the loaded data
+                setTabs(prevTabs => {
+                    // Create a map of existing tabs by ID for quick lookup
+                    const tabMap = {};
+                    prevTabs.forEach(tab => tabMap[tab.id] = tab);
+                    
+                    // Create an array to hold our updated tabs
+                    const updatedTabs = [];
+                    
+                    // Process existing tabs first
+                    prevTabs.forEach(tab => {
+                        if (subShapeData[tab.id]) {
+                            // Update existing tab with loaded data
+                            updatedTabs.push({
+                                ...tab,
+                                params: { ...tab.params, ...subShapeData[tab.id] }
+                            });
+                            delete subShapeData[tab.id]; // Remove from subShapeData so we don't add it twice
+                        } else {
+                            // Keep existing tab as is
+                            updatedTabs.push(tab);
+                        }
+                    });
+                    
+                    // Add any remaining tabs from the loaded data
+                    Object.entries(subShapeData).forEach(([tabId, params]) => {
+                        const numTabId = parseInt(tabId);
+                        updatedTabs.push({
+                            id: numTabId,
+                            params: params,
+                            pane: null
+                        });
+                        
+                        // Update nextTabId if needed
+                        if (numTabId >= nextTabId.current) {
+                            nextTabId.current = numTabId + 1;
+                        }
+                    });
+                    
+                    return updatedTabs;
+                });
+                
+                // Update parent's state with all tabs' params
+                const allTabParams = {};
+                Object.entries(subShapeData).forEach(([tabId, params]) => {
+                    allTabParams[tabId] = params;
+                });
+                
+                setParams(prev => ({
+                    ...prev,
+                    ...allTabParams
+                }));
+                
+                // Force refresh the panes by destroying and recreating them
+                Object.keys(panes.current).forEach(tabId => {
+                    if (panes.current[tabId]) {
+                        panes.current[tabId].dispose();
+                        delete panes.current[tabId];
+                    }
+                });
+            }
+        };
+        
+        window.addEventListener('tweakpane-update', handleTweakpaneUpdate);
+        
+        return () => {
+            window.removeEventListener('tweakpane-update', handleTweakpaneUpdate);
+        };
+    }, [setParams]); // Only re-run if setParams changes
+
     return (
         <div className="tabs-with-panes w-full !mt-2">
             {/* Tabs List */}

@@ -1,12 +1,13 @@
 import Header from "./components/Header";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
 import P5Wrapper from "./components/P5Wrapper"; // Import the wrapper
 import defaultSketch from "./sketches/defaultSketch";
 import TabsWithPanes from "./components/TabsWithPanes.jsx";
 import ButtonGroup from "./components/ButtonGroup.jsx";
 import TabGroup from "./components/TabGroup.jsx"; // Import your sketch
-
+import SaveButton from "./components/SaveButton"; // Import SaveButton
+import LoadButton from "./components/LoadButton"; // Import LoadButton
 
 function App() {
 
@@ -35,8 +36,55 @@ function App() {
         setLastUpdatedParam({ key, value }); // Update last changed param
     };
 
+    // Add this useEffect to listen for the tweakpane-update event
+    useEffect(() => {
+        const handleTweakpaneUpdate = (event) => {
+            if (event.detail) {
+                console.log("App received tweakpane-update event with data:", event.detail);
+                
+                // Split the parameters into main params and subshape params
+                const mainParams = {};
+                const subParams = {};
+                
+                // Known main parameters
+                const mainParamsList = ['missArea', 'numberOfLines', 'smoothAmount', 'lineWidth', 'lineType', 'lineComposition'];
+                
+                // Distribute parameters to the right state update
+                Object.entries(event.detail).forEach(([key, value]) => {
+                    if (mainParamsList.includes(key)) {
+                        mainParams[key] = value;
+                    } else if (key === 'subShapes') {
+                        // Special handling for the subShapes object if needed
+                        subParams.subShapes = value;
+                    } else {
+                        // All other parameters go to subParams
+                        subParams[key] = value;
+                    }
+                });
+                
+                // Update both states
+                if (Object.keys(mainParams).length > 0) {
+                    setParams(prev => ({
+                        ...prev,
+                        ...mainParams
+                    }));
+                }
+                
+                if (Object.keys(subParams).length > 0) {
+                    setSubShapeParams(prev => ({
+                        ...prev,
+                        ...subParams
+                    }));
+                }
+            }
+        };
 
-
+        window.addEventListener('tweakpane-update', handleTweakpaneUpdate);
+        
+        return () => {
+            window.removeEventListener('tweakpane-update', handleTweakpaneUpdate);
+        };
+    }, []);
 
     const mergedParams = { ...params, ...subShapeParams };
     console.log("lastupdated param",lastUpdatedParam);
@@ -108,7 +156,46 @@ function App() {
 
     const [isSecondGroupVisible, setIsSecondGroupVisible] = useState(true); // Track visibility of the second ButtonGroup
 
+    const handleSave = () => {
+        // Call p5 sketch's saveShapeLanguage method or any other save logic
+        if (window.p5Instance && window.p5Instance.saveShapeLanguage) {
+            window.p5Instance.saveShapeLanguage();
+        } else {
+            console.error("p5 instance or saveShapeLanguage method not available");
+        }
+    };
 
+    const handleLoad = () => {
+        // Create a file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonString = e.target.result;
+                        if (window.p5Instance && window.p5Instance.loadShapeLanguageFromJSON) {
+                            window.p5Instance.loadShapeLanguageFromJSON(jsonString);
+                        } else {
+                            console.error("p5 instance or loadShapeLanguageFromJSON method not available");
+                        }
+                    } catch (error) {
+                        console.error("Error loading file:", error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            document.body.removeChild(fileInput); // Clean up
+        });
+
+        fileInput.click();
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -160,6 +247,9 @@ function App() {
                         </div>
                     </div>
                 </div>
+                {/* Add the save button */}
+                <LoadButton onClick={handleLoad} />
+                <SaveButton onClick={handleSave} />
             </main>
         </div>
     );
