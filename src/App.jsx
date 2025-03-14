@@ -8,6 +8,7 @@ import ButtonGroup from "./components/ButtonGroup.jsx";
 import TabGroup from "./components/TabGroup.jsx"; // Import your sketch
 import SaveButton from "./components/SaveButton"; // Import SaveButton
 import LoadButton from "./components/LoadButton"; // Import LoadButton
+import ShareButton from "./components/ShareButton"; // Import the ShareButton
 
 function App() {
 
@@ -197,6 +198,14 @@ function App() {
         fileInput.click();
     };
 
+    const handleShare = () => {
+        if (window.p5Instance && typeof window.p5Instance.saveShapeLanguageToURL === 'function') {
+            window.p5Instance.saveShapeLanguageToURL();
+        } else {
+            console.error("p5 instance or saveShapeLanguageToURL method not available");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
@@ -250,6 +259,7 @@ function App() {
                 {/* Add the save button */}
                 <LoadButton onClick={handleLoad} />
                 <SaveButton onClick={handleSave} />
+                <ShareButton onClick={handleShare} />
             </main>
         </div>
     );

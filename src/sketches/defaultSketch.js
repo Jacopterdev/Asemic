@@ -50,6 +50,11 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         states["Composition"] = new CompositionState(p, mergedParams);
         currentState = "Edit Skeleton"
         updateState("Edit Skeleton"); // Set the initial state
+
+        // Check for shape data in URL on startup
+        setTimeout(() => {
+            p.checkURLForShapeLanguage();
+        }, 500); // Short delay to ensure all components are initialized
     };
 
     const updateState = (stateName) => {
@@ -313,6 +318,63 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             console.error("Failed to load shape language:", error);
             return false;
         }
+    };
+
+    // Add these methods to handle URL-based saving and loading
+
+    // Method to save current state to URL
+    p.saveShapeLanguageToURL = () => {
+        // Get the current shape language JSON
+        const shapeData = p.getShapeLanguageAsJSON();
+        
+        // Compress the data with JSON.stringify + base64 encoding
+        const jsonString = JSON.stringify(shapeData);
+        const compressedData = btoa(encodeURIComponent(jsonString));
+        
+        // Create new URL with the data as a query parameter
+        const url = new URL(window.location.href);
+        url.searchParams.set('shape', compressedData);
+        
+        // Update browser history without reloading
+        window.history.pushState({}, '', url);
+        
+        // Create a temporary input to allow copying the URL
+        const tempInput = document.createElement('input');
+        tempInput.value = url.toString();
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        console.log("Shape language URL created and copied to clipboard");
+        
+        // You could also show a notification to the user that the URL was copied
+        alert("Shareable URL copied to clipboard!");
+        
+        return url.toString();
+    };
+
+    // Method to check URL and load shape language if present
+    p.checkURLForShapeLanguage = () => {
+        try {
+            const url = new URL(window.location.href);
+            const shapeParam = url.searchParams.get('shape');
+            
+            if (shapeParam) {
+                // Decode the base64 data and parse as JSON
+                const jsonString = decodeURIComponent(atob(shapeParam));
+                const shapeData = JSON.parse(jsonString);
+                
+                // Load the shape language data
+                p.loadShapeLanguageFromJSON(JSON.stringify(shapeData));
+                console.log("Successfully loaded shape language from URL");
+                return true;
+            }
+        } catch (error) {
+            console.error("Failed to load shape language from URL:", error);
+        }
+        
+        return false;
     };
 };
 

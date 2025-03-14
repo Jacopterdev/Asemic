@@ -3,7 +3,16 @@ import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 class Tutorial {
     constructor(p) {
         this.p = p;
-        this.active = false; // Start with tutorial inactive
+        
+        // Check if tutorial has been completed before
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true') {
+            this.active = false; // Keep tutorial inactive if completed before
+        } else {
+            // Set initial state based on your preference:
+            this.active = false; // Start inactive until user clicks help button
+            // Or this.active = true; // Start active immediately on first visit
+        }
+        
         this.currentStep = 0;
         this.fadeInOpacity = 0;
         this.lastStepChangeTime = 0;
@@ -269,13 +278,11 @@ class Tutorial {
     
     complete() {
         this.active = false;
-        // Comment out the localStorage code so tutorial shows every time
-        // Store in localStorage that the tutorial has been completed
-        /*
+
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('tutorialCompleted', 'true');
         }
-        */
+        
     }
     
     drawTooltip(step) {
