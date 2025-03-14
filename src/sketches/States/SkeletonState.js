@@ -38,6 +38,11 @@ class SkeletonState {
         this.tutorial = new Tutorial(p);
         this.tutorial.active = !tutorialSeen; // Only show if not seen before
         
+        // Help button properties
+        this.helpButtonSize = 40;
+        this.helpButtonX = p.width - 60;
+        this.helpButtonY = 20;
+        
         this.init();
     }
 
@@ -346,10 +351,53 @@ class SkeletonState {
         // Draw the fill grid button
         this.drawFillGridButton();
         
+        // Draw help button if tutorial is inactive
+        if (this.tutorial && !this.tutorial.active) {
+            this.drawHelpButton();
+        }
+        
         // Draw tutorial overlay last so it appears on top
         if (this.tutorial && this.tutorial.active) {
             this.tutorial.draw();
         }
+    }
+
+    drawHelpButton() {
+        this.p.push();
+    
+        // Make the button the same size as the delete button - 30px
+        const size = 30;
+    
+        // Update button position to account for new size
+        const iconX = this.p.width - size - LAYOUT.MARGIN;
+        const iconY = 20; // Keep it at the top
+    
+        // Update the class properties to reflect new size and position
+        this.helpButtonSize = size;
+        this.helpButtonX = iconX;
+        this.helpButtonY = iconY;
+    
+        // Check if mouse is hovering over button
+        const isHovered = 
+            this.p.mouseX >= iconX && 
+            this.p.mouseX <= iconX + size && 
+            this.p.mouseY >= iconY && 
+            this.p.mouseY <= iconY + size;
+    
+        // Draw button background with same light gray colors as delete button
+        this.p.strokeWeight(0);
+        // Use same colors as delete and fill grid buttons (180 when hovered, 210 when not)
+        const buttonColor = isHovered ? 180 : 210;
+        this.p.fill(buttonColor);
+        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius (4) like other buttons
+    
+        // Draw question mark in white
+        this.p.fill(255); // White
+        this.p.noStroke();
+        this.p.textSize(20); // Slightly smaller text size
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text("?", iconX + size/2, iconY + size/2);
+        this.p.pop();
     }
 
     updateMergedParams(newMergedParams) {
@@ -381,6 +429,17 @@ class SkeletonState {
         if (this.isFillGridButtonHovered) {
             this.fillGridWithPoints();
             return;
+        }
+        
+        // Check for help button clicks when tutorial is inactive
+        if (this.tutorial && !this.tutorial.active &&
+            this.p.mouseX >= this.helpButtonX && 
+            this.p.mouseX <= this.helpButtonX + this.helpButtonSize &&
+            this.p.mouseY >= this.helpButtonY && 
+            this.p.mouseY <= this.helpButtonY + this.helpButtonSize) {
+            
+            this.tutorial.toggleTutorial();
+            return true;
         }
         
         const knobDragged = this.gridContext.mousePressed(this.p.mouseX, this.p.mouseY);

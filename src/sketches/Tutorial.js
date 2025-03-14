@@ -3,11 +3,21 @@ import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 class Tutorial {
     constructor(p) {
         this.p = p;
-        this.active = true;
+        this.active = false; // Start with tutorial inactive
         this.currentStep = 0;
         this.fadeInOpacity = 0;
         this.lastStepChangeTime = 0;
         this.MARGIN = 20; // Define default margin if you don't want to import
+        
+        // Button dimensions
+        this.buttonWidth = 80;
+        this.buttonHeight = 40;
+        this.buttonMargin = 10;
+        
+        // Help button dimensions
+        this.helpButtonSize = 30; // Same size as delete button
+        this.helpButtonX = p.width - this.helpButtonSize - (LAYOUT ? LAYOUT.MARGIN : this.MARGIN);
+        this.helpButtonY = 20;
         
         // Define all tutorial steps
         this.steps = [
@@ -78,11 +88,142 @@ class Tutorial {
                 position: "right"
             }
         ];
+    }
+    
+    // Add this method to toggle tutorial visibility
+    toggleTutorial() {
+        this.active = !this.active;
+        if (this.active) {
+            // Reset to first step when reopening
+            this.currentStep = 0;
+            this.fadeInOpacity = 0;
+            this.lastStepChangeTime = this.p.millis();
+        }
+    }
+    
+    // Modify draw method to always render something (help button or tutorial)
+    draw() {
+        if (!this.active) {
+            // Draw the question mark button when tutorial is inactive
+            this.drawHelpButton();
+            return;
+        }
         
-        // Button dimensions
-        this.buttonWidth = 80;
-        this.buttonHeight = 40;
-        this.buttonMargin = 10;
+        // Existing tutorial drawing code
+        const step = this.steps[this.currentStep];
+        this.p.push();
+        
+        // Update fade-in effect
+        const elapsed = this.p.millis() - this.lastStepChangeTime;
+        this.fadeInOpacity = this.p.min(255, elapsed * 0.5);
+        
+        // Draw tooltip
+        this.drawTooltip(step);
+        
+        // Draw navigation buttons
+        this.drawNavigationButtons();
+        
+        // Draw highlighted area based on target
+        this.highlightTarget(step);
+        
+        this.p.pop();
+    }
+    
+    
+    
+    // Modify to show X with the same style as other utility buttons
+    drawNavigationButtons() {
+        const buttonY = this.p.height - this.buttonHeight - 20;
+        
+        // X button with consistent styling
+        const isXHovered = 
+            this.p.mouseX >= this.helpButtonX && 
+            this.p.mouseX <= this.helpButtonX + this.helpButtonSize && 
+            this.p.mouseY >= this.helpButtonY && 
+            this.p.mouseY <= this.helpButtonY + this.helpButtonSize;
+        
+        this.p.strokeWeight(0);
+        // Use the same colors as in drawHelpButton
+        const buttonColor = isXHovered ? 180 : 210;
+        this.p.fill(buttonColor, this.fadeInOpacity);
+        this.p.rect(this.helpButtonX, this.helpButtonY, this.helpButtonSize, this.helpButtonSize, 4);
+
+        this.p.fill(255, this.fadeInOpacity); // White text
+        this.p.noStroke();
+        this.p.textSize(18); // Slightly smaller for the smaller button
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2);
+        
+        // Rest of navigation buttons code remains the same
+        // Previous button (if not on first step)
+        if (this.currentStep > 0) {
+            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
+            this.p.fill(200, 200, 200, this.fadeInOpacity);
+            this.p.stroke(100, 100, 100, this.fadeInOpacity);
+            this.p.rect(prevX, buttonY, this.buttonWidth, this.buttonHeight, 5);
+            this.p.fill(50, 50, 50, this.fadeInOpacity);
+            this.p.noStroke();
+            this.p.textSize(14);
+            this.p.textAlign(this.p.CENTER, this.p.CENTER);
+            this.p.text("Previous", prevX + this.buttonWidth/2, buttonY + this.buttonHeight/2);
+        }
+        
+        // Next button
+        const nextX = this.p.width/2 + this.buttonMargin;
+        this.p.fill(60, 120, 255, this.fadeInOpacity);
+        this.p.stroke(40, 80, 200, this.fadeInOpacity);
+        this.p.rect(nextX, buttonY, this.buttonWidth, this.buttonHeight, 5);
+        this.p.fill(255, 255, 255, this.fadeInOpacity);
+        this.p.noStroke();
+        this.p.textSize(14);
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        const buttonText = this.currentStep === this.steps.length - 1 ? "Finish" : "Next";
+        this.p.text(buttonText, nextX + this.buttonWidth/2, buttonY + this.buttonHeight/2);
+    }
+    
+    // Update to handle the help button click
+    handleMousePressed(mouseX, mouseY) {
+        // Check for help/close button clicks (both in same position)
+        if (mouseX >= this.helpButtonX && 
+            mouseX <= this.helpButtonX + this.helpButtonSize &&
+            mouseY >= this.helpButtonY && 
+            mouseY <= this.helpButtonY + this.helpButtonSize) {
+            
+            this.toggleTutorial();
+            return true;
+        }
+        
+        if (!this.active) return false;
+        
+        // Rest of your existing button handling...
+        const buttonY = this.p.height - this.buttonHeight - 20;
+        
+        // Previous button
+        if (this.currentStep > 0) {
+            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
+            if (mouseX >= prevX && mouseX <= prevX + this.buttonWidth &&
+                mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
+                this.previous();
+                return true;
+            }
+        }
+        
+        // Next/Finish button
+        const nextX = this.p.width/2 + this.buttonMargin;
+        if (mouseX >= nextX && mouseX <= nextX + this.buttonWidth &&
+            mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
+            
+            // If on last step, complete the tutorial immediately
+            if (this.currentStep === this.steps.length - 1) {
+                this.active = false; // Force active to false directly
+                return true;
+            } else {
+                this.next();
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     next() {
@@ -119,75 +260,6 @@ class Tutorial {
         */
     }
     
-    handleMousePressed(mouseX, mouseY) {
-        if (!this.active) return false;
-        
-        // Check if navigation buttons were clicked
-        const buttonY = this.p.height - this.buttonHeight - 20;
-        
-        // Skip button (updated position)
-        const skipX = this.p.width - 80;
-        const skipY = 20;
-        if (mouseX >= skipX && mouseX <= skipX + 60 &&
-            mouseY >= skipY && mouseY <= skipY + 30) {
-            this.active = false; // Force active to false directly
-            return true;
-        }
-        
-        // Previous button
-        if (this.currentStep > 0) {
-            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
-            if (mouseX >= prevX && mouseX <= prevX + this.buttonWidth &&
-                mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
-                this.previous();
-                return true;
-            }
-        }
-        
-        // Next/Finish button
-        const nextX = this.p.width/2 + this.buttonMargin;
-        if (mouseX >= nextX && mouseX <= nextX + this.buttonWidth &&
-            mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
-            
-            // If on last step, complete the tutorial immediately
-            if (this.currentStep === this.steps.length - 1) {
-                this.active = false; // Force active to false directly
-                return true;
-            } else {
-                this.next();
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    draw() {
-        if (!this.active) return;
-        
-        const step = this.steps[this.currentStep];
-        this.p.push();
-        
-        // Update fade-in effect
-        const elapsed = this.p.millis() - this.lastStepChangeTime;
-        this.fadeInOpacity = this.p.min(255, elapsed * 0.5);
-        
-        // Remove the overlay completely
-        // this.p.fill(0, 0, 0, 60);
-        // this.p.rect(0, 0, this.p.width, this.p.height);
-        
-        // Draw tooltip
-        this.drawTooltip(step);
-        
-        // Draw navigation buttons
-        this.drawNavigationButtons();
-        
-        // Draw highlighted area based on target
-        this.highlightTarget(step);
-        
-        this.p.pop();
-    }
-    
     drawTooltip(step) {
         const tooltipWidth = 300;
         const tooltipHeight = 150;
@@ -209,8 +281,9 @@ class Tutorial {
             case "point_drag":
             case "shift_click":
             case "lines":
-            case "missAre": // Added missAre to the top group
-            case "anatomyPage": // Also added anatomyPage to the top group
+            case "missAre": 
+            case "anatomyPage":
+            case "gridType": // Added gridType to the top group
                 x = this.p.width/2 - tooltipWidth/2;
                 y = 50; // Position at top with small margin
                 break;
@@ -241,45 +314,6 @@ class Tutorial {
         this.p.textSize(12);
         this.p.fill(120, 120, 120, this.fadeInOpacity);
         this.p.text(`${this.currentStep + 1}/${this.steps.length}`, x + tooltipWidth - 20, y + tooltipHeight - 20);
-    }
-    
-    drawNavigationButtons() {
-        const buttonY = this.p.height - this.buttonHeight - 20;
-        
-        // Skip tutorial button (moved to top-right corner)
-        this.p.fill(200, 200, 200, this.fadeInOpacity);
-        this.p.stroke(100, 100, 100, this.fadeInOpacity);
-        this.p.rect(this.p.width - 80, 20, 60, 30, 5); // Position in top-right
-        this.p.fill(50, 50, 50, this.fadeInOpacity);
-        this.p.noStroke();
-        this.p.textSize(12);
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("Skip", this.p.width - 50, 35); // Update text position
-        
-        // Previous button (if not on first step)
-        if (this.currentStep > 0) {
-            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
-            this.p.fill(200, 200, 200, this.fadeInOpacity);
-            this.p.stroke(100, 100, 100, this.fadeInOpacity);
-            this.p.rect(prevX, buttonY, this.buttonWidth, this.buttonHeight, 5);
-            this.p.fill(50, 50, 50, this.fadeInOpacity);
-            this.p.noStroke();
-            this.p.textSize(14);
-            this.p.textAlign(this.p.CENTER, this.p.CENTER);
-            this.p.text("Previous", prevX + this.buttonWidth/2, buttonY + this.buttonHeight/2);
-        }
-        
-        // Next button
-        const nextX = this.p.width/2 + this.buttonMargin;
-        this.p.fill(60, 120, 255, this.fadeInOpacity);
-        this.p.stroke(40, 80, 200, this.fadeInOpacity);
-        this.p.rect(nextX, buttonY, this.buttonWidth, this.buttonHeight, 5);
-        this.p.fill(255, 255, 255, this.fadeInOpacity);
-        this.p.noStroke();
-        this.p.textSize(14);
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        const buttonText = this.currentStep === this.steps.length - 1 ? "Finish" : "Next";
-        this.p.text(buttonText, nextX + this.buttonWidth/2, buttonY + this.buttonHeight/2);
     }
     
     highlightTarget(step) {
