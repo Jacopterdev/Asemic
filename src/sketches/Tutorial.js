@@ -119,6 +119,15 @@ class Tutorial {
         // Check if navigation buttons were clicked
         const buttonY = this.p.height - this.buttonHeight - 20;
         
+        // Skip button (updated position)
+        const skipX = this.p.width - 80;
+        const skipY = 20;
+        if (mouseX >= skipX && mouseX <= skipX + 60 &&
+            mouseY >= skipY && mouseY <= skipY + 30) {
+            this.active = false; // Force active to false directly
+            return true;
+        }
+        
         // Previous button
         if (this.currentStep > 0) {
             const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
@@ -142,15 +151,6 @@ class Tutorial {
                 this.next();
                 return true;
             }
-        }
-        
-        // Skip button
-        const skipX = 20;
-        const skipY = 20;
-        if (mouseX >= skipX && mouseX <= skipX + 60 &&
-            mouseY >= skipY && mouseY <= skipY + 30) {
-            this.active = false; // Force active to false directly
-            return true;
         }
         
         return false;
@@ -229,15 +229,15 @@ class Tutorial {
     drawNavigationButtons() {
         const buttonY = this.p.height - this.buttonHeight - 20;
         
-        // Skip tutorial button (top-left corner)
+        // Skip tutorial button (moved to top-right corner)
         this.p.fill(200, 200, 200, this.fadeInOpacity);
         this.p.stroke(100, 100, 100, this.fadeInOpacity);
-        this.p.rect(20, 20, 60, 30, 5);
+        this.p.rect(this.p.width - 80, 20, 60, 30, 5); // Position in top-right
         this.p.fill(50, 50, 50, this.fadeInOpacity);
         this.p.noStroke();
         this.p.textSize(12);
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("Skip", 50, 35);
+        this.p.text("Skip", this.p.width - 50, 35); // Update text position
         
         // Previous button (if not on first step)
         if (this.currentStep > 0) {
@@ -280,58 +280,31 @@ class Tutorial {
                 
             case "point_click":
             case "point_drag":
-                // Draw a pulsing circle near the canvas center
-                const pulseSize = 15 + Math.sin(this.p.millis() / 200) * 5;
-                this.p.stroke(255, 255, 0, this.fadeInOpacity);
-                this.p.strokeWeight(3);
-                this.p.noFill();
-                this.p.ellipse(this.p.width/2, this.p.height/2, pulseSize*2);
+   
                 break;
                 
             case "shift_click":
-                // Draw shift key indicator
-                this.p.fill(255, 255, 255, this.fadeInOpacity);
-                this.p.stroke(100, 100, 100, this.fadeInOpacity);
-                this.p.rect(100, this.p.height/2 + 100, 80, 40, 5);
-                this.p.fill(50, 50, 50, this.fadeInOpacity);
-                this.p.noStroke();
-                this.p.textSize(18);
-                this.p.textAlign(this.p.CENTER, this.p.CENTER);
-                this.p.text("SHIFT", 140, this.p.height/2 + 120);
-                
-                // Draw arrow
-                this.drawArrow(180, this.p.height/2 + 120, 250, this.p.height/2 + 80);
+    
                 break;
                 
             case "lines":
-                // Draw example line highlight
-                this.p.stroke(255, 255, 0, this.fadeInOpacity);
-                this.p.strokeWeight(4);
-                this.p.line(this.p.width/2 - 100, this.p.height/2, this.p.width/2 + 100, this.p.height/2);
+             
                 break;
                 
             case "missAre":
-                // Highlight the MissAre slider in the tweakpane
-                // Assuming the tweakpane is positioned at the right side of the screen
-                const tweakPaneX = this.p.width - 250;
-                const tweakPaneY = 100; // Approximate Y position of the MissAre slider
+                // No highlighting box needed, just the arrow pointing left
                 
-                // Draw a highlighting box around the slider
-                this.p.noFill();
-                this.p.stroke(255, 255, 0, this.fadeInOpacity);
-                this.p.strokeWeight(3);
-                this.p.rect(tweakPaneX, tweakPaneY, 220, 30, 5);
-                
-                // Draw a pulsating arrow pointing to it
-                const arrowX = tweakPaneX - 40;
-                const arrowY = tweakPaneY + 15;
-                const arrowPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2; // Renamed from pulseSize
+                // Position the arrow in the top-left area
+                const arrowX = 60; // Position a bit further from the edge
+                const arrowY = 10; // Position in top-left
+                const arrowPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2;
                 this.p.push();
                 this.p.translate(arrowX, arrowY);
                 this.p.scale(arrowPulse);
-                this.drawArrow(0, 0, 30, 0);
+                this.drawArrow(0, 0, -40, 0); // Point horizontally left
                 this.p.pop();
                 break;
+
                 
             case "anatomyPage":
                 // Highlight the navigation to Anatomy page
@@ -339,15 +312,10 @@ class Tutorial {
                 const navX = 200; // Approximate X position of the Anatomy tab
                 const navY = 30;  // Approximate Y position of the navigation bar
                 
-                // Draw a highlighting box around the Anatomy tab
-                this.p.noFill();
-                this.p.stroke(255, 255, 0, this.fadeInOpacity);
-                this.p.strokeWeight(3);
-                this.p.rect(navX, 0, 100, 40, 0, 0, 5, 5);
                 
                 // Draw an animated arrow pointing to it
-                const navArrowX = navX + 50;
-                const navArrowY = navY + 50;
+                const navArrowX = 180;
+                const navArrowY = 50;
                 const navArrowPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2; // Renamed from navPulse
                 this.p.push();
                 this.p.translate(navArrowX, navArrowY);
