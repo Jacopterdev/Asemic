@@ -5,6 +5,7 @@ import CompositionState from "./States/CompositionState.js";
 import Effects from "./Effects.js";
 import shapeDictionary from "./ShapeDictionary.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import LZString from 'lz-string'; // Add this import for compression
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) => {
     let points = [];
@@ -325,34 +326,37 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
     // Method to save current state to URL
     p.saveShapeLanguageToURL = () => {
-        // Get the current shape language JSON
-        const shapeData = p.getShapeLanguageAsJSON();
-        
-        // Compress the data with JSON.stringify + base64 encoding
-        const jsonString = JSON.stringify(shapeData);
-        const compressedData = btoa(encodeURIComponent(jsonString));
-        
-        // Create new URL with the data as a query parameter
-        const url = new URL(window.location.href);
-        url.searchParams.set('shape', compressedData);
-        
-        // Update browser history without reloading
-        window.history.pushState({}, '', url);
-        
-        // Create a temporary input to allow copying the URL
-        const tempInput = document.createElement('input');
-        tempInput.value = url.toString();
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        
-        console.log("Shape language URL created and copied to clipboard");
-        
-        // You could also show a notification to the user that the URL was copied
-        alert("Shareable URL copied to clipboard!");
-        
-        return url.toString();
+        try {
+            // Get the current shape language JSON
+            const shapeData = p.getShapeLanguageAsJSON();
+            
+            // Convert to JSON string
+            const jsonString = JSON.stringify(shapeData);
+            
+            // Compress the data using LZString (which we've now imported)
+            const compressedData = LZString.compressToEncodedURIComponent(jsonString);
+            
+            // Create new URL with the compressed data
+            const url = new URL(window.location.href);
+            url.searchParams.set('shape', compressedData);
+            
+            // Update browser history without reloading
+            window.history.pushState({}, '', url);
+            
+            // Copy URL to clipboard
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                console.log("URL copied to clipboard");
+                alert("Shareable URL copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy URL:", err);
+            });
+            
+            return url.toString();
+        } catch (error) {
+            console.error("Error creating shape URL:", error);
+            alert("Failed to create shareable URL - data may be too large");
+            return null;
+        }
     };
 
     // Method to check URL and load shape language if present
@@ -362,8 +366,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             const shapeParam = url.searchParams.get('shape');
             
             if (shapeParam) {
-                // Decode the base64 data and parse as JSON
-                const jsonString = decodeURIComponent(atob(shapeParam));
+                // Decompress the data using LZString
+                const jsonString = LZString.decompressFromEncodedURIComponent(shapeParam);
                 const shapeData = JSON.parse(jsonString);
                 
                 // Load the shape language data
