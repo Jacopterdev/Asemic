@@ -4,10 +4,11 @@ import RectGrid from "../RectGrid.js";
 import NoGrid from "../NoGrid.js";
 import PointRenderer from "../PointRenderer.js";
 import PossibleLinesRenderer from "../PossibleLinesRenderer.js";
-
 import EphemeralLineAnimator from "../EphemeralLineAnimator.js";
 import GridContext from "../GridContext.js";
 import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
+import Tutorial from "../Tutorial.js";
+
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
         this.p = p;
@@ -31,6 +32,12 @@ class SkeletonState {
         this.fillGridButtonPosition = { x: 0, y: 0 }; // Will be set in updateGridContext
         this.fillGridButtonSize = { width: 40, height: 40 };
         this.isFillGridButtonHovered = false;
+        
+        // Initialize tutorial system
+        const tutorialSeen = typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true';
+        this.tutorial = new Tutorial(p);
+        this.tutorial.active = !tutorialSeen; // Only show if not seen before
+        
         this.init();
     }
 
@@ -338,6 +345,11 @@ class SkeletonState {
         
         // Draw the fill grid button
         this.drawFillGridButton();
+        
+        // Draw tutorial overlay last so it appears on top
+        if (this.tutorial && this.tutorial.active) {
+            this.tutorial.draw();
+        }
     }
 
     updateMergedParams(newMergedParams) {
@@ -351,6 +363,13 @@ class SkeletonState {
 
     mousePressed() {
         if (!this.mouseHandler) return;
+        
+        // First check if the tutorial handled the click
+        if (this.tutorial && this.tutorial.active) {
+            if (this.tutorial.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
+                return true; // Tutorial handled the click
+            }
+        }
         
         // Check if the delete button was clicked
         if (this.isDeleteButtonHovered) {
