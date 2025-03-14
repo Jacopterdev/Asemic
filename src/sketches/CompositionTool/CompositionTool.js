@@ -184,7 +184,7 @@ class CompositionTool {
 
     onKeyPress(key) {
         // When a key in the keyboard grid is clicked, add the shape to the input field
-        this.shapeInputField.addShape(key);
+        //this.shapeInputField.addShape(key);
     }
     
     updateMergedParams(mergedParams) {
