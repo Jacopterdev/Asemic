@@ -166,9 +166,9 @@ class Tutorial {
         const elapsed = this.p.millis() - this.lastStepChangeTime;
         this.fadeInOpacity = this.p.min(255, elapsed * 0.5);
         
-        // Draw semi-transparent overlay
-        this.p.fill(0, 0, 0, 100);
-        this.p.rect(0, 0, this.p.width, this.p.height);
+        // Remove the overlay completely
+        // this.p.fill(0, 0, 0, 60);
+        // this.p.rect(0, 0, this.p.width, this.p.height);
         
         // Draw tooltip
         this.drawTooltip(step);
@@ -196,6 +196,17 @@ class Tutorial {
             case "fillGridButton":
                 x = this.p.width - 280;
                 y = this.p.height - 200;
+                break;
+            // Place tooltip at top for point and line related steps and missAre
+            case "canvas_click":
+            case "point_click":
+            case "point_drag":
+            case "shift_click":
+            case "lines":
+            case "missAre": // Added missAre to the top group
+            case "anatomyPage": // Also added anatomyPage to the top group
+                x = this.p.width/2 - tooltipWidth/2;
+                y = 50; // Position at top with small margin
                 break;
             default:
                 x = this.p.width/2 - tooltipWidth/2;
@@ -332,7 +343,8 @@ class Tutorial {
         const glowSize = 8;
         for (let i = glowSize; i > 0; i--) {
             this.p.noFill();
-            this.p.stroke(255, 255, 0, this.fadeInOpacity * (1 - i/glowSize));
+            // Change from yellow to orange
+            this.p.stroke(255, 165, 0, this.fadeInOpacity * (1 - i/glowSize));
             this.p.strokeWeight(i);
             this.p.rect(x - glowSize/2, y - glowSize/2, size + glowSize, size + glowSize, 5);
         }
@@ -340,9 +352,10 @@ class Tutorial {
     
     drawArrow(x1, y1, x2, y2) {
         this.p.push();
-        this.p.stroke(255, 255, 0, this.fadeInOpacity);
+        // Change from yellow (255, 255, 0) to orange (255, 165, 0)
+        this.p.stroke(255, 165, 0, this.fadeInOpacity);
         this.p.strokeWeight(3);
-        this.p.fill(255, 255, 0, this.fadeInOpacity);
+        this.p.fill(255, 165, 0, this.fadeInOpacity);
         
         // Draw line
         this.p.line(x1, y1, x2, y2);
