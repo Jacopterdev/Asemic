@@ -145,7 +145,7 @@ class CompositionTool {
 
     // Existing methods remain unchanged
     keyPressed(key) {
-        this.keyboardGrid.keyPressed(key);
+        //this.keyboardGrid.keyPressed(key);
         if (key === "Backspace") {
             // Call `removeLastShape()` immediately
             this.shapeInputField.removeLastShape();
@@ -184,7 +184,7 @@ class CompositionTool {
 
     onKeyPress(key) {
         // When a key in the keyboard grid is clicked, add the shape to the input field
-        //this.shapeInputField.addShape(key);
+        this.shapeInputField.addShape(key);
     }
     
     updateMergedParams(mergedParams) {
