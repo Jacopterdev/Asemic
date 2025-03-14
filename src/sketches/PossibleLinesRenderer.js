@@ -22,6 +22,7 @@
         this.hoverTimeout = 60; // Frames to wait before auto-fading (60 frames ≈ 1 second at 60fps)
         this.hoverTimer = 0; // Current timer count
         this.autoFadeTriggered = false; // Flag to track if auto-fade has been triggered
+        this.anyHoveredLine = false;
     }
 
     /**
@@ -33,13 +34,15 @@
     drawLines(lines, selectedPoint, hoveredLine) {
         // Update hover animation state
         this.updateHoverAnimation(hoveredLine);
-        
+
+        this.anyHoveredLine = false;
         // Draw all selected lines (always visible)
         lines.forEach((line) => {
             if (line.selected) {
                 // Check if this is the hovered line
                 const isHovered = hoveredLine && hoveredLine.start.id === line.start.id && 
                                   hoveredLine.end.id === line.end.id;
+                this.anyHoveredLine = this.anyHoveredLine || isHovered;
                 
                 // Handle hover animation for selected lines
                 if (isHovered) {
@@ -61,9 +64,11 @@
                 this.p.line(line.start.x, line.start.y, line.end.x, line.end.y);
             }
         });
-        
+
+
         // Draw any hovered unselected line (only visible when hovered)
         if (hoveredLine && !hoveredLine.selected) {
+            this.anyHoveredLine = this.anyHoveredLine || hoveredLine;
             // Calculate animation progress (0 to 1)
             const animProgress = this.hoverTransition / this.hoverAnimationDuration;
             
@@ -136,6 +141,10 @@
         } else if (!this.hoverFadeIn && this.hoverTransition > 0) {
             this.hoverTransition--;
         }
+    }
+
+    getAnyHoveredLine() {
+        return this.anyHoveredLine;
     }
 }
 

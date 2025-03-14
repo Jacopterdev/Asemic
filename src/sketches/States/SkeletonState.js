@@ -8,6 +8,7 @@ import EphemeralLineAnimator from "../EphemeralLineAnimator.js";
 import GridContext from "../GridContext.js";
 import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
 import Tutorial from "../Tutorial.js";
+import {p5 as p} from "p5/lib/p5.js";
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -89,7 +90,8 @@ class SkeletonState {
             this.p.mouseX <= iconX + size && 
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
-        
+
+        if(this.isDeleteButtonHovered) this.p.cursor(this.p.HAND);
         // Draw button background with lighter grayscale colors
         this.p.strokeWeight(0);
         // Use lighter grays for both states
@@ -155,6 +157,8 @@ class SkeletonState {
             this.p.mouseX <= iconX + size && 
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
+
+        if(this.isFillGridButtonHovered) this.p.cursor(this.p.HAND);
         
         // Draw button background with lighter grayscale colors - same as delete button
         this.p.strokeWeight(0);
@@ -371,6 +375,7 @@ class SkeletonState {
 
     // Modify the draw method to handle the null selectedPoint
     draw() {
+        this.p.cursor(this.p.ARROW)
         this.updateGridContext();
         const missRadius = this.mergedParams.missArea;
         this.pointRenderer.setMissRadius(missRadius);
@@ -388,12 +393,21 @@ class SkeletonState {
         // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
         this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
 
+        //For changing the cursor
+        let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
+
         // Draw all points with hover effect
         this.points.forEach((point) => {
             const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
-            this.pointRenderer.draw(point, isHovered);
+            if (isHovered) {
+                anyHovered = true; // At least one point is hovered
+            }
+            this.pointRenderer.draw(point, isHovered); // Render the point with hover state
+
         });
-        
+        // Update cursor based on whether any point is hovered
+        if (anyHovered) this.p.cursor(this.p.HAND);
+
         // Draw the delete button
         this.drawDeleteButton();
         
@@ -432,7 +446,9 @@ class SkeletonState {
             this.p.mouseX <= iconX + size && 
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
-    
+
+        if(isHovered) this.p.cursor(this.p.HAND);
+
         // Draw button background with same light gray colors as delete button
         this.p.strokeWeight(0);
         // Use same colors as delete and fill grid buttons (180 when hovered, 210 when not)

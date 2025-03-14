@@ -23,7 +23,8 @@
      * @returns {Boolean} True if hovering, otherwise false.
      */
     isHovered(point, mouseX, mouseY) {
-        return this.p.dist(point.x, point.y, mouseX, mouseY) < this.missRadius;
+        const isHovered = this.p.dist(point.x, point.y, mouseX, mouseY) < this.normalSize;
+        return isHovered;
     }
 
     setMissRadius(missRadius) {

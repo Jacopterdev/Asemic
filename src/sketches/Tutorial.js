@@ -141,7 +141,9 @@ class Tutorial {
             this.p.mouseX <= this.helpButtonX + this.helpButtonSize && 
             this.p.mouseY >= this.helpButtonY && 
             this.p.mouseY <= this.helpButtonY + this.helpButtonSize;
-        
+
+        if(isXHovered) this.p.cursor(this.p.HAND);
+
         this.p.strokeWeight(0);
         // Use the same colors as in drawHelpButton
         const buttonColor = isXHovered ? 180 : 210;
@@ -153,11 +155,28 @@ class Tutorial {
         this.p.textSize(18); // Slightly smaller for the smaller button
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2);
-        
+
+
+        const nextX = this.p.width/2 + this.buttonMargin;
+        const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
+
+        const isNextHovered =
+            this.p.mouseX > nextX &&
+            this.p.mouseX < nextX + this.buttonWidth &&
+            this.p.mouseY > buttonY &&
+            this.p.mouseY < buttonY + this.buttonHeight;
+
+        const isPrevHovered =
+            this.p.mouseX > prevX &&
+            this.p.mouseX < prevX + this.buttonWidth &&
+            this.p.mouseY > buttonY &&
+            this.p.mouseY < buttonY + this.buttonHeight;
+
+        if(isNextHovered || isPrevHovered) this.p.cursor(this.p.HAND);
+
         // Rest of navigation buttons code remains the same
         // Previous button (if not on first step)
         if (this.currentStep > 0) {
-            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
             this.p.fill(200, 200, 200, this.fadeInOpacity);
             this.p.stroke(100, 100, 100, this.fadeInOpacity);
             this.p.rect(prevX, buttonY, this.buttonWidth, this.buttonHeight, 5);
@@ -169,7 +188,6 @@ class Tutorial {
         }
         
         // Next button
-        const nextX = this.p.width/2 + this.buttonMargin;
         this.p.fill(60, 120, 255, this.fadeInOpacity);
         this.p.stroke(40, 80, 200, this.fadeInOpacity);
         this.p.rect(nextX, buttonY, this.buttonWidth, this.buttonHeight, 5);
