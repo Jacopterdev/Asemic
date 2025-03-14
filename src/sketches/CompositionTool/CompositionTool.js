@@ -53,6 +53,10 @@ class CompositionTool {
             40,                     // Button width
             40                      // Button height (larger than standard)
         );
+        this.backspaceTimer = null;
+        this.initialDelayTimer = null; // Timer for the initial delay
+
+
     }
     
     // Handle mouse presses for the download button
@@ -143,7 +147,19 @@ class CompositionTool {
     keyPressed(key) {
         this.keyboardGrid.keyPressed(key);
         if (key === "Backspace") {
-            this.shapeInputField.removeLastShape(); // Handle backspace
+            // Call `removeLastShape()` immediately
+            this.shapeInputField.removeLastShape();
+
+            // Start the initial delay before the repeated execution
+            if (!this.initialDelayTimer) {
+                this.initialDelayTimer = setTimeout(() => {
+                    // After the initial delay, start the faster interval timer
+                    this.backspaceTimer = setInterval(() => {
+                        this.shapeInputField.removeLastShape();
+                    }, 50); // Faster pace after delay
+                }, 400); // Initial delay of 400ms
+            }
+
         } else {
             this.shapeInputField.addShape(key); // Add shape based on key
         }
@@ -151,6 +167,19 @@ class CompositionTool {
 
     keyReleased(key){
         this.keyboardGrid.keyReleased(key);
+        if (key === "Backspace") {
+            // Clear all timers when Backspace is released
+            if (this.initialDelayTimer) {
+                clearTimeout(this.initialDelayTimer);
+                this.initialDelayTimer = null;
+            }
+            if (this.backspaceTimer) {
+                clearInterval(this.backspaceTimer);
+                this.backspaceTimer = null;
+            }
+        }
+
+
     }
 
     onKeyPress(key) {
