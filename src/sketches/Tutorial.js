@@ -23,14 +23,14 @@ class Tutorial {
         this.steps = [
             {
                 target: "canvas",
-                title: "Shape Editor",
-                description: "Welcome to the Shape Editor! This tutorial will guide you through the main features.",
+                title: "Skeleton Editor",
+                description: "Welcome to the Skeleton Editor! The skeleton will act as the structural foundation of your shapes.",
                 position: "center"
             },
             {
                 target: "canvas_click",
                 title: "Creating Points",
-                description: "Click anywhere on the canvas to create a point. Try it now!",
+                description: "Click anywhere on the canvas to create a point.",
                 position: "center"
             },
             {
@@ -54,7 +54,7 @@ class Tutorial {
             {
                 target: "lines",
                 title: "Line Selection",
-                description: "Click on any line to toggle its visibility.",
+                description: "Click on any line to toggle it.",
                 position: "center"
             },
             {
@@ -77,7 +77,7 @@ class Tutorial {
             },
             {
                 target: "missAre",
-                title: "MissAre Slider",
+                title: "MissArea Slider",
                 description: "Adjust this slider to control how much variation is applied to your shape.",
                 position: "right"
             },

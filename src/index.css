@@ -170,3 +170,7 @@ button, .button{
 .tp-rotv {
     font-size: 0.75rem !important;
 }
+
+.tp-lblv_l {
+    @apply select-none;
+}
