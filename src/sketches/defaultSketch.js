@@ -29,6 +29,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         p.createCanvas(800, 800);
         p.angleMode(p.DEGREES);
         p.angleMode(p.RADIANS);
+        p.noiseSeed(1);
 
         mergedParams = mergedParamsRef.current;
         toolConfig = toolConfigRef.current;
