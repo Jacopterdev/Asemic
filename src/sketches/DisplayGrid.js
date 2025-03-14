@@ -410,7 +410,7 @@ class DisplayGrid {
                         
                         try {
                             // Initialize shapeSaver before using it
-                            shapeSaver.init(this.p, this.mergedParams).download(letter);
+                            shapeSaver.init(this.p, this.mergedParams).saveAsSvg(letter);
                             return true;
                         } catch (error) {
                             console.error("Error downloading shape:", error);

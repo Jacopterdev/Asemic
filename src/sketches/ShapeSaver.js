@@ -2,6 +2,7 @@ import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary";
 import Effects from "./Effects.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import { Posterizer } from "potrace";
 
 class ShapeSaver {
     static #instance;
@@ -70,6 +71,75 @@ class ShapeSaver {
         console.log(`Downloaded shape ${letter}`);
         return true;
     }
+
+    async saveAsSvg(letter) {
+        // Check if properly initialized
+        if (!this.p || !this.mergedParams) {
+            console.error("ShapeSaver not properly initialized. Call init() first.");
+            return false;
+        }
+
+        // Step 1: Create a buffer to render the shape
+        const outputSize = 800;
+        const buffer = this.p.createGraphics(outputSize, outputSize);
+        buffer.background(255);
+
+        // Scale and center the shape
+        const displayScale = LAYOUT.SHAPE_SCALE * this.p.getShapeScale();
+        buffer.push();
+        buffer.translate((1 - displayScale) * outputSize / 2, (1 - displayScale) * outputSize / 2);
+        buffer.scale(displayScale);
+
+        // Generate the shape
+        const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
+        const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+        bufferShape.setNoisePosition(noiseX, noiseY);
+        bufferShape.generate();
+        bufferShape.draw(false);
+
+        buffer.pop();
+
+        // Apply the same effects as in the main canvas
+        let effect = new Effects(buffer);
+        effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        effect.applyEffects(displayScale);
+
+        // Step 2: Extract the buffer contents as a base64 image
+        const base64Image = buffer.elt.toDataURL("image/png");
+        buffer.remove();
+
+        // Step 3: Use potrace.js to generate SVG
+        const potrace = Potrace; // Assuming Potrace is globally available
+        potrace.loadImageFromUrl(base64Image); // Load the buffer image
+        /**potrace.setParameter({
+            turnpolicy: "minority",
+            optcurve: true,
+            alphamax: 1.0,
+            opttolerance: 0.2,
+        });*/
+
+        return new Promise((resolve, reject) => {
+            potrace.process(() => {
+                let svg = potrace.getSVG(1.0); // Generate the SVG with size and curve
+                if (svg) {
+                    // Create a downloadable link
+                    const blob = new Blob([svg], { type: "image/svg+xml" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `shape_${letter}.svg`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+
+                    console.log(`Saved shape ${letter} as SVG.`);
+                    resolve(true);
+                } else {
+                    console.error("Failed to generate SVG.");
+                    reject(false);
+                }
+            });
+        });
+    }
+
 
     // Add this method to the ShapeSaver class
 
