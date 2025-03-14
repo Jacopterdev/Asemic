@@ -89,7 +89,8 @@ class DisplayGrid {
                     this.p, 
                     pos.x, 
                     pos.y, 
-                    cell.letter
+                    cell.letter,
+                    true
                 );
             }
         }
@@ -150,7 +151,8 @@ class DisplayGrid {
                         this.p, 
                         pos.x, 
                         pos.y, 
-                        cell.letter
+                        cell.letter,
+                        true
                     );
                 }
                 
@@ -159,7 +161,7 @@ class DisplayGrid {
                 
                 const button = this.downloadButtons[j][i];
                 button.update(pos.x, pos.y);
-                button.isVisible = (j === this.hoveredCellRow && i === this.hoveredCellCol && isVisible);
+                button.isVisible = ((j === this.hoveredCellRow && i === this.hoveredCellCol && isVisible));
                 
                 // Draw the button if visible
                 if (button.isVisible) {
@@ -410,7 +412,13 @@ class DisplayGrid {
                         
                         try {
                             // Initialize shapeSaver before using it
-                            shapeSaver.init(this.p, this.mergedParams).saveAsSvg(letter);
+                            const selectedOption = button.getSelectedOption().type;
+                            shapeSaver.init(this.p, this.mergedParams);
+                            if(selectedOption == "svg"){
+                                shapeSaver.saveAsSvg(letter);
+                            } else if (selectedOption == "png") {
+                                shapeSaver.download(letter);
+                            } else {return;}
                             return true;
                         } catch (error) {
                             console.error("Error downloading shape:", error);
