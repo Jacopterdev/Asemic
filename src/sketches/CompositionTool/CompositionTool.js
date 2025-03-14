@@ -4,6 +4,9 @@ import DownloadButton from "../DownloadButton.js";
 // Import the shapeSaver utility
 import shapeSaver from "../ShapeSaver.js";
 import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
+import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
+import Effects from "../Effects.js";
+import shapeDictionary from "../ShapeDictionary.js";
 
 class CompositionTool {
     constructor(p, mergedParams) {
@@ -41,10 +44,35 @@ class CompositionTool {
             30,                        // Button width
             30                         // Button height
         );
+
+        // Add a download all button at the bottom of the KeyboardGrid
+        this.downloadAllButton = new DownloadButton(
+            p,
+            p.width - 80,           // Position at right side
+            p.height/2 + (3 * ((p.width - (2*50))/10)) + 20, // Position below the keyboard grid
+            40,                     // Button width
+            40                      // Button height (larger than standard)
+        );
     }
     
     // Handle mouse presses for the download button
     handleMousePressed() {
+        // Check if download all button was clicked
+        if (this.downloadAllButton && this.downloadAllButton.isClicked(this.p.mouseX, this.p.mouseY)) {
+            console.log("Download all button clicked");
+            
+            try {
+                // Use ShapeSaver's method instead of direct implementation
+                const allCharacters = "QWERTYUIOPASDFGHJKL ZXCVBNM"; // Match your grid layout
+                shapeSaver.init(this.p, this.mergedParams)
+                    .downloadAllShapes(this.p, this.mergedParams, allCharacters);
+                return true;
+            } catch (error) {
+                console.error("Error downloading all shapes:", error);
+            }
+            return true; // Event handled
+        }
+        
         // First check if the download button was clicked
         if (this.downloadButton && this.downloadButton.isClicked(this.p.mouseX, this.p.mouseY)) {
             console.log("Download button clicked in CompositionTool");
@@ -96,6 +124,19 @@ class CompositionTool {
         
         // Draw the keyboard
         this.keyboardGrid.draw(this.p);
+        
+        // Always make the download all button visible
+        this.downloadAllButton.isVisible = true;
+        this.downloadAllButton.update(this.downloadAllButton.x, this.downloadAllButton.y);
+        this.downloadAllButton.draw();
+        
+        // Optional: Add a label for the button
+        this.p.fill(0);
+        this.p.noStroke();
+        this.p.textSize(12);
+        this.p.textAlign(this.p.CENTER);
+        this.p.text("Download All", this.downloadAllButton.x, this.downloadAllButton.y + 50);
+        this.p.textAlign(this.p.LEFT);
     }
 
     // Existing methods remain unchanged

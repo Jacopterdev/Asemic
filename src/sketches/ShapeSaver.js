@@ -234,6 +234,110 @@ class ShapeSaver {
         return true;
     }
 
+    downloadAllShapes(p, mergedParams, alphabet) {
+        // Check if properly initialized
+        if (!this.p || !this.mergedParams) {
+            console.error("ShapeSaver not properly initialized. Call init() first.");
+            return false;
+        }
+        
+        console.log("Creating shape catalog PNG");
+        
+        // Filter out spaces from the alphabet
+        const filteredAlphabet = alphabet.split('').filter(char => char !== ' ');
+        
+        // Define grid layout parameters
+        const shapeSize = 600;
+        const spacing = 200;
+        const columns = 5;
+        const rows = Math.ceil(filteredAlphabet.length / columns);
+        
+        // Fix the buffer dimensions to include ALL shapes properly
+        // Don't subtract spacing - that's what's causing shapes to get cut off
+        const bufferWidth = columns * (shapeSize + spacing);
+        const bufferHeight = rows * (shapeSize + spacing);
+        
+        console.log(`Creating buffer with dimensions ${bufferWidth}x${bufferHeight}`);
+        
+        // Create two buffers - one for shapes (with effects) and one for text (without effects)
+        const shapeBuffer = this.p.createGraphics(bufferWidth, bufferHeight);
+        const finalBuffer = this.p.createGraphics(bufferWidth, bufferHeight);
+        
+        // Fill shape buffer with white background
+        shapeBuffer.background(255);
+        
+        // Draw each shape to the shape buffer
+        for (let i = 0; i < filteredAlphabet.length; i++) {
+            const char = filteredAlphabet[i];
+            
+            // Calculate grid position
+            const col = i % columns;
+            const row = Math.floor(i / columns);
+            
+            // Calculate pixel position
+            const x = col * (shapeSize + spacing);
+            const y = row * (shapeSize + spacing);
+            
+            // Get noise position from dictionary
+            const noisePos = shapeDictionary.getValue(char);
+            if (!noisePos) {
+                console.warn(`No noise position for char: ${char}`);
+                continue;
+            }
+            
+            // Draw the shape only to shape buffer
+            shapeBuffer.push();
+            shapeBuffer.translate(x + shapeSize/2, y + shapeSize/2); // Center in cell
+            shapeBuffer.scale(0.8);
+            
+            const shape = new ShapeGeneratorV2(shapeBuffer, this.mergedParams);
+            shape.setNoisePosition(noisePos.x, noisePos.y);
+            shape.generate();
+            shape.draw();
+            
+            shapeBuffer.pop();
+        }
+        
+        // Apply effects to the shape buffer only
+        const effect = new Effects(shapeBuffer);
+        effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        effect.applyEffects(0.4);
+        
+        // Draw the processed shape buffer to the final buffer
+        finalBuffer.background(255);
+        finalBuffer.image(shapeBuffer, 0, 0);
+        
+        // Add text labels on top (not affected by smoothing)
+        for (let i = 0; i < filteredAlphabet.length; i++) {
+            const char = filteredAlphabet[i];
+            
+            // Calculate grid position
+            const col = i % columns;
+            const row = Math.floor(i / columns);
+            
+            // Calculate pixel position
+            const x = col * (shapeSize + spacing);
+            const y = row * (shapeSize + spacing);
+            
+            // Draw character label on the final buffer
+            finalBuffer.fill(0);
+            finalBuffer.noStroke();
+            finalBuffer.textSize(48);
+            finalBuffer.textAlign(finalBuffer.CENTER);
+            finalBuffer.text(char, x + shapeSize/2, y + 40);
+        }
+        
+        // Save the final composition
+        finalBuffer.save(`shape_catalog_${Date.now()}.png`);
+        
+        // Clean up
+        shapeBuffer.remove();
+        finalBuffer.remove();
+        
+        console.log("Shape catalog downloaded successfully");
+        return true;
+    }
+
 }   // This static property will hold the singleton instance of ShapeDictionary
 
 
