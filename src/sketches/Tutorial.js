@@ -48,6 +48,12 @@ class Tutorial {
                 position: "center"
             },
             {
+                target: "gridType",
+                title: "Grid Selection",
+                description: "Change between circular, rectangular, or no grid using the controls in the top right.",
+                position: "right"
+            },
+            {
                 target: "fillGridButton",
                 title: "Fill Grid",
                 description: "This button fills the current grid with evenly spaced points.",
@@ -334,6 +340,18 @@ class Tutorial {
                 this.drawArrow(0, 0, 0, -30);
                 this.p.pop();
                 
+                break;
+
+            case "gridType":
+                // Arrow pointing to the top right corner where grid controls are
+                const gridX = this.p.width - 132; // Position near the right edge
+                const gridY = 50;               // Position near the top
+                const gridPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2;
+                this.p.push();
+                this.p.translate(gridX, gridY);
+                this.p.scale(gridPulse);
+                this.drawArrow(0, 0, 30, -30); // Point diagonally up and right
+                this.p.pop();
                 break;
         }
     }
