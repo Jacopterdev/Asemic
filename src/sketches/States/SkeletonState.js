@@ -38,6 +38,11 @@ class SkeletonState {
         this.tutorial = new Tutorial(p);
         this.tutorial.active = !tutorialSeen; // Only show if not seen before
         
+        // Help button properties
+        this.helpButtonSize = 40;
+        this.helpButtonX = p.width - 60;
+        this.helpButtonY = 20;
+        
         this.init();
     }
 
@@ -206,6 +211,8 @@ class SkeletonState {
     
     // Add method to fill grid with points
     fillGridWithPoints() {
+        console.log("Starting fillGridWithPoints");
+        
         // Clear existing points and lines first
         this.points.length = 0;
         this.lineManager.clearAllLines();
@@ -213,96 +220,143 @@ class SkeletonState {
         // Get the current grid type and dimensions
         const grid = this.gridContext.getGrid();
         
-        // Create points at grid intersections
-        const gridPoints = grid.getIntersections();
+        // Force grid update before proceeding
+        this.updateGridContext();
         
-        // Add points at each intersection
-        let pointId = 0;
-        gridPoints.forEach(point => {
-            this.points.push({
-                x: point.x,
-                y: point.y,
-                id: pointId++
-            });
-        });
+        console.log(`Current grid type: ${this.currentGridType}`);
+        console.log("Grid object:", grid);
         
-        // For rectangular grid - add lines only between adjacent points
         if (this.currentGridType === "rect") {
-            const cols = grid.cols;
-            const rows = grid.rows;
+            // Get grid dimensions - add fallbacks in case these are undefined
+            const cols = grid.cols || 3;  // Default to 3 if undefined
+            const rows = grid.rows || 3;  // Default to 3 if undefined
+            console.log(`Rectangle grid dimensions: ${cols}x${rows}`);
             
-            // Loop through all points
-            for (let i = 0; i < this.points.length; i++) {
-                const col = i % (cols + 1);
-                const row = Math.floor(i / (cols + 1));
-                
-                // Connect to right neighbor (if not at right edge)
-                if (col < cols) {
-                    const rightNeighbor = this.points[i + 1];
-                    this.lineManager.lines.push({
-                        start: this.points[i],
-                        end: rightNeighbor,
-                        selected: true
-                    });
-                }
-                
-                // Connect to bottom neighbor (if not at bottom edge)
-                if (row < rows) {
-                    const bottomNeighbor = this.points[i + cols + 1];
-                    this.lineManager.lines.push({
-                        start: this.points[i],
-                        end: bottomNeighbor,
-                        selected: true
-                    });
+            // Calculate grid cell dimensions
+            const gridWidth = grid.width || (this.p.width - 2 * LAYOUT.MARGIN);
+            const gridHeight = grid.height || (this.p.width - 2 * LAYOUT.MARGIN);
+            const cellWidth = gridWidth / cols;
+            const cellHeight = gridHeight / rows;
+            const startX = grid.x || LAYOUT.MARGIN;
+            const startY = grid.y || LAYOUT.MARGIN;
+            
+            console.log(`Grid dimensions: ${gridWidth}x${gridHeight}, Cell: ${cellWidth}x${cellHeight}, Start: ${startX},${startY}`);
+            
+            // Create points in row-column order to match our indexing
+            let pointId = 0;
+            for (let row = 0; row <= rows; row++) {
+                for (let col = 0; col <= cols; col++) {
+                    const point = {
+                        x: startX + col * cellWidth,
+                        y: startY + row * cellHeight,
+                        id: pointId++
+                    };
+                    this.points.push(point);
+                    console.log(`Added point at (${point.x}, ${point.y})`);
                 }
             }
-        }
-        // For radial grid - connect adjacent points on same radius and same angle
-        else if (this.currentGridType === "radial") {
-            const angularDivisions = grid.angularDivisions;
-            const radialDivisions = grid.radialDivisions;
             
-            // Connect points on the same circle (adjacent angles)
-            for (let r = 1; r <= radialDivisions; r++) {
-                for (let a = 0; a < angularDivisions; a++) {
-                    const currentIndex = (r - 1) * angularDivisions + a;
-                    const nextIndex = (r - 1) * angularDivisions + ((a + 1) % angularDivisions);
+            console.log(`Added ${this.points.length} points to this.points`);
+            
+            if (this.points.length === 0) {
+                console.error("No points were added! Check grid dimensions.");
+                return;
+            }
+            
+            // Total points per row is cols + 1 (for intersections)
+            const pointsPerRow = cols + 1;
+            console.log(`Points per row: ${pointsPerRow}`);
+            
+            // Loop through all points by row and column for more reliable indexing
+            for (let row = 0; row <= rows; row++) {
+                for (let col = 0; col <= cols; col++) {
+                    const currentIndex = row * pointsPerRow + col;
                     
-                    this.lineManager.lines.push({
-                        start: this.points[currentIndex],
-                        end: this.points[nextIndex],
-                        selected: true
-                    });
-                }
-            }
-            
-            // Connect points on the same radius (adjacent circles)
-            for (let r = 1; r < radialDivisions; r++) {
-                for (let a = 0; a < angularDivisions; a++) {
-                    const currentIndex = (r - 1) * angularDivisions + a;
-                    const nextRadiusIndex = r * angularDivisions + a;
+                    // Connect to right neighbor (if not at right edge)
+                    if (col < cols && this.points[currentIndex] && this.points[currentIndex + 1]) {
+                        const rightIndex = currentIndex + 1;
+                        this.lineManager.lines.push({
+                            start: this.points[currentIndex],
+                            end: this.points[rightIndex],
+                            selected: true
+                        });
+                    }
                     
-                    this.lineManager.lines.push({
-                        start: this.points[currentIndex],
-                        end: this.points[nextRadiusIndex],
-                        selected: true
-                    });
+                    // Connect to bottom neighbor (if not at bottom edge)
+                    if (row < rows && this.points[currentIndex] && this.points[currentIndex + pointsPerRow]) {
+                        const bottomIndex = currentIndex + pointsPerRow;
+                        this.lineManager.lines.push({
+                            start: this.points[currentIndex],
+                            end: this.points[bottomIndex],
+                            selected: true
+                        });
+                    }
                 }
             }
             
-            // Connect center point to first circle
-            const centerIndex = this.points.length - 1; // Last point is center
-            for (let a = 0; a < angularDivisions; a++) {
-                this.lineManager.lines.push({
-                    start: this.points[centerIndex],
-                    end: this.points[a],
-                    selected: true
+            console.log(`Created ${this.lineManager.lines.length} lines for rectangular grid`);
+        } else {
+            // For other grid types, continue using grid.getIntersections()
+            const gridPoints = grid.getIntersections();
+            console.log(`Generated ${gridPoints.length} grid points`);
+            
+            // Add points at each intersection
+            let pointId = 0;
+            gridPoints.forEach(point => {
+                this.points.push({
+                    x: point.x,
+                    y: point.y,
+                    id: pointId++
                 });
+            });
+            
+            // Rest of the function for radial and none grid types
+            if (this.currentGridType === "radial") {
+                const angularDivisions = grid.angularDivisions;
+                const radialDivisions = grid.radialDivisions;
+                
+                // Connect points on the same circle (adjacent angles)
+                for (let r = 1; r <= radialDivisions; r++) {
+                    for (let a = 0; a < angularDivisions; a++) {
+                        const currentIndex = (r - 1) * angularDivisions + a;
+                        const nextIndex = (r - 1) * angularDivisions + ((a + 1) % angularDivisions);
+                        
+                        this.lineManager.lines.push({
+                            start: this.points[currentIndex],
+                            end: this.points[nextIndex],
+                            selected: true
+                        });
+                    }
+                }
+                
+                // Connect points on the same radius (adjacent circles)
+                for (let r = 1; r < radialDivisions; r++) {
+                    for (let a = 0; a < angularDivisions; a++) {
+                        const currentIndex = (r - 1) * angularDivisions + a;
+                        const nextRadiusIndex = r * angularDivisions + a;
+                        
+                        this.lineManager.lines.push({
+                            start: this.points[currentIndex],
+                            end: this.points[nextRadiusIndex],
+                            selected: true
+                        });
+                    }
+                }
+                
+                // Connect center point to first circle
+                const centerIndex = this.points.length - 1; // Last point is center
+                for (let a = 0; a < angularDivisions; a++) {
+                    this.lineManager.lines.push({
+                        start: this.points[centerIndex],
+                        end: this.points[a],
+                        selected: true
+                    });
+                }
             }
-        }
-        // For NoGrid - no specific structure, don't add lines
-        else {
-            // No lines for "none" grid type
+            // For NoGrid - no specific structure, don't add lines
+            else {
+                // No lines for "none" grid type
+            }
         }
     }
 
@@ -346,10 +400,53 @@ class SkeletonState {
         // Draw the fill grid button
         this.drawFillGridButton();
         
+        // Draw help button if tutorial is inactive
+        if (this.tutorial && !this.tutorial.active) {
+            this.drawHelpButton();
+        }
+        
         // Draw tutorial overlay last so it appears on top
         if (this.tutorial && this.tutorial.active) {
             this.tutorial.draw();
         }
+    }
+
+    drawHelpButton() {
+        this.p.push();
+    
+        // Make the button the same size as the delete button - 30px
+        const size = 30;
+    
+        // Update button position to account for new size
+        const iconX = this.p.width - size - LAYOUT.MARGIN;
+        const iconY = 20; // Keep it at the top
+    
+        // Update the class properties to reflect new size and position
+        this.helpButtonSize = size;
+        this.helpButtonX = iconX;
+        this.helpButtonY = iconY;
+    
+        // Check if mouse is hovering over button
+        const isHovered = 
+            this.p.mouseX >= iconX && 
+            this.p.mouseX <= iconX + size && 
+            this.p.mouseY >= iconY && 
+            this.p.mouseY <= iconY + size;
+    
+        // Draw button background with same light gray colors as delete button
+        this.p.strokeWeight(0);
+        // Use same colors as delete and fill grid buttons (180 when hovered, 210 when not)
+        const buttonColor = isHovered ? 180 : 210;
+        this.p.fill(buttonColor);
+        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius (4) like other buttons
+    
+        // Draw question mark in white
+        this.p.fill(255); // White
+        this.p.noStroke();
+        this.p.textSize(20); // Slightly smaller text size
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text("?", iconX + size/2, iconY + size/2);
+        this.p.pop();
     }
 
     updateMergedParams(newMergedParams) {
@@ -381,6 +478,17 @@ class SkeletonState {
         if (this.isFillGridButtonHovered) {
             this.fillGridWithPoints();
             return;
+        }
+        
+        // Check for help button clicks when tutorial is inactive
+        if (this.tutorial && !this.tutorial.active &&
+            this.p.mouseX >= this.helpButtonX && 
+            this.p.mouseX <= this.helpButtonX + this.helpButtonSize &&
+            this.p.mouseY >= this.helpButtonY && 
+            this.p.mouseY <= this.helpButtonY + this.helpButtonSize) {
+            
+            this.tutorial.toggleTutorial();
+            return true;
         }
         
         const knobDragged = this.gridContext.mousePressed(this.p.mouseX, this.p.mouseY);
