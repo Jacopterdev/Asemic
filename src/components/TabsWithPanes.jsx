@@ -398,7 +398,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                         </div>
                     ))
                 ) : (
-                    <div className="flex-grow flex justify-center items-center text-gray-500 text-xs flex-grow text-center font-mono">
+                    <div className="flex-grow flex justify-center items-center text-gray-500 text-xs flex-grow text-center font-mono select-none">
                         Add Sub-Shapes
                     </div>
                 )}
