@@ -9,7 +9,7 @@
         this.draggingPoint = null; // Currently dragged point
         this.mouseDragStart = null; // Start position of mouse drag
         this.snapThreshold = 10; // Hover distance to detect points
-        this.maxPoints = 16;
+        // Removed maxPoints limit
         
         // No more selectedPoint, we only track hover state
         this.hoveredLine = null; // Currently hovered line
@@ -41,23 +41,71 @@
                 return true;
             }
             
-            // If we're not clicking on a point or line, create a new point
-            if (this.points.length < this.maxPoints) {
-                // Rest of your point creation code remains the same...
-                const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
-                const newPoint = this.createPoint(
-                    snapPosition ? snapPosition.x : this.p.mouseX,
-                    snapPosition ? snapPosition.y : this.p.mouseY
-                );
+            // Remove the limit on max points
+            // if (this.points.length < this.maxPoints) {
+            // Create a new point
+            const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+            const newPoint = this.createPoint(
+                snapPosition ? snapPosition.x : this.p.mouseX,
+                snapPosition ? snapPosition.y : this.p.mouseY
+            );
+            
+            this.points.push(newPoint);
+            
+            // Get the most recent point (exclude the one we just added)
+            const previousPoints = this.points.filter(p => p.id !== newPoint.id);
+            const mostRecentPoint = previousPoints.length > 0 ? 
+                previousPoints[previousPoints.length - 1] : null;
+            
+            // After 8 points, only connect to nearby points
+            if (this.points.length > 10) {
+                // Connection threshold distance
+                const proximityThreshold = 200; // Only connect to points within this distance
                 
-                this.points.push(newPoint);
-                
-                // Get the most recent point (exclude the one we just added)
-                const previousPoints = this.points.filter(p => p.id !== newPoint.id);
-                const mostRecentPoint = previousPoints.length > 0 ? 
-                    previousPoints[previousPoints.length - 1] : null;
-                
-                // If shift is pressed, only connect visibly to the last added point
+                // If shift is pressed, always connect visibly to the last added point (no distance check)
+                if (this.p.keyIsDown(16)) { // 16 is the keyCode for shift
+                    if (mostRecentPoint) {
+                        // Connect to most recent point with visible line - REMOVED distance check
+                        this.lineManager.lines.push({
+                            start: newPoint,
+                            end: mostRecentPoint,
+                            selected: true
+                        });
+                        
+                        // Connect to all other nearby points with invisible lines
+                        previousPoints.forEach(point => {
+                            if (point.id !== mostRecentPoint.id) {
+                                const dist = this.p.dist(
+                                    newPoint.x, newPoint.y,
+                                    point.x, point.y
+                                );
+                                
+                                if (dist <= proximityThreshold) {
+                                    this.lineManager.lines.push({
+                                        start: newPoint,
+                                        end: point,
+                                        selected: false // Invisible line
+                                    });
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    // Normal behavior: connect only to nearby points with visible lines
+                    const nearbyPoints = previousPoints.filter(point => {
+                        const dist = this.p.dist(
+                            newPoint.x, newPoint.y,
+                            point.x, point.y
+                        );
+                        return dist <= proximityThreshold;
+                    });
+                    
+                    if (nearbyPoints.length > 0) {
+                        this.lineManager.addLinesForPoint(newPoint, nearbyPoints);
+                    }
+                }
+            } else {
+                // For first 8 points, keep the original behavior
                 if (this.p.keyIsDown(16)) { // 16 is the keyCode for shift
                     if (mostRecentPoint) {
                         // Connect to most recent point with visible line
@@ -83,6 +131,7 @@
                     this.lineManager.addLinesForPoint(newPoint, previousPoints);
                 }
             }
+            // }
             return true;
         }
     }
