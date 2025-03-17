@@ -77,10 +77,9 @@ class SkeletonState {
         // Other initialization code...
     }
 
-    // Update delete button method
+    // Update drawDeleteButton method to make the button bigger
     drawDeleteButton() {
-        // Make button smaller
-        const size = 30; // Reduced from 40
+        const size = 30; // Larger button size (was 24)
         const iconX = this.p.width - size - LAYOUT.MARGIN;
         const iconY = this.p.height - size - LAYOUT.MARGIN;
         
@@ -92,63 +91,56 @@ class SkeletonState {
             this.p.mouseY <= iconY + size;
 
         if(this.isDeleteButtonHovered) this.p.cursor(this.p.HAND);
-        // Draw button background with lighter grayscale colors
-        this.p.strokeWeight(0);
-        // Use lighter grays for both states
-        const buttonColor = this.isDeleteButtonHovered ? 180 : 210;
-        this.p.fill(buttonColor);
-        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
         
-        // Draw trash can icon - slightly smaller proportions
-        this.p.noStroke();
-        this.p.fill(255); // Changed to white instead of dark gray
+        // Match your index.css button styles
+        if(this.isDeleteButtonHovered) {
+            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
+        } else {
+            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
+        }
         
-        // Draw trash can body - slightly smaller
-        const margin = size * 0.2;
-        const trashWidth = size * 0.5; // Reduced width
-        const trashHeight = size * 0.45; // Reduced height
+        this.p.noStroke(); // No border like your buttons
+        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
+        
+        // Draw trash can icon in text-gray-600 color (rgb(75, 85, 99))
+        this.p.stroke(75, 85, 99); // text-gray-600
+        this.p.strokeWeight(1);
+        this.p.noFill();
+        
+        // Keep icon size the same - just centered in the larger button
+        const iconSize = 18; // Icon size (unchanged)
+        const margin = (size - iconSize) / 2; // Center the icon
+        const trashWidth = iconSize * 0.6;
+        const trashHeight = iconSize * 0.5;
         const trashX = iconX + (size - trashWidth) / 2;
         const trashY = iconY + margin + size * 0.15;
         
         // Trash can body
-        this.p.rect(trashX, trashY, trashWidth, trashHeight, 2);
+        this.p.rect(trashX, trashY, trashWidth, trashHeight, 1);
         
-        // Trash can lid - slightly smaller
-        const lidWidth = trashWidth * 1.1; // Less exaggerated
-        const lidHeight = size * 0.08;
+        // Trash can lid
+        const lidWidth = trashWidth * 1.1;
+        const lidHeight = size * 0.05;
         const lidX = iconX + (size - lidWidth) / 2;
         const lidY = trashY - lidHeight - 1;
-        this.p.rect(lidX, lidY, lidWidth, lidHeight);
+        this.p.line(lidX, lidY, lidX + lidWidth, lidY);
         
         // Handle on lid
         const handleWidth = lidWidth * 0.2;
-        const handleHeight = size * 0.06;
+        const handleHeight = size * 0.05;
         const handleX = iconX + (size - handleWidth) / 2;
         const handleY = lidY - handleHeight;
         this.p.rect(handleX, handleY, handleWidth, handleHeight, 1);
         
-        // Draw vertical lines inside trash can - use the same light gray color as the background
-        this.p.strokeWeight(1);
-        this.p.stroke(buttonColor); // Changed to use the same color as the button background
-        
-        const lineCount = 3;
-        const lineSpacing = trashWidth / (lineCount + 1);
-        
-        for (let i = 1; i <= lineCount; i++) {
-            const lineX = trashX + i * lineSpacing;
-            this.p.line(lineX, trashY + 4, lineX, trashY + trashHeight - 4);
-        }
-        
-        // Update the position and size properties for hit detection
+        // Update position and size properties for hit detection
         this.deleteButtonPosition = { x: iconX, y: iconY };
         this.deleteButtonSize = { width: size, height: size };
     }
 
-    // Add new method to draw the fill grid button
+    // Update drawFillGridButton method to make the button bigger
     drawFillGridButton() {
-        // Make button smaller - same size as delete button
-        const size = 30; // Reduced from 40
-        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 1.5; // Position it to the left of the delete button
+        const size = 30; // Larger button size (was 24)
+        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 1.5; // Position left of delete button
         const iconY = this.p.height - size - LAYOUT.MARGIN;
         
         // Check if mouse is hovering over button
@@ -160,29 +152,32 @@ class SkeletonState {
 
         if(this.isFillGridButtonHovered) this.p.cursor(this.p.HAND);
         
-        // Draw button background with lighter grayscale colors - same as delete button
-        this.p.strokeWeight(0);
-        // Use lighter grays for both states
-        this.p.fill(this.isFillGridButtonHovered ? 180 : 210);
-        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius
+        // Match your index.css button styles
+        if(this.isFillGridButtonHovered) {
+            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
+        } else {
+            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
+        }
         
-        // Draw grid fill icon with white instead of dark gray
-        this.p.noStroke();
-        this.p.fill(255); // Changed to white
+        this.p.noStroke(); // No border like your buttons
+        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
         
-        // Draw grid representation - slightly smaller
-        const margin = size * 0.2;
-        const gridSize = size * 0.55; // Reduced size
+        // Draw grid fill icon in text-gray-600 color (rgb(75, 85, 99))
+        this.p.stroke(75, 85, 99); // text-gray-600
+        this.p.strokeWeight(1);
+        this.p.noFill();
+        
+        // Keep icon size the same - just centered in the larger button
+        const iconSize = 18; // Icon size
+        const margin = (size - iconSize) / 2; // Center the icon
+        const gridSize = iconSize * 0.8;
         const gridX = iconX + (size - gridSize) / 2;
         const gridY = iconY + (size - gridSize) / 2;
         
         // Draw grid outline
-        this.p.strokeWeight(1);
-        this.p.stroke(255); // Changed to white
-        this.p.noFill();
-        this.p.rect(gridX, gridY, gridSize, gridSize, 2);
+        this.p.rect(gridX, gridY, gridSize, gridSize, 1);
         
-        // Draw grid lines - thinner, in white
+        // Draw grid lines
         const cellSize = gridSize / 2;
         
         // Vertical line
@@ -191,10 +186,10 @@ class SkeletonState {
         // Horizontal line
         this.p.line(gridX, gridY + cellSize, gridX + gridSize, gridY + cellSize);
         
-        // Draw points at the intersections - smaller, in white
+        // Draw points at the intersections
         this.p.noStroke();
-        this.p.fill(255); // Changed to white
-        const dotSize = 3; // Smaller dots
+        this.p.fill(75, 85, 99); // text-gray-600
+        const dotSize = 2; // Small dots
         
         // Draw points at intersections
         for (let i = 0; i <= 2; i++) {
@@ -208,11 +203,11 @@ class SkeletonState {
             }
         }
         
-        // Update the position and size properties for hit detection
+        // Update position and size properties for hit detection
         this.fillGridButtonPosition = { x: iconX, y: iconY };
         this.fillGridButtonSize = { width: size, height: size };
     }
-    
+
     // Add method to fill grid with points
     fillGridWithPoints() {
         console.log("Starting fillGridWithPoints");
@@ -425,11 +420,12 @@ class SkeletonState {
         }
     }
 
+    // Update drawHelpButton method to make the button bigger
     drawHelpButton() {
         this.p.push();
     
-        // Make the button the same size as utility buttons (30px)
-        const size = 30;
+        // Make the button the same size as utility buttons
+        const size = 30; // Larger button size (was 24)
     
         // Position at top-right
         const iconX = this.p.width - size - LAYOUT.MARGIN;
@@ -450,16 +446,20 @@ class SkeletonState {
         // Change cursor to hand when hovering
         if(isHovered) this.p.cursor(this.p.HAND);
     
-        // Draw button background with same light gray colors as other utility buttons
-        this.p.strokeWeight(0);
-        const buttonColor = isHovered ? 180 : 210;
-        this.p.fill(buttonColor);
-        this.p.rect(iconX, iconY, size, size, 4); // Corner radius (4) like other buttons
-    
-        // Draw question mark in white
-        this.p.fill(255); // White
+        // Match your index.css button styles
+        if(isHovered) {
+            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
+        } else {
+            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
+        }
+        
+        this.p.noStroke(); // No border like your buttons
+        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
+        
+        // Keep question mark size similar but centered in the larger button
+        this.p.fill(75, 85, 99); // text-gray-600
         this.p.noStroke();
-        this.p.textSize(18); // Appropriate size for the question mark
+        this.p.textSize(16); // Appropriate size for the question mark
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.text("?", iconX + size/2, iconY + size/2 + 1); // +1 for better vertical alignment
     

@@ -4,14 +4,8 @@ class Tutorial {
     constructor(p) {
         this.p = p;
         
-        // Check if tutorial has been completed before
-        if (typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true') {
-            this.active = false; // Keep tutorial inactive if completed before
-        } else {
-            // Set initial state based on your preference:
-            this.active = false; // Start inactive until user clicks help button
-            // Or this.active = true; // Start active immediately on first visit
-        }
+        // Always start with tutorial inactive, regardless of localStorage
+        this.active = false; // Start inactive until user clicks help button
         
         this.currentStep = 0;
         this.fadeInOpacity = 0;
@@ -138,13 +132,53 @@ class Tutorial {
         this.p.pop();
     }
     
+    // Update the drawHelpButton method - reversed colors (light bg, dark lines)
+    drawHelpButton() {
+        this.p.push();
+        
+        // Match button group size
+        const size = 24;
+        
+        // Position at top-right
+        const iconX = this.p.width - size - LAYOUT.MARGIN;
+        const iconY = 20; // Keep it at the top
+        
+        // Update the class properties to reflect size and position
+        this.helpButtonSize = size;
+        this.helpButtonX = iconX;
+        this.helpButtonY = iconY;
+        
+        // Check if mouse is hovering over button
+        const isHovered = 
+            this.p.mouseX >= iconX && 
+            this.p.mouseX <= iconX + size && 
+            this.p.mouseY >= iconY && 
+            this.p.mouseY <= iconY + size;
+        
+        // Change cursor to hand when hovering
+        if(isHovered) this.p.cursor(this.p.HAND);
+        
+        // Use LIGHT gray fill with thin DARK border like button group
+        this.p.fill(215);  // Light gray background
+        
+        this.p.strokeWeight(1);
+        this.p.rect(iconX, iconY, size, size, 2); // Smaller corner radius like button group
+        
+        // Draw question mark in dark gray
+        this.p.fill(64); // Dark gray
+        this.p.noStroke();
+        this.p.textSize(16); // Appropriate size for the question mark
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text("?", iconX + size/2, iconY + size/2 + 1); // +1 for better vertical alignment
+        
+        this.p.pop();
+    }
     
-    
-    // Modify to show X with the same style as other utility buttons
+    // Update the X button styling in drawNavigationButtons - reversed colors
     drawNavigationButtons() {
         const buttonY = this.p.height - this.buttonHeight - 20;
         
-        // X button with consistent styling
+        // X button with consistent styling - reversed colors
         const isXHovered = 
             this.p.mouseX >= this.helpButtonX && 
             this.p.mouseX <= this.helpButtonX + this.helpButtonSize && 
@@ -153,18 +187,18 @@ class Tutorial {
 
         if(isXHovered) this.p.cursor(this.p.HAND);
 
-        this.p.strokeWeight(0);
-        // Use the same colors as in drawHelpButton
-        const buttonColor = isXHovered ? 180 : 210;
-        this.p.fill(buttonColor, this.fadeInOpacity);
-        this.p.rect(this.helpButtonX, this.helpButtonY, this.helpButtonSize, this.helpButtonSize, 4);
-
-        this.p.fill(255, this.fadeInOpacity); // White text
+        // Use LIGHT gray fill with thin DARK border like button group
+        this.p.fill(215, this.fadeInOpacity);  // Light gray background
+        
+        this.p.strokeWeight(1);
+        this.p.rect(this.helpButtonX, this.helpButtonY, this.helpButtonSize, this.helpButtonSize, 2);
+        
+        // Draw X in dark gray
+        this.p.fill(64, this.fadeInOpacity); // Dark gray X
         this.p.noStroke();
-        this.p.textSize(18); // Slightly smaller for the smaller button
+        this.p.textSize(16); // Same size as question mark
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2 + 1);
-
 
         const nextX = this.p.width/2 + this.buttonMargin;
         const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
@@ -334,9 +368,7 @@ class Tutorial {
         this.p.strokeWeight(0);
         this.p.rect(x, y, tooltipWidth, tooltipHeight, 8); // Rounded corners
         
-        // Add a subtle highlight at the top for a glass effect
-        this.p.fill(255, 255, 255, this.fadeInOpacity * 0.1);
-        this.p.rect(x, y, tooltipWidth, 20, 8, 8, 0, 0);
+        
         
         // Title text
         this.p.fill(255, 255, 255, this.fadeInOpacity);

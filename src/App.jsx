@@ -252,32 +252,36 @@ function MainApp() {
                         <div className="flex justify-between items-center h-6">
                             <TabGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
 
-                            {isSecondGroupVisible && (
-                                <div>
-                                    <ButtonGroup buttons={secondGroupButtons} onButtonSelect={handleSecondGroupSelection}
+                            <div className="flex items-center space-x-2">
+                                {isSecondGroupVisible && (
+                                    <ButtonGroup 
+                                        buttons={secondGroupButtons} 
+                                        onButtonSelect={handleSecondGroupSelection}
                                     />
+                                )}
+                                
+                                {/* Action buttons in the top bar - using components now */}
+                                {/* Increased margin from ml-4 to ml-8 for more space */}
+                                <div className="flex items-center space-x-2 ml-24">
+                                    <LoadButton onClick={handleLoad} />
+                                    <SaveButton onClick={handleSave} />
+                                    <ShareButton onClick={handleShare} />
                                 </div>
-                            )}
-
-                            <div className="flex items-center space-x-4">
-
                             </div>
                         </div>
+                        
                         <div className="flex space-y-2 bg-white">
                             {/* Render the p5.js sketch */}
-                            <P5Wrapper sketch={defaultSketch}
-                                       mergedParams={mergedParams}
-                                       toolConfig={toolConfig}
-                                       lastUpdatedParam={lastUpdatedParam}
+                            <P5Wrapper 
+                                sketch={defaultSketch}
+                                mergedParams={mergedParams}
+                                toolConfig={toolConfig}
+                                lastUpdatedParam={lastUpdatedParam}
                             />
                             <div className="bg-gray-50 flex-1 rounded m-4"></div>
                         </div>
                     </div>
                 </div>
-                {/* Add the save button */}
-                <LoadButton onClick={handleLoad} />
-                <SaveButton onClick={handleSave} />
-                <ShareButton onClick={handleShare} />
             </main>
         </div>
     );
