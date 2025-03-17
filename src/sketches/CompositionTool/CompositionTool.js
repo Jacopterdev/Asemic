@@ -169,7 +169,7 @@ class CompositionTool {
             }
 
         } else {
-            this.shapeInputField.addShape(key); // Add shape based on key
+            //this.shapeInputField.addShape(key); // Add shape based on key
         }
         this.keyboardGrid.keyPressed(key);
     }
