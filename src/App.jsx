@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Header from "./components/Header";
 import { useState, useEffect } from "react";
 import TweakpaneComponent from "./components/TweakpaneComponent.jsx";
@@ -9,9 +10,10 @@ import TabGroup from "./components/TabGroup.jsx"; // Import your sketch
 import SaveButton from "./components/SaveButton"; // Import SaveButton
 import LoadButton from "./components/LoadButton"; // Import LoadButton
 import ShareButton from "./components/ShareButton"; // Import the ShareButton
+import GalleryPage from "./components/GalleryPage"; // Import the GalleryPage
 
-function App() {
-
+function MainApp() {
+    // Your existing App code here
     const [params, setParams] = useState({
         missArea: 10,
         numberOfLines: {min: 4, max: 8},
@@ -23,13 +25,34 @@ function App() {
 
     const [subShapeParams, setSubShapeParams] = useState({});
     const [lastUpdatedParam, setLastUpdatedParam] = useState(null); // Track last updated param
+    const location = useLocation();
 
+    // Check URL for shape data when the page loads
+    useEffect(() => {
+        const checkURLForShapeLanguage = () => {
+            try {
+                const url = new URL(window.location.href);
+                const shapeParam = url.searchParams.get('shape');
+                
+                if (shapeParam && window.p5Instance) {
+                    setTimeout(() => {
+                        if (window.p5Instance && window.p5Instance.checkURLForShapeLanguage) {
+                            window.p5Instance.checkURLForShapeLanguage();
+                        }
+                    }, 500);
+                }
+            } catch (error) {
+                console.error("Failed to load shape language from URL:", error);
+            }
+        };
+
+        checkURLForShapeLanguage();
+    }, [location]);
 
     const handleSetParams = (tabId, updatedParam) => {
         // Track the last updated tab and parameter
         setLastUpdatedParam({ tabId, ...updatedParam });
     };
-
 
     // Handle updates from TweakpaneComponent
     const handleTweakpaneUpdates = (key, value) => {
@@ -90,13 +113,11 @@ function App() {
     const mergedParams = { ...params, ...subShapeParams };
     console.log("lastupdated param",lastUpdatedParam);
 
-
     // NEW: State for managing selected buttons for each group
     const [toolConfig, setToolConfig] = useState({
         state: "Edit Skeleton", // Default selection for the first group
         grid: "radial", // Default selection for the second group
     });
-
 
     const firstGroupButtons = [
         {
@@ -150,10 +171,6 @@ function App() {
 
         console.log(`Second group selected index: ${index}`);
     };
-
-
-
-
 
     const [isSecondGroupVisible, setIsSecondGroupVisible] = useState(true); // Track visibility of the second ButtonGroup
 
@@ -211,6 +228,7 @@ function App() {
             {/* Header Section */}
             <header>
                 <Header />
+
             </header>
 
             {/* Main Content Section */}
@@ -262,6 +280,17 @@ function App() {
                 <ShareButton onClick={handleShare} />
             </main>
         </div>
+    );
+}
+
+function App() {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<MainApp />} />
+                <Route path="/gallery" element={<GalleryPage />} />
+            </Routes>
+        </Router>
     );
 }
 
