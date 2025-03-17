@@ -2,6 +2,7 @@ import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary";
 import Effects from "./Effects.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import Potrace from "./potrace.js";
 
 class ShapeSaver {
     static #instance;
