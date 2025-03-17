@@ -22,7 +22,7 @@ class CompositionState {
     }
 
     mouseReleased() {
-
+        this.compositionTool.handleMouseReleased();
         // Handle composition-specific mouse releasing if needed
     }
 

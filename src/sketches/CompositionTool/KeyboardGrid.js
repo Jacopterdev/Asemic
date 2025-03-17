@@ -21,6 +21,7 @@ class KeyboardGrid {
         // Create a p5 graphics buffer for the entire grid
         this.buffer = p.createGraphics(this.cols * this.cellSize, this.rows * this.cellSize);
         this.effect = new Effects(this.buffer);
+        this.lastKeyPressed = null;
 
         // Create the cells
         for (let row = 0; row < this.rows; row++) {
@@ -45,11 +46,18 @@ class KeyboardGrid {
     }
 
     draw() {
-        this.buffer.clear();
+        //this.buffer.clear();
         this.buffer.background(255);
 
         this.cells.forEach((cell) => cell.drawShape());
-        const scaleFactor =  this.cellSize / this.p.width; // Adjust scale factor to fit the cell size
+        const key = this.getKeyFromMouse(
+            this.p.mouseX,
+            this.p.mouseY)
+        const hover = key !== null;
+        this.cells.forEach((cell) => cell.checkKeyHovered(key, hover));
+
+
+        const scaleFactor = this.cellSize / this.p.width; // Adjust scale factor to fit the cell size
         this.effect.applyEffects(scaleFactor * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
 
         // Draw all cells in the grid
@@ -63,52 +71,75 @@ class KeyboardGrid {
         // Pass the key press event to each cell
         this.cells.forEach((cell) => cell.checkKeyPressed(key));
     }
-    keyReleased(key){
+
+    keyReleased(key) {
         this.cells.forEach((cell) => cell.checkKeyReleased(key));
     }
 
-    updateMergedParams(newParams){
+    updateMergedParams(newParams) {
         this.mergedParams = newParams;
         this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
         this.cells.forEach((cell) => cell.updateMergedParams(newParams));
     }
 
     handleMousePressed(mouseX, mouseY) {
+        this.lastKeyPressed = this.getKeyFromMouse(mouseX, mouseY);
+        // Only process non-space keys
+        if (this.lastKeyPressed !== ' ' && this.lastKeyPressed) {
+            this.cells.forEach((cell) => cell.checkKeyPressed(this.lastKeyPressed));
+            return true; // Click was handled
+        }
+
+        return false; // Click was not on a valid key
+    }
+
+    handleMouseReleased() {
+        if (this.lastKeyPressed) this.cells.forEach((cell) => cell.checkKeyReleased(this.lastKeyPressed));
+    }
+
+    getKeyFromMouse(mouseX, mouseY) {
         // Check if the click is within the grid bounds
         if (mouseX < this.x || mouseX > this.x + this.cols * this.cellSize ||
             mouseY < this.y || mouseY > this.y + this.rows * this.cellSize) {
-            return false; // Click is outside the grid
+            return null; // Click is outside the grid
         }
-        
+
         // Translate mouse coordinates to be relative to the grid
         const relativeX = mouseX - this.x;
         const relativeY = mouseY - this.y;
-        
+
         // Calculate which cell was clicked
         const col = Math.floor(relativeX / this.cellSize);
         const row = Math.floor(relativeY / this.cellSize);
-        
+
         // Make sure we're within bounds
         if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
             // Get the index in our keyboard layout
             const index = row * this.cols + col;
-            
+
             // Make sure the index exists in our alphabet
             if (index < this.alphabet.length) {
-                const key = this.alphabet[index];
-                
-                // Only process non-space keys
-                if (key !== ' ') {
-                    // Call the callback function provided during construction
-                    if (this.callback) {
-                        this.callback(key);
-                    }
-                    return true; // Click was handled
-                }
+                return this.alphabet[index];
             }
+            return null;
         }
-        
-        return false; // Click was not on a valid key
     }
+
+    /**
+     * Checks if the current mouse position is hovering over the buffer.
+     * @returns {boolean} True if the buffer is hovered; otherwise, false.
+     */
+    isBufferHovered() {
+        const mouseX = this.p.mouseX;
+        const mouseY = this.p.mouseY;
+
+        // Check if the mouse position falls within the buffer's boundaries
+        return mouseX >= this.x &&
+            mouseX <= this.x + this.buffer.width &&
+            mouseY >= this.y &&
+            mouseY <= this.y + this.buffer.height;
+    }
+
+
 }
 export default KeyboardGrid;

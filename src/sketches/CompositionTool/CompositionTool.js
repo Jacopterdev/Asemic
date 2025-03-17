@@ -7,6 +7,7 @@ import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
 import Effects from "../Effects.js";
 import shapeDictionary from "../ShapeDictionary.js";
+import keyboardGrid from "./KeyboardGrid.js";
 
 class CompositionTool {
     constructor(p, mergedParams) {
@@ -99,6 +100,10 @@ class CompositionTool {
         
         return false; // Event not handled
     }
+
+    handleMouseReleased() {
+        this.keyboardGrid.handleMouseReleased();
+    }
     
     // Draw method to render the CompositionTool components
     draw() {
@@ -111,9 +116,10 @@ class CompositionTool {
             const { x, y } = this.shapeInputField.getCursorPosition();
             this.shapeInputField.drawCursor(x, y);
         }
-        
+
+        const hoverInput = this.isMouseOverInputField();
         // Update download button visibility based on mouse position
-        this.downloadButton.isVisible = this.isMouseOverInputField();
+        this.downloadButton.isVisible = hoverInput;
         
         // Update hover state - this line was missing
         if (this.downloadButton.isVisible) {
@@ -135,12 +141,14 @@ class CompositionTool {
         this.downloadAllButton.draw();
         
         // Optional: Add a label for the button
-        this.p.fill(0);
-        this.p.noStroke();
-        this.p.textSize(12);
-        this.p.textAlign(this.p.CENTER);
-        this.p.text("Download All", this.downloadAllButton.x, this.downloadAllButton.y + 50);
-        this.p.textAlign(this.p.LEFT);
+        //this.p.fill(0);
+        //this.p.noStroke();
+        //this.p.textSize(12);
+        //this.p.textAlign(this.p.CENTER);
+        //this.p.text("Download All", this.downloadAllButton.x, this.downloadAllButton.y + 50);
+        //this.p.textAlign(this.p.LEFT);
+        const hoverKeyboard = this.keyboardGrid.isBufferHovered();
+        if (hoverKeyboard) this.p.cursor(this.p.HAND);
     }
 
     // Existing methods remain unchanged
@@ -163,6 +171,7 @@ class CompositionTool {
         } else {
             this.shapeInputField.addShape(key); // Add shape based on key
         }
+        this.keyboardGrid.keyPressed(key);
     }
 
     keyReleased(key){
