@@ -163,7 +163,7 @@ class Tutorial {
         this.p.noStroke();
         this.p.textSize(18); // Slightly smaller for the smaller button
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2);
+        this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2 + 1);
 
 
         const nextX = this.p.width/2 + this.buttonMargin;
@@ -285,6 +285,7 @@ class Tutorial {
         
     }
     
+    // Update drawTooltip to position tooltips further from edges
     drawTooltip(step) {
         const tooltipWidth = 300;
         const tooltipHeight = 150;
@@ -293,13 +294,15 @@ class Tutorial {
         // Position tooltip based on target
         switch (step.target) {
             case "deleteButton":
-                x = this.p.width - 200;
-                y = this.p.height - 200;
+                x = this.p.width - 320; // Move further from right edge
+                y = this.p.height - 230; // Move further from bottom edge
                 break;
+                
             case "fillGridButton":
-                x = this.p.width - 280;
-                y = this.p.height - 200;
+                x = this.p.width - 350; // Move further from right edge
+                y = this.p.height - 230; // Move further from bottom edge
                 break;
+                
             // Place tooltip at top for point and line related steps and missAre
             case "canvas_click":
             case "point_click":
@@ -308,109 +311,111 @@ class Tutorial {
             case "lines":
             case "missAre": 
             case "anatomyPage":
-            case "gridType": // Added gridType to the top group
+            case "gridType":
                 x = this.p.width/2 - tooltipWidth/2;
                 y = 50; // Position at top with small margin
                 break;
+                
             default:
                 x = this.p.width/2 - tooltipWidth/2;
                 y = this.p.height/3 - tooltipHeight/2;
         }
         
-        // Draw tooltip background
+        // Ensure tooltips don't go off-screen
+        x = Math.max(20, Math.min(x, this.p.width - tooltipWidth - 20));
+        y = Math.max(20, Math.min(y, this.p.height - tooltipHeight - 20));
+        
+        // Create a modern, clean tooltip design
+        this.p.push();
+        
+        // Rest of the tooltip drawing code remains the same...
+        // Semi-transparent background
+        this.p.fill(40, 40, 40, this.fadeInOpacity * 0.9);
+        this.p.strokeWeight(0);
+        this.p.rect(x, y, tooltipWidth, tooltipHeight, 8); // Rounded corners
+        
+        // Add a subtle highlight at the top for a glass effect
+        this.p.fill(255, 255, 255, this.fadeInOpacity * 0.1);
+        this.p.rect(x, y, tooltipWidth, 20, 8, 8, 0, 0);
+        
+        // Title text
         this.p.fill(255, 255, 255, this.fadeInOpacity);
-        this.p.stroke(100, 100, 100, this.fadeInOpacity);
-        this.p.strokeWeight(1);
-        this.p.rect(x, y, tooltipWidth, tooltipHeight, 10);
-        
-        // Draw title
-        this.p.fill(50, 50, 50, this.fadeInOpacity);
         this.p.noStroke();
-        this.p.textSize(18);
-        this.p.textAlign(this.p.LEFT, this.p.TOP);
-        this.p.text(step.title, x + 20, y + 20);
+        this.p.textSize(16);
+        this.p.textStyle(this.p.BOLD);
+        this.p.textAlign(this.p.LEFT);
+        this.p.text(step.title, x + 20, y + 30);
         
-        // Draw description
+        // Description text
+        this.p.fill(220, 220, 220, this.fadeInOpacity);
         this.p.textSize(14);
-        this.p.text(step.description, x + 20, y + 50, tooltipWidth - 40, tooltipHeight - 70);
+        this.p.textStyle(this.p.NORMAL);
         
-        // Draw step indicator
-        this.p.textAlign(this.p.RIGHT);
-        this.p.textSize(12);
-        this.p.fill(120, 120, 120, this.fadeInOpacity);
-        this.p.text(`${this.currentStep + 1}/${this.steps.length}`, x + tooltipWidth - 20, y + tooltipHeight - 20);
+        // Split text into multiple lines if needed
+        const words = step.description.split(' ');
+        let line = '';
+        let yPos = y + 60;
+        const lineHeight = 20;
+        
+        words.forEach(word => {
+            const testLine = line + word + ' ';
+            const testWidth = this.p.textWidth(testLine);
+            
+            if (testWidth > tooltipWidth - 40) {
+                this.p.text(line, x + 20, yPos);
+                line = word + ' ';
+                yPos += lineHeight;
+            } else {
+                line = testLine;
+            }
+        });
+        
+        this.p.text(line, x + 20, yPos);
+        
+        this.p.pop();
     }
     
+    // Update the highlightTarget method to use indicators instead of highlights for buttons
     highlightTarget(step) {
         switch (step.target) {
             case "deleteButton":
-                // Use either this.MARGIN or LAYOUT.MARGIN depending on which approach you took
-                this.highlightButton(this.p.width - 30 - (LAYOUT ? LAYOUT.MARGIN : this.MARGIN), 
-                                   this.p.height - 30 - (LAYOUT ? LAYOUT.MARGIN : this.MARGIN), 30);
+                // Use indicator instead of highlight
+                this.drawIndicator(
+                    this.p.width - 35, 
+                    this.p.height - 65, 
+                    'down'
+                );
                 break;
                 
             case "fillGridButton":
-                this.highlightButton(this.p.width - 30*2 - (LAYOUT ? LAYOUT.MARGIN*1.5 : this.MARGIN*1.5), 
-                                   this.p.height - 30 - (LAYOUT ? LAYOUT.MARGIN : this.MARGIN), 30);
+                // Use indicator instead of highlight
+                this.drawIndicator(
+                    this.p.width - 75, 
+                    this.p.height - 65, 
+                    'down'
+                );
                 break;
                 
             case "point_click":
             case "point_drag":
-   
                 break;
                 
             case "shift_click":
-    
                 break;
                 
             case "lines":
-             
                 break;
                 
             case "missAre":
-                // No highlighting box needed, just the arrow pointing left
-                
-                // Position the arrow in the top-left area
-                const arrowX = 60; // Position a bit further from the edge
-                const arrowY = 10; // Position in top-left
-                const arrowPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2;
-                this.p.push();
-                this.p.translate(arrowX, arrowY);
-                this.p.scale(arrowPulse);
-                this.drawArrow(0, 0, -40, 0); // Point horizontally left
-                this.p.pop();
+                this.drawIndicator(16, 10, 'left');
                 break;
 
-                
             case "anatomyPage":
-                // Highlight the navigation to Anatomy page
-                // Assuming navigation tabs are at the top
-                const navX = 200; // Approximate X position of the Anatomy tab
-                const navY = 30;  // Approximate Y position of the navigation bar
-                
-                
-                // Draw an animated arrow pointing to it
-                const navArrowX = 180;
-                const navArrowY = 50;
-                const navArrowPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2; // Renamed from navPulse
-                this.p.push();
-                this.p.translate(navArrowX, navArrowY);
-                this.p.scale(navArrowPulse); 
-                this.drawArrow(0, 0, 0, -30);
-                this.p.pop();
-                
+                this.drawIndicator(170, 15, 'up');
                 break;
 
             case "gridType":
-                // Arrow pointing to the top right corner where grid controls are
-                const gridX = this.p.width - 132; // Position near the right edge
-                const gridY = 50;               // Position near the top
-                const gridPulse = 1 + Math.sin(this.p.millis() / 200) * 0.2;
-                this.p.push();
-                this.p.translate(gridX, gridY);
-                this.p.scale(gridPulse);
-                this.drawArrow(0, 0, 30, -30); // Point diagonally up and right
-                this.p.pop();
+                this.drawIndicator(this.p.width - 70, 20, "up");
                 break;
         }
     }
@@ -427,24 +432,46 @@ class Tutorial {
         }
     }
     
-    drawArrow(x1, y1, x2, y2) {
+    // Update the drawIndicator method to use the same blue as the Next button
+    drawIndicator(x, y, direction) {
         this.p.push();
-        // Change from yellow (255, 255, 0) to orange (255, 165, 0)
-        this.p.stroke(255, 165, 0, this.fadeInOpacity);
-        this.p.strokeWeight(3);
-        this.p.fill(255, 165, 0, this.fadeInOpacity);
         
-        // Draw line
-        this.p.line(x1, y1, x2, y2);
+        // Calculate pulse effect with faster speed
+        const pulseRate = 0.005; // Increased speed
+        const baseOpacity = 0.5;  // Minimum opacity
+        const pulseAmount = 0.5;  // How much the opacity fluctuates
         
-        // Calculate arrow angle
-        const angle = Math.atan2(y2 - y1, x2 - x1);
+        // Use sine wave for smooth pulsing
+        const pulse = baseOpacity + pulseAmount * Math.sin(this.p.millis() * pulseRate);
         
-        // Draw arrow head
-        const arrowSize = 10;
-        this.p.translate(x2, y2);
-        this.p.rotate(angle);
-        this.p.triangle(0, 0, -arrowSize, -arrowSize/2, -arrowSize, arrowSize/2);
+        // Use the same blue color as the Next button (60, 120, 255)
+        this.p.fill(60, 120, 255, this.fadeInOpacity * pulse);
+        this.p.noStroke(); // No stroke
+        
+        // Draw a triangle pointing in the specified direction
+        // direction can be 'up', 'down', 'left', 'right' or a degree angle
+        let angle = 0;
+        
+        if (direction === 'up') angle = -90;
+        else if (direction === 'down') angle = 90;
+        else if (direction === 'left') angle = 180;
+        else if (direction === 'right') angle = 0;
+        else angle = direction; // Use the provided angle directly
+        
+        // Position and draw the triangle
+        this.p.translate(x, y);
+        this.p.rotate(this.p.radians(angle));
+        
+        // Draw a more pointy triangle
+        const length = 9;  // Total length of triangle
+        const width = 6;    // Width of the base
+        
+        this.p.triangle(
+            length, 0,        // Pointy tip
+            -length/3, -width/1.1,  // Left corner (pulled back for pointiness)
+            -length/3, width/1.1    // Right corner (pulled back for pointiness)
+        );
+        
         this.p.pop();
     }
 }

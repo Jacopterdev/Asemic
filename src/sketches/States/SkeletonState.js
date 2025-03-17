@@ -428,14 +428,14 @@ class SkeletonState {
     drawHelpButton() {
         this.p.push();
     
-        // Make the button the same size as the delete button - 30px
+        // Make the button the same size as utility buttons (30px)
         const size = 30;
     
-        // Update button position to account for new size
+        // Position at top-right
         const iconX = this.p.width - size - LAYOUT.MARGIN;
         const iconY = 20; // Keep it at the top
     
-        // Update the class properties to reflect new size and position
+        // Update the class properties to reflect size and position
         this.helpButtonSize = size;
         this.helpButtonX = iconX;
         this.helpButtonY = iconY;
@@ -446,22 +446,23 @@ class SkeletonState {
             this.p.mouseX <= iconX + size && 
             this.p.mouseY >= iconY && 
             this.p.mouseY <= iconY + size;
-
+    
+        // Change cursor to hand when hovering
         if(isHovered) this.p.cursor(this.p.HAND);
-
-        // Draw button background with same light gray colors as delete button
+    
+        // Draw button background with same light gray colors as other utility buttons
         this.p.strokeWeight(0);
-        // Use same colors as delete and fill grid buttons (180 when hovered, 210 when not)
         const buttonColor = isHovered ? 180 : 210;
         this.p.fill(buttonColor);
-        this.p.rect(iconX, iconY, size, size, 4); // Smaller corner radius (4) like other buttons
+        this.p.rect(iconX, iconY, size, size, 4); // Corner radius (4) like other buttons
     
         // Draw question mark in white
         this.p.fill(255); // White
         this.p.noStroke();
-        this.p.textSize(20); // Slightly smaller text size
+        this.p.textSize(18); // Appropriate size for the question mark
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("?", iconX + size/2, iconY + size/2);
+        this.p.text("?", iconX + size/2, iconY + size/2 + 1); // +1 for better vertical alignment
+    
         this.p.pop();
     }
 
