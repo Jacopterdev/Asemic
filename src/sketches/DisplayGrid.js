@@ -126,10 +126,10 @@ class DisplayGrid {
                 p.rect(cell.x, cellYWithScroll, this.cellWidth, this.cellHeight);
                 
                 // Draw letter in corner
-                p.fill(0);
+                p.fill(64);
                 p.noStroke();
                 p.textSize(12);
-                p.text(cell.letter, cell.x + 5, cellYWithScroll + 15);
+                p.text(cell.letter, cell.x + LAYOUT.PADDING, cellYWithScroll + LAYOUT.PADDING + 10);
             }
         }
         
