@@ -29,12 +29,13 @@
         const menuY = this.ownerButton.y + (this.ownerButton.size / 2) - (this.optionHeight / 2);
         const menuWidth = this.optionWidth * this.options.length + this.ownerButton.margin;
         const menuHeight = this.optionHeight;
+        const hoverMargin = 15;
 
         return (
-            this.p.mouseX > menuX &&
-            this.p.mouseX < menuX + menuWidth &&
-            this.p.mouseY > menuY &&
-            this.p.mouseY < menuY + menuHeight
+            this.p.mouseX > menuX - hoverMargin &&
+            this.p.mouseX < menuX + menuWidth + hoverMargin &&
+            this.p.mouseY > menuY - hoverMargin &&
+            this.p.mouseY < menuY + menuHeight + hoverMargin
         );
     }
 
