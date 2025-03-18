@@ -17,6 +17,7 @@ class KeyboardCell {
         this.fontFillColor = fontFillColor; // Font fill color for the character
         this.mergedParams = {};
         this.isActive = false; // Track if the cell is active
+        this.isHovered = false;
         this.shape = this.createShape();
     }
 
@@ -85,9 +86,12 @@ class KeyboardCell {
     }
     draw(p) {
         // Change fill color based on whether the cell is active or not
-        if (this.isActive) {
+         if (this.isActive) {
             p.fill(64, 64, 64, 32); // Active fill color (example: semi-transparent gray)
-        } else {
+        } else if(this.isHovered) {
+            p.fill(64, 64, 64, 16);
+        }
+         else {
             p.fill(255,255,255,0); // Default fill color (white)
         }
 
@@ -132,6 +136,14 @@ class KeyboardCell {
 
             // Deactivate the cell (reset its state)
             this.isActive = false;
+        }
+    }
+
+    checkKeyHovered(key, hovered){
+        this.isHovered = false;
+        if(!key) return;
+        if (key.toLowerCase() === this.char.toLowerCase() && hovered) {
+            this.isHovered = true;
         }
     }
 

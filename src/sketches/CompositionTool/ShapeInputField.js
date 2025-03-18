@@ -1,5 +1,6 @@
 ﻿import shapeDictionary from "../ShapeDictionary.js";
 import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
+import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class ShapeInputField {
     constructor(p, mergedParams, x, y, width, height) {
@@ -88,10 +89,19 @@ class ShapeInputField {
             p.push();
 
             // Translate to the starting position of the current shape
-            p.translate(startX - baseShapeWidth, this.y);
+            //p.translate(startX - baseShapeWidth, this.y);
+
+
+            const inputFieldScale = this.scale;
+            const shapeScale = p.getShapeScale();
+            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
+
+            //Find the new margin offset.
+            p.translate(startX - ((spacedShapeScale*baseShapeWidth)/2), this.y - ((spacedShapeScale*this.height)/2) + (this.height/2));
+
 
             // Scale the shape to fit appropriately
-            p.scale(this.scale);
+            p.scale(spacedShapeScale * inputFieldScale);
 
             // Use the `draw` method of ShapeGeneratorV2 to render the shape
             shape.draw();

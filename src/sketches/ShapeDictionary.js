@@ -17,12 +17,29 @@
 
     // Method to initialize the dictionary
     #initializeDictionary() {
-        const startCharCode = 65; // ASCII code for 'A'
+        let letterCode = 65; // Start with 'A' (ASCII code)
+        let suffix = 0; // Start without a suffix
 
-        // Populate dictionary with letters A-Z mapped to {x, y}
-        for (let i = 0; i < 26; i++) {
-            const letter = String.fromCharCode(startCharCode + i);
-            this.#dictionary[letter] = { x: i, y: i };
+        for (let step = 0; step < 100; step++) { // Example loop to generate a sequence
+            let letter;
+
+            // If suffix is 0 (initial state), use only letters A-Z
+            if (suffix === 0) {
+                letter = String.fromCharCode(letterCode);
+            } else {
+                // Once we exceed Z, append the number suffix (e.g., A1, B1, etc.)
+                letter = String.fromCharCode(letterCode) + suffix;
+            }
+
+            this.#dictionary[letter] = { x: step, y: step };
+            // Increment letter code
+            letterCode++;
+
+            // If we exceed 'Z', wrap around to 'A' and add a suffix
+            if (letterCode > 90) {
+                letterCode = 65; // Reset to 'A'
+                suffix++; // Increment suffix
+            }
         }
     }
 
