@@ -9,6 +9,7 @@ import GridContext from "../GridContext.js";
 import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
 import Tutorial from "../Tutorial.js";
 import {p5 as p} from "p5/lib/p5.js";
+import RandomPointGenerator from '../RandomPointGenerator.js';
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -218,17 +219,27 @@ class SkeletonState {
         
         // Get the current grid type and dimensions
         const grid = this.gridContext.getGrid();
+        console.log("Grid object:", grid);
         
         // Force grid update before proceeding
         this.updateGridContext();
+        console.log("heeey");
+
+        // Check grid type in multiple ways to be sure
+        const toolConfigType = this.toolConfig?.grid || "NoGrid";
+        console.log("Grid types - current:", this.currentGridType, 
+                    "toolConfig:", toolConfigType,
+                    "grid constructor:", grid.constructor.name);
         
-        console.log(`Current grid type: ${this.currentGridType}`);
-        console.log("Grid object:", grid);
-        
-        if (this.currentGridType === "rect") {
-            // Get grid dimensions - add fallbacks in case these are undefined
-            const cols = grid.cols || 3;  // Default to 3 if undefined
-            const rows = grid.rows || 3;  // Default to 3 if undefined
+        // More robust check for NoGrid: check multiple conditions
+        if (this.currentGridType === "none"){
+            
+   this.generateRandomPoints();
+
+        } else if (this.currentGridType === "rect") {
+            // Get grid dimensions - use current grid values or user settings
+            const cols = grid.cols || 5;  // Default to 5 if undefined
+            const rows = grid.rows || 5;  // Default to 5 if undefined
             console.log(`Rectangle grid dimensions: ${cols}x${rows}`);
             
             // Calculate grid cell dimensions
@@ -238,8 +249,6 @@ class SkeletonState {
             const cellHeight = gridHeight / rows;
             const startX = grid.x || LAYOUT.MARGIN;
             const startY = grid.y || LAYOUT.MARGIN;
-            
-            console.log(`Grid dimensions: ${gridWidth}x${gridHeight}, Cell: ${cellWidth}x${cellHeight}, Start: ${startX},${startY}`);
             
             // Create points in row-column order to match our indexing
             let pointId = 0;
@@ -251,112 +260,120 @@ class SkeletonState {
                         id: pointId++
                     };
                     this.points.push(point);
-                    console.log(`Added point at (${point.x}, ${point.y})`);
                 }
-            }
-            
-            console.log(`Added ${this.points.length} points to this.points`);
-            
-            if (this.points.length === 0) {
-                console.error("No points were added! Check grid dimensions.");
-                return;
             }
             
             // Total points per row is cols + 1 (for intersections)
             const pointsPerRow = cols + 1;
-            console.log(`Points per row: ${pointsPerRow}`);
             
-            // Loop through all points by row and column for more reliable indexing
+            // Create lines between adjacent points
             for (let row = 0; row <= rows; row++) {
                 for (let col = 0; col <= cols; col++) {
                     const currentIndex = row * pointsPerRow + col;
                     
                     // Connect to right neighbor (if not at right edge)
                     if (col < cols && this.points[currentIndex] && this.points[currentIndex + 1]) {
-                        const rightIndex = currentIndex + 1;
                         this.lineManager.lines.push({
                             start: this.points[currentIndex],
-                            end: this.points[rightIndex],
+                            end: this.points[currentIndex + 1],
                             selected: true
                         });
                     }
                     
                     // Connect to bottom neighbor (if not at bottom edge)
                     if (row < rows && this.points[currentIndex] && this.points[currentIndex + pointsPerRow]) {
-                        const bottomIndex = currentIndex + pointsPerRow;
                         this.lineManager.lines.push({
                             start: this.points[currentIndex],
-                            end: this.points[bottomIndex],
+                            end: this.points[currentIndex + pointsPerRow],
                             selected: true
                         });
                     }
                 }
             }
             
-            console.log(`Created ${this.lineManager.lines.length} lines for rectangular grid`);
-        } else {
-            // For other grid types, continue using grid.getIntersections()
-            const gridPoints = grid.getIntersections();
-            console.log(`Generated ${gridPoints.length} grid points`);
+            console.log(`Created ${this.points.length} points and ${this.lineManager.lines.length} lines for rectangular grid`);
+        } 
+        else if (this.currentGridType === "radial") {
+            // Get radial grid parameters
+            const angularDivisions = grid.angularDivisions || 12; // Default to 12 if undefined 
+            const radialDivisions = grid.radialDivisions || 5;   // Default to 5 if undefined
+            const centerX = grid.centerX || (this.p.width / 2);
+            const centerY = grid.centerY || (this.p.height / 2);
+            const radius = grid.radius || (Math.min(this.p.width, this.p.height) / 2 - LAYOUT.MARGIN);
             
-            // Add points at each intersection
+            console.log(`Radial grid parameters: ${angularDivisions} angles, ${radialDivisions} circles`);
+            
+            // Add points for each intersection on concentric circles
             let pointId = 0;
-            gridPoints.forEach(point => {
-                this.points.push({
-                    x: point.x,
-                    y: point.y,
-                    id: pointId++
-                });
+            
+            // Add points on the circles
+            for (let r = 1; r <= radialDivisions; r++) {
+                const currentRadius = (radius / radialDivisions) * r;
+                
+                for (let a = 0; a < angularDivisions; a++) {
+                    const angle = (2 * Math.PI * a) / angularDivisions;
+                    const x = centerX + currentRadius * Math.cos(angle);
+                    const y = centerY + currentRadius * Math.sin(angle);
+                    
+                    this.points.push({
+                        x: x,
+                        y: y,
+                        id: pointId++
+                    });
+                }
+            }
+            
+            // Add center point last
+            const centerPointId = pointId++;
+            this.points.push({
+                x: centerX,
+                y: centerY,
+                id: centerPointId
             });
             
-            // Rest of the function for radial and none grid types
-            if (this.currentGridType === "radial") {
-                const angularDivisions = grid.angularDivisions;
-                const radialDivisions = grid.radialDivisions;
-                
-                // Connect points on the same circle (adjacent angles)
-                for (let r = 1; r <= radialDivisions; r++) {
-                    for (let a = 0; a < angularDivisions; a++) {
-                        const currentIndex = (r - 1) * angularDivisions + a;
-                        const nextIndex = (r - 1) * angularDivisions + ((a + 1) % angularDivisions);
-                        
-                        this.lineManager.lines.push({
-                            start: this.points[currentIndex],
-                            end: this.points[nextIndex],
-                            selected: true
-                        });
-                    }
-                }
-                
-                // Connect points on the same radius (adjacent circles)
-                for (let r = 1; r < radialDivisions; r++) {
-                    for (let a = 0; a < angularDivisions; a++) {
-                        const currentIndex = (r - 1) * angularDivisions + a;
-                        const nextRadiusIndex = r * angularDivisions + a;
-                        
-                        this.lineManager.lines.push({
-                            start: this.points[currentIndex],
-                            end: this.points[nextRadiusIndex],
-                            selected: true
-                        });
-                    }
-                }
-                
-                // Connect center point to first circle
-                const centerIndex = this.points.length - 1; // Last point is center
+            // NOW ADD LINES BETWEEN POINTS:
+            
+            // Connect points along each circle (adjacent angular points)
+            for (let r = 0; r < radialDivisions; r++) {
                 for (let a = 0; a < angularDivisions; a++) {
+                    const currentIndex = r * angularDivisions + a;
+                    const nextAngleIndex = r * angularDivisions + ((a + 1) % angularDivisions);
+                    
                     this.lineManager.lines.push({
-                        start: this.points[centerIndex],
-                        end: this.points[a],
+                        start: this.points[currentIndex],
+                        end: this.points[nextAngleIndex],
                         selected: true
                     });
                 }
             }
-            // For NoGrid - no specific structure, don't add lines
-            else {
-                // No lines for "none" grid type
+            
+            // Connect points along radial lines (between adjacent circles)
+            for (let r = 0; r < radialDivisions - 1; r++) {
+                for (let a = 0; a < angularDivisions; a++) {
+                    const currentIndex = r * angularDivisions + a;
+                    const nextRadiusIndex = (r + 1) * angularDivisions + a;
+                    
+                    this.lineManager.lines.push({
+                        start: this.points[currentIndex],
+                        end: this.points[nextRadiusIndex],
+                        selected: true
+                    });
+                }
             }
+            
+            // Connect center point to the innermost circle
+            for (let a = 0; a < angularDivisions; a++) {
+                this.lineManager.lines.push({
+                    start: this.points[centerPointId],
+                    end: this.points[a],
+                    selected: true
+                });
+            }
+            
+            console.log(`Created ${this.points.length} points and ${this.lineManager.lines.length} lines for radial grid`);
         }
+        
+        console.log(`Generated ${this.points.length} grid points`);
     }
 
     // Add this method to handle delete functionality
@@ -367,6 +384,24 @@ class SkeletonState {
         // Remove all lines
         this.lineManager.clearAllLines();
     }
+
+    // Add a method to generate random points
+    generateRandomPoints() {
+        const generator = new RandomPointGenerator(this.p, this.p.width, this.p.height);
+        const { points, lines } = generator.generate();
+        
+        // Clear existing points and lines
+        this.points.length = 0;
+        this.lineManager.clearAllLines();
+        
+        // Add new points
+        points.forEach(point => this.points.push(point));
+        
+        // Add new lines to the line manager
+        lines.forEach(line => this.lineManager.lines.push(line));
+    }
+
+
 
     // Modify the draw method to handle the null selectedPoint
     draw() {
