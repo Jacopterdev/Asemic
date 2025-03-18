@@ -1,7 +1,6 @@
 import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
 import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary.js";
-import Effects from "./Effects.js";
 import shapeSaver from "./ShapeSaver.js";
 import DownloadButton from "./DownloadButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
@@ -24,6 +23,8 @@ class DisplayGrid {
 
         this.mergedParams = mergedParams;
         this.scale = 1/rows;
+
+        this.suffix = 0;
 
         this.initGrid();
 
@@ -51,8 +52,22 @@ class DisplayGrid {
                 let y = j * this.cellHeight + this.yStart;
 
                 // Assign letter to the cell and wrap after 'Z'
-                const letter = String.fromCharCode(letterCode);
-                letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
+                let letter;
+                // If suffix is 0 (initial state), use only letters A-Z
+                if (this.suffix === 0) {
+                    letter = String.fromCharCode(letterCode);
+                } else {
+                    // Once we exceed Z, append the number suffix (e.g., A1, B1, etc.)
+                    letter = String.fromCharCode(letterCode) + this.suffix;
+                }
+                //letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
+                const wrap = letterCode === 90;
+                if(wrap){
+                    letterCode = 65;
+                    this.suffix++;
+                } else {
+                    letterCode++;
+                }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
 
@@ -302,9 +317,23 @@ class DisplayGrid {
                 const x = col * this.cellWidth + this.xStart;
                 const y = startingY + row * this.cellHeight; // Align new rows correctly
 
-                // Assign letters (wrap from 'Z' to 'A')
-                const letter = String.fromCharCode(letterCode);
-                letterCode = letterCode === 90 ? 65 : letterCode + 1;
+                // Assign letter to the cell and wrap after 'Z'
+                let letter;
+                // If suffix is 0 (initial state), use only letters A-Z
+                if (this.suffix === 0) {
+                    letter = String.fromCharCode(letterCode);
+                } else {
+                    // Once we exceed Z, append the number suffix (e.g., A1, B1, etc.)
+                    letter = String.fromCharCode(letterCode) + this.suffix;
+                }
+
+                const wrap = letterCode === 90;
+                if(wrap){
+                    letterCode = 65;
+                    this.suffix++;
+                } else {
+                    letterCode++;
+                }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
                 // Get noise position for the letter from the ShapeDictionary
