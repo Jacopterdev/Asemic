@@ -10,7 +10,7 @@ class AnatomyState {
         this.lineManager = lineManager;
         this.shapeGenerator = shapeGenerator;
         this.mergedParams = mergedParams;
-        this.displayGrid = new DisplayGrid(p, 3,3, LAYOUT.MARGIN, LAYOUT.MARGIN, p.width - LAYOUT.MARGIN * 2, this.mergedParams);
+        this.displayGrid = new DisplayGrid(p, 3,3, LAYOUT.MARGIN, LAYOUT.MARGIN, LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2, this.mergedParams);
         this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray

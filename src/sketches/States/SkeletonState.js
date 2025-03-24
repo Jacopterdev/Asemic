@@ -42,7 +42,7 @@ class SkeletonState {
         
         // Help button properties
         this.helpButtonSize = 40;
-        this.helpButtonX = p.width - 60;
+        this.helpButtonX = LAYOUT.GRID_SIZE - 60;
         this.helpButtonY = 20;
         
         this.init();
@@ -52,7 +52,7 @@ class SkeletonState {
         // Other initialization code...
 
         // Initialize the gridContext based on the default `currentGridType` ("none")
-        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, this.p.width - SPACING.MARGIN * 2);
+        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
 
         this.pointRenderer = new PointRenderer(this.p, this.mergedParams.missRadius); // Initialize the PointRenderer
 
@@ -81,8 +81,8 @@ class SkeletonState {
     // Update drawDeleteButton method to make the button bigger
     drawDeleteButton() {
         const size = 30; // Larger button size (was 24)
-        const iconX = this.p.width - size - LAYOUT.MARGIN;
-        const iconY = this.p.height - size - LAYOUT.MARGIN;
+        const iconX = LAYOUT.GRID_SIZE;
+        const iconY = LAYOUT.GRID_SIZE - size - LAYOUT.MARGIN;
         
         // Check if mouse is hovering over button
         this.isDeleteButtonHovered = 
@@ -141,8 +141,8 @@ class SkeletonState {
     // Update drawFillGridButton method to make the button bigger
     drawFillGridButton() {
         const size = 30; // Larger button size (was 24)
-        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 1.5; // Position left of delete button
-        const iconY = this.p.height - size - LAYOUT.MARGIN;
+        const iconX = LAYOUT.GRID_SIZE; // Position left of delete button
+        const iconY = LAYOUT.GRID_SIZE - 2*size - LAYOUT.MARGIN - 1 * 0.5 * LAYOUT.PADDING;
         
         // Check if mouse is hovering over button
         this.isFillGridButtonHovered = 
@@ -243,8 +243,8 @@ class SkeletonState {
             console.log(`Rectangle grid dimensions: ${cols}x${rows}`);
             
             // Calculate grid cell dimensions
-            const gridWidth = grid.width || (this.p.width - 2 * LAYOUT.MARGIN);
-            const gridHeight = grid.height || (this.p.width - 2 * LAYOUT.MARGIN);
+            const gridWidth = grid.width || (LAYOUT.GRID_SIZE - 2 * LAYOUT.MARGIN);
+            const gridHeight = grid.height || (LAYOUT.GRID_SIZE - 2 * LAYOUT.MARGIN);
             const cellWidth = gridWidth / cols;
             const cellHeight = gridHeight / rows;
             const startX = grid.x || LAYOUT.MARGIN;
@@ -297,9 +297,9 @@ class SkeletonState {
             // Get radial grid parameters
             const angularDivisions = grid.angularDivisions || 12; // Default to 12 if undefined 
             const radialDivisions = grid.radialDivisions || 5;   // Default to 5 if undefined
-            const centerX = grid.centerX || (this.p.width / 2);
-            const centerY = grid.centerY || (this.p.height / 2);
-            const radius = grid.radius || (Math.min(this.p.width, this.p.height) / 2 - LAYOUT.MARGIN);
+            const centerX = grid.centerX || (LAYOUT.GRID_SIZE / 2);
+            const centerY = grid.centerY || (LAYOUT.GRID_SIZE / 2);
+            const radius = grid.radius || (Math.min(LAYOUT.GRID_SIZE, LAYOUT.GRID_SIZE) / 2 - LAYOUT.MARGIN);
             
             console.log(`Radial grid parameters: ${angularDivisions} angles, ${radialDivisions} circles`);
             
@@ -387,7 +387,7 @@ class SkeletonState {
 
     // Add a method to generate random points
     generateRandomPoints() {
-        const generator = new RandomPointGenerator(this.p, this.p.width, this.p.height);
+        const generator = new RandomPointGenerator(this.p, LAYOUT.GRID_SIZE, LAYOUT.GRID_SIZE);
         const { points, lines } = generator.generate();
         
         // Clear existing points and lines
@@ -463,8 +463,8 @@ class SkeletonState {
         const size = 30; // Larger button size (was 24)
     
         // Position at top-right
-        const iconX = this.p.width - size - LAYOUT.MARGIN;
-        const iconY = 20; // Keep it at the top
+        const iconX = LAYOUT.GRID_SIZE;
+        const iconY = LAYOUT.MARGIN; // Keep it at the top
     
         // Update the class properties to reflect size and position
         this.helpButtonSize = size;
@@ -571,12 +571,12 @@ class SkeletonState {
     updateGridContext = () => {
         let xStart = LAYOUT.MARGIN;
         let yStart = LAYOUT.MARGIN;
-        let gridSize = this.p.width - LAYOUT.MARGIN * 2;
+        let gridSize = LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2;
 
         // Position the delete button at the bottom right corner of the canvas
         this.deleteButtonPosition = { 
-            x: this.p.width - this.deleteButtonSize.width - LAYOUT.MARGIN, 
-            y: this.p.height - this.deleteButtonSize.height - LAYOUT.MARGIN 
+            x: LAYOUT.GRID_SIZE - this.deleteButtonSize.width - LAYOUT.MARGIN,
+            y: LAYOUT.GRID_SIZE - this.deleteButtonSize.height - LAYOUT.MARGIN
         };
 
         // Retrieve the latest grid type from toolConfig

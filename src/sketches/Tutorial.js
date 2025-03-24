@@ -19,8 +19,8 @@ class Tutorial {
         
         // Help button dimensions
         this.helpButtonSize = 30; // Same size as delete button
-        this.helpButtonX = p.width - this.helpButtonSize - (LAYOUT ? LAYOUT.MARGIN : this.MARGIN);
-        this.helpButtonY = 20;
+        this.helpButtonX = LAYOUT.GRID_SIZE;
+        this.helpButtonY = LAYOUT.MARGIN;
         
         // Define all tutorial steps
         this.steps = [
@@ -140,8 +140,8 @@ class Tutorial {
         const size = 24;
         
         // Position at top-right
-        const iconX = this.p.width - size - LAYOUT.MARGIN;
-        const iconY = 20; // Keep it at the top
+        const iconX = LAYOUT.GRID_SIZE;
+        const iconY = LAYOUT.MARGIN; // Keep it at the top
         
         // Update the class properties to reflect size and position
         this.helpButtonSize = size;
@@ -200,8 +200,8 @@ class Tutorial {
         this.p.textAlign(this.p.CENTER, this.p.CENTER);
         this.p.text("×", this.helpButtonX + this.helpButtonSize/2, this.helpButtonY + this.helpButtonSize/2 + 1);
 
-        const nextX = this.p.width/2 + this.buttonMargin;
-        const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
+        const nextX = LAYOUT.GRID_SIZE/2 + this.buttonMargin;
+        const prevX = LAYOUT.GRID_SIZE/2 - this.buttonWidth - this.buttonMargin;
 
         const isNextHovered =
             this.p.mouseX > nextX &&
@@ -261,7 +261,7 @@ class Tutorial {
         
         // Previous button
         if (this.currentStep > 0) {
-            const prevX = this.p.width/2 - this.buttonWidth - this.buttonMargin;
+            const prevX = LAYOUT.GRID_SIZE/2 - this.buttonWidth - this.buttonMargin;
             if (mouseX >= prevX && mouseX <= prevX + this.buttonWidth &&
                 mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
                 this.previous();
@@ -270,7 +270,7 @@ class Tutorial {
         }
         
         // Next/Finish button
-        const nextX = this.p.width/2 + this.buttonMargin;
+        const nextX = LAYOUT.GRID_SIZE/2 + this.buttonMargin;
         if (mouseX >= nextX && mouseX <= nextX + this.buttonWidth &&
             mouseY >= buttonY && mouseY <= buttonY + this.buttonHeight) {
             
@@ -328,13 +328,13 @@ class Tutorial {
         // Position tooltip based on target
         switch (step.target) {
             case "deleteButton":
-                x = this.p.width - 320; // Move further from right edge
-                y = this.p.height - 230; // Move further from bottom edge
+                x = LAYOUT.GRID_SIZE - 320; // Move further from right edge
+                y = LAYOUT.GRID_SIZE - 230; // Move further from bottom edge
                 break;
                 
             case "fillGridButton":
-                x = this.p.width - 350; // Move further from right edge
-                y = this.p.height - 230; // Move further from bottom edge
+                x = LAYOUT.GRID_SIZE - 350; // Move further from right edge
+                y = LAYOUT.GRID_SIZE - 230; // Move further from bottom edge
                 break;
                 
             // Place tooltip at top for point and line related steps and missAre
@@ -346,18 +346,18 @@ class Tutorial {
             case "missAre": 
             case "anatomyPage":
             case "gridType":
-                x = this.p.width/2 - tooltipWidth/2;
+                x = LAYOUT.GRID_SIZE/2 - tooltipWidth/2;
                 y = 50; // Position at top with small margin
                 break;
                 
             default:
-                x = this.p.width/2 - tooltipWidth/2;
-                y = this.p.height/3 - tooltipHeight/2;
+                x = LAYOUT.GRID_SIZE/2 - tooltipWidth/2;
+                y = LAYOUT.GRID_SIZE/3 - tooltipHeight/2;
         }
         
         // Ensure tooltips don't go off-screen
-        x = Math.max(20, Math.min(x, this.p.width - tooltipWidth - 20));
-        y = Math.max(20, Math.min(y, this.p.height - tooltipHeight - 20));
+        x = Math.max(20, Math.min(x, LAYOUT.GRID_SIZE - tooltipWidth - 20));
+        y = Math.max(20, Math.min(y, LAYOUT.GRID_SIZE - tooltipHeight - 20));
         
         // Create a modern, clean tooltip design
         this.p.push();
@@ -413,7 +413,7 @@ class Tutorial {
             case "deleteButton":
                 // Use indicator instead of highlight
                 this.drawIndicator(
-                    this.p.width - 35, 
+                    LAYOUT.GRID_SIZE - 35,
                     this.p.height - 65, 
                     'down'
                 );
@@ -422,8 +422,8 @@ class Tutorial {
             case "fillGridButton":
                 // Use indicator instead of highlight
                 this.drawIndicator(
-                    this.p.width - 75, 
-                    this.p.height - 65, 
+                    LAYOUT.GRID_SIZE - 75,
+                    LAYOUT.GRID_SIZE - 65,
                     'down'
                 );
                 break;
@@ -447,7 +447,7 @@ class Tutorial {
                 break;
 
             case "gridType":
-                this.drawIndicator(this.p.width - 70, 20, "up");
+                this.drawIndicator(LAYOUT.GRID_SIZE - 70, 20, "up");
                 break;
         }
     }
