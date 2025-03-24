@@ -48,7 +48,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         /** STATE MANAGEMENT */
         // Pre-create each state and store them
         states["Edit Skeleton"] = new SkeletonState(p, points, lineManager, mergedParams, toolConfig);
-        states["Anatomy"] = new AnatomyState(p, points, lineManager, shapeGenerator, mergedParamsRef);
+        states["Anatomy"] = new AnatomyState(p, points, mergedParams);
         states["Composition"] = new CompositionState(p, mergedParams);
         currentState = "Edit Skeleton"
         updateState("Edit Skeleton"); // Set the initial state

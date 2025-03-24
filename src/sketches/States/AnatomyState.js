@@ -3,14 +3,12 @@ import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
 
 class AnatomyState {
-    constructor(p, points, lineManager, shapeGenerator, mergedParams) {
+    constructor(p, points, mergedParams) {
         this.p = p;
         this.name = "Anatomy";
         this.points = points;
-        this.lineManager = lineManager;
-        this.shapeGenerator = shapeGenerator;
         this.mergedParams = mergedParams;
-        this.displayGrid = new DisplayGrid(p, 3,3, LAYOUT.MARGIN, LAYOUT.MARGIN, LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2, this.mergedParams);
+        this.displayGrid = new DisplayGrid(p, 4,3, LAYOUT.MARGIN, LAYOUT.MARGIN, LAYOUT.GRID_SIZE*1.5 - LAYOUT.MARGIN * 2, this.mergedParams);
         this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray
