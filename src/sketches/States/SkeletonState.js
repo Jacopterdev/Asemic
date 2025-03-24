@@ -52,7 +52,8 @@ class SkeletonState {
         // Other initialization code...
 
         // Initialize the gridContext based on the default `currentGridType` ("none")
-        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
+        //this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
+        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, 200);
 
         this.pointRenderer = new PointRenderer(this.p, this.mergedParams.missRadius); // Initialize the PointRenderer
 
@@ -223,7 +224,7 @@ class SkeletonState {
         
         // Force grid update before proceeding
         this.updateGridContext();
-        console.log("heeey");
+
 
         // Check grid type in multiple ways to be sure
         const toolConfigType = this.toolConfig?.grid || "NoGrid";
