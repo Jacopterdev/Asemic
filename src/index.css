@@ -88,3 +88,7 @@ button, .button{
 .tp-lblv_l {
     @apply select-none;
 }
+
+.tp-lblv {
+    line-height: 2 !important;
+}
