@@ -11,7 +11,8 @@ import Tutorial from "../Tutorial.js";
 import {p5 as p} from "p5/lib/p5.js";
 import RandomPointGenerator from '../RandomPointGenerator.js';
 import DisplayGrid from "../DisplayGrid.js";
-import * as buffer from "node:buffer"; // Import DisplayGrid if not already imported
+import * as buffer from "node:buffer";
+import Effects from "../Effects.js"; // Import DisplayGrid if not already imported
 
 
 class SkeletonState {
@@ -102,14 +103,16 @@ class SkeletonState {
     initBufferGrid() {
         // Initialize a grid with 1 column and 3 rows inside the buffer
         this.bufferGrid = new DisplayGrid(
-            this.buffer,
+            this.p,
             1, // 1 column
             3, // 3 rows
             LAYOUT.MARGIN, // X start in the buffer (relative to buffer)
             LAYOUT.MARGIN, // Y start in the buffer
             this.bufferWidth - LAYOUT.MARGIN*2, // Total height of the grid
-            this.mergedParams
+            this.mergedParams,
+            this.buffer
         );
+        this.effect = new Effects(this.buffer);
 
         // Render the grid onto the buffer immediately
         this.drawBufferGrid();
@@ -117,10 +120,13 @@ class SkeletonState {
 
     drawBufferGrid() {
         // Clear the buffer and draw the grid
-        this.buffer.clear();
-        this.buffer.background(255); // Optional: Set buffer background color
+        this.buffer.background(255);
+        this.bufferGrid.drawShapes();
+        this.effect.applyEffects(this.bufferGrid.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
+
+        //this.bufferGrid.drawShapes(true);
         this.bufferGrid.drawGrid(); // Pass buffer as P5 canvas for drawing
-        //this.bufferGrid.drawShapes(); //TODO draw the shapes
+
     }
 
 
@@ -527,8 +533,6 @@ class SkeletonState {
         const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
         const bufferY = 0; // Position 0px from the top
         this.p.image(this.buffer, bufferX, bufferY);
-
-
     }
 
     // Update drawHelpButton method to make the button bigger
@@ -579,6 +583,8 @@ class SkeletonState {
 
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
+        this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        this.bufferGrid.updateMergedParams(newMergedParams);
     }
 
     updateToolConfig(newToolConfig) {
@@ -642,6 +648,10 @@ class SkeletonState {
         if (this.mouseHandler) {
             this.mouseHandler.handleMouseMoved();
         }
+    }
+
+    mouseWheel(event) {
+        this.bufferGrid.handleScroll(event.delta);
     }
 
     updateGridContext = () => {
