@@ -41,7 +41,7 @@ class DisplayGrid {
     // Initialize the grid and assign letters
     initGrid() {
         this.cellWidth = this.gridSize / this.cols;
-        this.cellHeight = this.gridSize / this.rows;
+        this.cellHeight = this.cellWidth;
         this.grid = [];
         let letterCode = 65; // Start with 'A' (ASCII code)
 
@@ -180,7 +180,7 @@ class DisplayGrid {
                 
                 // Draw the button if visible
                 if (button.isVisible) {
-                    button.draw();
+                    //button.draw(); //TODO
                 }
             }
         }

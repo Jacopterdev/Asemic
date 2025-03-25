@@ -10,7 +10,10 @@ class NoGrid extends BaseGrid {
     }
 
     draw() {
-        return;
+        this.p.stroke(this.strokeColor);
+        this.p.strokeWeight(this.strokeWeight);
+        this.p.noFill();
+        this.p.rect(this.xStart, this.yStart, this.gridSize, this.gridSize);
     }
 
     initGrid() {

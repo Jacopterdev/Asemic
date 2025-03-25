@@ -10,6 +10,9 @@ import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
 import Tutorial from "../Tutorial.js";
 import {p5 as p} from "p5/lib/p5.js";
 import RandomPointGenerator from '../RandomPointGenerator.js';
+import DisplayGrid from "../DisplayGrid.js";
+import * as buffer from "node:buffer"; // Import DisplayGrid if not already imported
+
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -27,12 +30,11 @@ class SkeletonState {
         this.gridContext  = null;
         this.possibleLinesRenderer  = null;
         this.mouseHandler = null;
-        this.deleteButtonPosition = { x: 0, y: 0 }; // Will be set in updateGridContext
+
         this.deleteButtonSize = { width: 40, height: 40 };
         this.isDeleteButtonHovered = false;
         // Add new fill grid button properties
-        this.fillGridButtonPosition = { x: 0, y: 0 }; // Will be set in updateGridContext
-        this.fillGridButtonSize = { width: 40, height: 40 };
+
         this.isFillGridButtonHovered = false;
         
         // Initialize tutorial system
@@ -46,13 +48,25 @@ class SkeletonState {
         this.helpButtonY = 20;
         
         this.init();
+
+        //BUFFER
+        this.bufferX = 810; // X-position of the buffer (canvas width + 10px margin)
+        this.bufferY = 0;   // Y-position of the buffer
+        this.bufferWidth = 350; // Buffer width
+        this.bufferHeight = 800; // Buffer height
+
+        // Initialize the buffer (off-screen graphics canvas)
+        this.buffer = p.createGraphics(this.bufferWidth, this.bufferHeight);
+        this.initBufferGrid(); // Initialize the buffer grid
+
     }
 
     init(){
         // Other initialization code...
 
         // Initialize the gridContext based on the default `currentGridType` ("none")
-        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
+        //this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
+        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, 800); //Is updated somewhere else!
 
         this.pointRenderer = new PointRenderer(this.p, this.mergedParams.missRadius); // Initialize the PointRenderer
 
@@ -84,6 +98,33 @@ class SkeletonState {
 
         // Other initialization code...
     }
+
+    initBufferGrid() {
+        // Initialize a grid with 1 column and 3 rows inside the buffer
+        this.bufferGrid = new DisplayGrid(
+            this.buffer,
+            1, // 1 column
+            3, // 3 rows
+            LAYOUT.MARGIN, // X start in the buffer (relative to buffer)
+            LAYOUT.MARGIN, // Y start in the buffer
+            this.bufferWidth - LAYOUT.MARGIN*2, // Total height of the grid
+            this.mergedParams
+        );
+
+        // Render the grid onto the buffer immediately
+        this.drawBufferGrid();
+    }
+
+    drawBufferGrid() {
+        // Clear the buffer and draw the grid
+        this.buffer.clear();
+        this.buffer.background(255); // Optional: Set buffer background color
+        this.bufferGrid.drawGrid(); // Pass buffer as P5 canvas for drawing
+        //this.bufferGrid.drawShapes(); //TODO draw the shapes
+    }
+
+
+
 
     // Update drawDeleteButton method to make the button bigger
     drawDeleteButton() {
@@ -235,7 +276,7 @@ class SkeletonState {
         
         // Force grid update before proceeding
         this.updateGridContext();
-        console.log("heeey");
+
 
         // Check grid type in multiple ways to be sure
         const toolConfigType = this.toolConfig?.grid || "NoGrid";
@@ -480,6 +521,14 @@ class SkeletonState {
         if (this.tutorial && this.tutorial.active) {
             this.tutorial.draw();
         }
+
+        this.drawBufferGrid();
+        // Render the buffer on the right-hand side of the canvas
+        const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
+        const bufferY = 0; // Position 0px from the top
+        this.p.image(this.buffer, bufferX, bufferY);
+
+
     }
 
     // Update drawHelpButton method to make the button bigger
