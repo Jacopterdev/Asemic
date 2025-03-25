@@ -94,6 +94,8 @@ class SkeletonState {
                 if (typeof this.p.recordCurrentState === 'function') {
                     this.p.recordCurrentState("skeletonChange");
                 }
+                this.p.previousPoints = JSON.parse(JSON.stringify(this.points));
+                this.p.previousLines = JSON.parse(JSON.stringify(this.lineManager.getLines()));
             }
         );
 

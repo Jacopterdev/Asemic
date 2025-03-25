@@ -19,6 +19,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     let toolConfig;
     let lastUpdatedParam;
     let previousLastUpdatedParam;
+    let previousPoints;
+    let previousLines;
+
     let effects;
 
     // Instances of various states
@@ -42,6 +45,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         toolConfig = toolConfigRef.current;
         lastUpdatedParam = lastUpdatedParamRef.current;
         previousLastUpdatedParam = null;
+        previousPoints = null;
+        previousLines = null;
 
         //gridSize = p.width - margin * 2;
 
@@ -174,7 +179,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         toolConfig = toolConfigRef.current;
         lastUpdatedParam = lastUpdatedParamRef.current;
 
-        let configUpdated = p.isConfigUpdated();
+        let configUpdated = p.isConfigUpdated() || p.isSkeletonUpdated();
 
         // Record state when parameters are updated
         if (currentState?.updateMergedParams && configUpdated && !isUndoRedoOperation) {
@@ -242,6 +247,22 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             : null;
         return configUpdated;
     }
+    p.isSkeletonUpdated = () => {
+        let skeletonUpdated =
+            previousPoints &&
+            previousLines &&
+            (
+                JSON.stringify(points) !== JSON.stringify(previousPoints) ||
+                JSON.stringify(lineManager.getLines()) !== JSON.stringify(previousLines)
+            );
+
+        previousPoints = points ? JSON.parse(JSON.stringify(points)) : null;
+        previousLines = lineManager.getLines() ? JSON.parse(JSON.stringify(lineManager.getLines())) : null;
+
+        return skeletonUpdated;
+    };
+
+
     p.mousePressed = () => currentState?.mousePressed();
     p.mouseDragged = () => currentState?.mouseDragged();
     p.mouseReleased = () => {
