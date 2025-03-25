@@ -149,6 +149,11 @@ class CompositionTool {
         //this.p.textAlign(this.p.LEFT);
         const hoverKeyboard = this.keyboardGrid.isBufferHovered();
         if (hoverKeyboard) this.p.cursor(this.p.HAND);
+
+        this.p.fill(240);
+        this.p.blendMode(this.p.MULTIPLY);
+        this.p.rect(30, (this.p.height/2)-20, 1140, 1000, 8);
+        this.p.blendMode(this.p.BLEND);
     }
 
     // Existing methods remain unchanged

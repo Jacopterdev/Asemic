@@ -3,7 +3,7 @@ import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
 import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class KeyboardCell {
-    constructor(p, buffer, x, y, size, char, callback, fontSize = 8, fontType = "Roboto Mono", fontFillColor = 128) {
+    constructor(p, buffer, x, y, size, char, callback, fontSize = 12, fontType = "Roboto Mono", fontFillColor = 64) {
         this.p = p;
         this.buffer = buffer;
         this.x = x; // X coordinate of the cell
@@ -107,7 +107,7 @@ class KeyboardCell {
         p.textFont(this.fontType); // Use the configured font type
 
         // Draw the character in the bottom-left corner
-        const padding = 5; // Some padding from the edges
+        const padding = 8; // Some padding from the edges
         p.textAlign(p.LEFT, p.BOTTOM); // Align text at the bottom-left corner
         p.text(
             this.char,
