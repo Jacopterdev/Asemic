@@ -1,10 +1,11 @@
 ﻿class MouseEventHandler {
-    constructor(p, gridContext, points, lineManager, possibleLinesRenderer) {
+    constructor(p, gridContext, points, lineManager, possibleLinesRenderer, onStateChange = null) {
         this.p = p; // Reference to p5 instance
         this.gridContext = gridContext; // GridContext to handle snapping
         this.points = points; // Array to store points
         this.lineManager = lineManager; // Reference to the LineManager
         this.possibleLinesRenderer = possibleLinesRenderer; // Reference to the PossibleLinesRenderer
+        this.onStateChange = onStateChange; // Callback for state changes
         
         this.draggingPoint = null; // Currently dragged point
         this.mouseDragStart = null; // Start position of mouse drag
@@ -13,6 +14,9 @@
         
         // No more selectedPoint, we only track hover state
         this.hoveredLine = null; // Currently hovered line
+        this.didAddPoint = false; // Track if a point was added
+        this.didAddLine = false; // Track if a line was added
+        this.isDragging = false;
     }
     
     /**
@@ -20,6 +24,9 @@
      */
     handleMousePressed() {
         if (!this.isInCanvas()) {return;}
+        
+        // Record state at the beginning of any mouse interaction
+        if (this.onStateChange) this.onStateChange("start");
         
         // Determine if the mouse is over an existing point
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
@@ -38,6 +45,7 @@
             if (hoveredLine && this.isLineHoverActive(hoveredLine)) {
                 hoveredLine.selected = !hoveredLine.selected;
                 this.hoveredLine = null;
+                this.didAddLine = true; // Mark that we modified a line
                 return true;
             }
             
@@ -51,6 +59,7 @@
             );
             
             this.points.push(newPoint);
+            this.didAddPoint = true; // Mark that we added a point
             
             // Get the most recent point (exclude the one we just added)
             const previousPoints = this.points.filter(p => p.id !== newPoint.id);
@@ -208,12 +217,22 @@
             if (!this.isDragging) {
                 this.removePoint(this.draggingPoint);
             }
+            
+            // Call state change callback - this marks the end of a drag operation
+            if (this.onStateChange) this.onStateChange("end");
         }
         
-        // Reset dragging state
+        // If we added a point or modified a line
+        if (this.didAddPoint || this.didAddLine) {
+            if (this.onStateChange) this.onStateChange("end");
+        }
+        
+        // Reset flags
         this.draggingPoint = null;
         this.mouseDragStart = null; 
         this.isDragging = false;
+        this.didAddPoint = false;
+        this.didAddLine = false;
     }
     
     /**

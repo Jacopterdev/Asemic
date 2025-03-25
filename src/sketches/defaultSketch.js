@@ -6,6 +6,7 @@ import Effects from "./Effects.js";
 import shapeDictionary from "./ShapeDictionary.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 import LZString from 'lz-string'; // Add this import for compression
+import History from "./History.js";
 
 const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) => {
     let points = [];
@@ -24,6 +25,11 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     let states = {};
     let currentState;
 
+    // Create history instance
+    let history;
+    
+    // Flag to prevent recording history during undo/redo operations
+    let isUndoRedoOperation = false;
 
     p.setup = () => {
         // Create the canvas (adjust dimensions as needed)
@@ -40,6 +46,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         //gridSize = p.width - margin * 2;
 
         lineManager = new LineManager();
+        console.log("LineManager created", lineManager);
         shapeScale = 1;
 
         effects = new Effects(p);
@@ -53,15 +60,112 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         currentState = "Edit Skeleton"
         updateState("Edit Skeleton"); // Set the initial state
 
+        // Initialize history
+        history = new History();
+        
         // Check for shape data in URL on startup
         setTimeout(() => {
             p.checkURLForShapeLanguage();
+            recordCurrentState("initial");
         }, 500); // Short delay to ensure all components are initialized
     };
 
     const updateState = (stateName) => {
         if (currentState?.name === stateName) return; // Avoid unnecessary updates
         currentState = states[stateName]; // Switch to the existing state instance
+    };
+
+    // Add function to record current state
+    const recordCurrentState = (changedParam = null) => {
+        if (isUndoRedoOperation) return; // Don't record during undo/redo
+
+
+        const state = {
+            points: JSON.parse(JSON.stringify(points)),
+            lines: getSerializableLines(),
+            params: JSON.parse(JSON.stringify(mergedParamsRef.current))
+        };
+        
+        // Only push if it's different from the last state
+        if (history.isDifferentFromLastState(state)) {
+            history.pushState(state, changedParam);
+        }
+    };
+    
+    // Helper function to get serializable lines
+    const getSerializableLines = () => {
+        if (!lineManager || !lineManager.lines) {
+            console.warn("lineManager or lineManager.lines is undefined");
+            return []; // Return empty array if lineManager is not available
+        }
+        return lineManager.lines.map(line => ({
+            startId: line.start.id,
+            endId: line.end.id,
+            selected: line.selected
+        }));
+    };
+    
+    // Add function to restore state
+    const restoreState = (state) => {
+        if (!state) return false;
+        
+        isUndoRedoOperation = true;
+        
+        try {
+            // Restore points
+            points.length = 0;
+            state.points.forEach(point => points.push({...point}));
+            
+            // Restore lines
+            if (lineManager) {
+                lineManager.clearAllLines();
+                state.lines.forEach(line => {
+                    const startPoint = points.find(p => p.id === line.startId);
+                    const endPoint = points.find(p => p.id === line.endId);
+                    if (startPoint && endPoint) {
+                        lineManager.lines.push({
+                            start: startPoint,
+                            end: endPoint,
+                            selected: line.selected || true
+                        });
+                    }
+                });
+            }
+            
+            // Restore parameters
+            Object.keys(state.params).forEach(key => {
+                mergedParamsRef.current[key] = state.params[key];
+            });
+            
+            // Update local mergedParams
+            mergedParams = mergedParamsRef.current;
+            
+            // Update Tweakpane UI
+            const tweakpaneUpdateEvent = new CustomEvent('tweakpane-update', {
+                detail: mergedParams
+            });
+            window.dispatchEvent(tweakpaneUpdateEvent);
+            
+            // Rebuild the skeleton with restored data
+            p.rebuildSkeleton();
+            
+            // Update current state
+            if (currentState?.updateMergedParams) {
+                currentState.updateMergedParams(mergedParams);
+            }
+            
+            // If we're in the Edit Skeleton state, update its points and lines
+            if (currentState?.name === "Edit Skeleton" && currentState.updatePointsAndLines) {
+                currentState.updatePointsAndLines(points, lineManager);
+            }
+            
+            isUndoRedoOperation = false;
+            return true;
+        } catch (error) {
+            console.error("Error restoring state:", error);
+            isUndoRedoOperation = false;
+            return false;
+        }
     };
 
     p.draw = () => {
@@ -72,11 +176,12 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
         let configUpdated = p.isConfigUpdated();
 
-
-        if (currentState?.updateMergedParams && configUpdated) {
+        // Record state when parameters are updated
+        if (currentState?.updateMergedParams && configUpdated && !isUndoRedoOperation) {
             p.rebuildSkeleton();
             effects.setSmoothAmount(mergedParams.smoothAmount);
             currentState.updateMergedParams(mergedParams);
+        
         }
 
         if(currentState?.updateToolConfig){
@@ -96,7 +201,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 currentState.updateMergedParams(mergedParams);
                 effects.setSmoothAmount(mergedParams.smoothAmount);
                 p.animateSmoothAmount();
-
+                if (!isUndoRedoOperation) {
+                    recordCurrentState("stateChange");
+                }
             }
         }
 
@@ -137,8 +244,37 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     }
     p.mousePressed = () => currentState?.mousePressed();
     p.mouseDragged = () => currentState?.mouseDragged();
-    p.mouseReleased = () => currentState?.mouseReleased();
-    p.keyPressed = (evt) => currentState?.keyPressed?.(evt);
+    p.mouseReleased = () => {
+        const result = currentState?.mouseReleased();
+        
+        // Record state after mouse release (likely a point was added, moved, or removed)
+        if (!isUndoRedoOperation) {
+            console.log(lineManager, "lineManagerMOUSE RELEASED");
+            if (lineManager) {
+                console.log(lineManager, "lineManagerMOUSE RELEASEDAFTER CHECK");
+                recordCurrentState("mouseAction");
+            }
+            //recordCurrentState("mouseAction");
+        }
+        
+        return result;
+    };
+    p.keyPressed = (evt) => {
+        // Handle Undo - Cmd+Z (Mac) or Ctrl+Z (Windows)
+        if ((evt.key === 'z' || evt.key === 'Z') && (evt.ctrlKey || evt.metaKey)) {
+            if (history?.canUndo()) {
+                const state = history.undo();
+                if (restoreState(state)) {
+                    console.log("Undo successful");
+                    return false; // Prevent default behavior
+                }
+            }
+            return false; // Even if we can't undo, prevent default browser behavior
+        }
+        
+        // Forward key event to current state
+        return currentState?.keyPressed?.(evt);
+    };
     p.keyReleased = (evt) => currentState?.keyReleased?.(evt);
     p.mouseWheel = (event) => {
         if (currentState?.mouseWheel) currentState.mouseWheel(event);
