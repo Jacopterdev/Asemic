@@ -72,7 +72,14 @@ class SkeletonState {
             this.gridContext, 
             this.points, 
             this.lineManager,
-            this.possibleLinesRenderer // Pass the renderer
+            this.possibleLinesRenderer, // Pass the renderer
+            // Add callback for state changes
+            () => {
+                // Record state after significant changes
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("skeletonChange");
+                }
+            }
         );
 
         // Other initialization code...
@@ -211,6 +218,11 @@ class SkeletonState {
 
     // Add method to fill grid with points
     fillGridWithPoints() {
+        // Record state before filling if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("beforeFillGrid");
+        }
+        
         console.log("Starting fillGridWithPoints");
         
         // Clear existing points and lines first
@@ -374,15 +386,30 @@ class SkeletonState {
         }
         
         console.log(`Generated ${this.points.length} grid points`);
+        
+        // Record state after filling if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("fillGrid");
+        }
     }
 
     // Add this method to handle delete functionality
     deleteAllPoints() {
+        // Record state before deletion if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("beforeDelete");
+        }
+        
         // Clear all points
         this.points.length = 0;
         
         // Remove all lines
         this.lineManager.clearAllLines();
+        
+        // Record state after deletion if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("deleteAll");
+        }
     }
 
     // Add a method to generate random points
