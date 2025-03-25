@@ -234,7 +234,7 @@ function MainApp() {
             {/* Main Content Section */}
             <main className="container mx-auto">
                 <div className="flex justify-between gap-4">
-                    <div className="basis-1/3 bg-gray-100 shadow p-4 rounded w-full overflow-hidden">
+                    <div className="basis-1/3 bg-gray-100 shadow p-4 rounded w-full">
                         <div className="space-y-2">
                             <TweakpaneComponent
                                 defaultParams={params}

@@ -96,7 +96,7 @@ class KeyboardCell {
         }
 
         // Draw the cell background
-        p.stroke(196); // Black stroke around the cell
+        p.stroke(240); // Black stroke around the cell
         p.rect(this.x, this.y, this.size, this.size);
 
         p.noStroke();

@@ -20,6 +20,7 @@ header{
     @apply mx-auto;
 }
 
+
 /* Apply the new font-sans (Arial) globally */
 @theme {
     --font-primary: "Arial", "sans-serif";
