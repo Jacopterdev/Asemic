@@ -59,12 +59,12 @@ class History {
                 this.currentIndex--;
             }
             
-            console.log(`History: Added state ${this.currentIndex}/${this.stack.length - 1}${changedParam ? ` (parameter: ${changedParam})` : ' (structure)'}`);
+            
         } catch (error) {
             console.error("Error adding state to history:", error);
         }
 
-        console.log(this.currentIndex, "index");
+        
     }
 
     // Helper method to check if a state is significantly different from the last recorded state
@@ -110,13 +110,10 @@ class History {
         const newNumericKeys = newParamKeys.filter(key => !isNaN(parseInt(key)));
         const lastNumericKeys = lastParamKeys.filter(key => !isNaN(parseInt(key)));
 
-        // Log for debugging
-        console.log("Numeric keys (subshapes) in new state:", newNumericKeys);
-        console.log("Numeric keys (subshapes) in last state:", lastNumericKeys);
 
         // If the number of numeric keys changed, a subshape was added or removed
         if (newNumericKeys.length !== lastNumericKeys.length) {
-            console.log("Subshape count changed, detecting difference in history");
+            
             return true;
         }
 
@@ -124,7 +121,7 @@ class History {
         for (const key of newNumericKeys) {
             if (!lastState.params[key] || 
                 JSON.stringify(newState.params[key]) !== JSON.stringify(lastState.params[key])) {
-                console.log(`Subshape ${key} changed or is new`);
+                
                 return true;
             }
         }
@@ -135,7 +132,7 @@ class History {
             if (!isNaN(parseInt(key))) continue;
             
             if (JSON.stringify(newState.params[key]) !== JSON.stringify(lastState.params[key])) {
-                console.log(`Parameter ${key} changed`);
+                //console.log(`Parameter ${key} changed`);
                 return true;
             }
         }
@@ -152,15 +149,7 @@ class History {
         if (this.currentIndex > 0) {
             this.currentIndex--;
             const prevState = this.stack[this.currentIndex];
-            console.log(`History: Undoing to state ${this.currentIndex}/${this.stack.length - 1}`);
-            
-            // Log what kind of change is being undone
-            if (prevState.metadata?.changedParam) {
-                console.log(`Undoing parameter change: ${prevState.metadata.changedParam}`);
-            } else {
-                console.log(`Undoing structure change (points/lines)`);
-            }
-            
+           
             return JSON.parse(JSON.stringify(prevState));
         }
         console.log("History: Cannot undo, at earliest state");
@@ -176,7 +165,7 @@ class History {
     }
     
     canUndo() {
-        console.log(this.currentIndex, "index af undo");
+  
         return this.currentIndex > 0;
     }
     

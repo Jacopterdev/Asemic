@@ -42,26 +42,14 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         }
 
     };
-    const [tabs, setTabs] = useState([
-        {
-            id: 1,
-            params: {
-                subShape: "Triangle",
-                connection: "Along", // Default value
-                rotationType: "relative", // Default value
-                angle: {min: 0, max: 360},
-                amount: {min: 1, max: 3}, // Default interval
-                size: {min: 20, max: 160}, // Default interval
-                distort: {min: 0, max: 0}, // Default interval
-            },
-            pane: null,
-        },
-    ]); // Initial tabs with parameters
+   
+    // Initialize with an empty array instead of a default tab
+    const [tabs, setTabs] = useState([]); // No initial tabs
 
-    const [activeTab, setActiveTab] = useState(tabs.length > 0 ? tabs[0].id : null);
+    const [activeTab, setActiveTab] = useState(null); // No active tab initially
     const paneContainerRefs = useRef({}); // Track container refs for each tab
     const panes = useRef({}); // Track Tweakpane instances for each tab
-    const nextTabId = useRef(2); // Start with 2 because tabs 1 already exist
+    const nextTabId = useRef(1); // Start with ID 1 for the first tab that will be added
 
     useEffect(() => {
         const initialParams = {};
@@ -273,7 +261,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         const handleTweakpaneUpdate = (event) => {
             if (!event.detail) return;
             
-            console.log("TabsWithPanes received update event:", event.detail);
+            
             
             // Check if we have any subshape data in the loaded parameters
             const subShapeData = {};
@@ -293,7 +281,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             const needsFullRefresh = event.detail.forceRebuild || event.detail.updateSubshapes;
             
             if (hasSubShapeData || needsFullRefresh) {
-                console.log("Found subshape data or full refresh requested:", subShapeData);
+                
                 
                 // Get the current tab IDs from the event data or use an empty set
                 const currentTabIds = event.detail.subshapeKeys || 

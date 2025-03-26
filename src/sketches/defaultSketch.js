@@ -51,11 +51,11 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         //gridSize = p.width - margin * 2;
 
         lineManager = new LineManager();
-        console.log("LineManager created", lineManager);
+        
         shapeScale = 1;
 
         effects = new Effects(p);
-        console.log(shapeDictionary.getDictionary());
+        
 
         /** STATE MANAGEMENT */
         // Pre-create each state and store them
@@ -84,8 +84,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     const recordCurrentState = (changedParam = null) => {
         if (isUndoRedoOperation) return; // Don't record during undo/redo
 
-        console.log("Subshapesstaate:", mergedParams);
-
         const state = {
             points: JSON.parse(JSON.stringify(points)),
             lines: getSerializableLines(),
@@ -94,7 +92,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         // Only push if it's different from the last state
         if (history.isDifferentFromLastState(state)) {
-            console.log("CHHAAAAANGE", state);
             history.pushState(state, changedParam);
         }
     };
@@ -138,25 +135,21 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                     }
                 });
             }
-            console.log("state", JSON.parse(JSON.stringify(state.params)));            // Restore parameters
+            
+            // Restore parameters
             // First clear all existing parameters that are numeric (subshapes)
-const currentNumericKeys = Object.keys(mergedParamsRef.current).filter(key => !isNaN(parseInt(key)));
-currentNumericKeys.forEach(key => {
-    delete mergedParamsRef.current[key];
-});
+            const currentNumericKeys = Object.keys(mergedParamsRef.current).filter(key => !isNaN(parseInt(key)));
+            currentNumericKeys.forEach(key => {
+                delete mergedParamsRef.current[key];
+            });
 
-            console.log("before update", JSON.parse(JSON.stringify(mergedParamsRef.current)));            // Restore parameters
+            // Restore parameters
             Object.keys(state.params).forEach(key => {
                 mergedParamsRef.current[key] = state.params[key];
             });
 
-            console.log("after update", JSON.parse(JSON.stringify(mergedParamsRef.current)));
-
-
             // Update local mergedParams
             mergedParams = mergedParamsRef.current;
-            console.log("after2 update", JSON.parse(JSON.stringify(mergedParams)));            // Restore parameters
-
             
             // Update Tweakpane UI with explicit information about subshapes
             const uiParams = {};
@@ -170,6 +163,8 @@ currentNumericKeys.forEach(key => {
 
             // Set a special flag to ensure complete UI refresh 
             uiParams.updateSubshapes = true;
+            
+ 
 
             // Dispatch the event with clean parameters
             const tweakpaneUpdateEvent = new CustomEvent('tweakpane-update', {
@@ -306,13 +301,13 @@ currentNumericKeys.forEach(key => {
     p.keyPressed = (evt) => {
         // Handle Undo - Cmd+Z (Mac) or Ctrl+Z (Windows)
         if ((evt.key === 'z' || evt.key === 'Z') && (evt.ctrlKey || evt.metaKey)) {
-            console.log("s");
+            
 
             if (history?.canUndo()) {
-                console.log("Undo in progress");
+                
                 const state = history.undo();
                 if (restoreState(state)) {
-                    console.log("Undo successful");
+                    
                     return false; // Prevent default behavior
                 }
             }
@@ -419,7 +414,7 @@ currentNumericKeys.forEach(key => {
                 }
             });
             
-            console.log("UI params to update:", uiParams);
+            
             
             // Update mergedParams with loaded data
             Object.keys(loadedData).forEach(key => {
@@ -433,16 +428,13 @@ currentNumericKeys.forEach(key => {
             if (loadedData.points && Array.isArray(loadedData.points)) {
                 points.length = 0; // Clear existing points
                 loadedData.points.forEach(point => points.push({...point})); // Create fresh objects
-                console.log(`Loaded ${points.length} points`);
+                
             }
             
             if (loadedData.lines && Array.isArray(loadedData.lines)) {
                 lineManager.clearAllLines();
                 
-                // Check if all loaded lines have selected property
-                const allHaveSelectedProp = loadedData.lines.every(line => 'selected' in line);
-                console.log(`All lines have selected property: ${allHaveSelectedProp}`);
-                
+               
                 loadedData.lines.forEach(line => {
                     // Find the actual point objects in our points array
                     const startPoint = points.find(p => p.id === line.start.id);
@@ -458,8 +450,7 @@ currentNumericKeys.forEach(key => {
                     }
                 });
                 
-                console.log(`Loaded ${lineManager.lines.length} lines`);
-                console.log(`Selected lines after push: ${lineManager.getSelectedLines().length}`);
+
             }
             
             // Rebuild the skeleton with loaded data
@@ -468,11 +459,10 @@ currentNumericKeys.forEach(key => {
             // Force selection of all lines in case the line manager has internal state
             if (lineManager && typeof lineManager.selectAllLines === 'function') {
                 lineManager.selectAllLines();
-                console.log(`Selected lines after selectAllLines: ${lineManager.getSelectedLines().length}`);
             } else {
                 // If no selectAllLines method, manually set all to selected
                 lineManager.lines.forEach(line => line.selected = true);
-                console.log(`Manually set all lines to selected: ${lineManager.getSelectedLines().length}`);
+                
             }
             
             // Update current state
@@ -490,14 +480,7 @@ currentNumericKeys.forEach(key => {
                 detail: uiParams
             });
             window.dispatchEvent(tweakpaneUpdateEvent);
-            
-            // Debug logging
-            console.log("State after loading:", currentState?.name);
-            console.log("Points loaded:", points.length);
-            console.log("Lines loaded:", lineManager.lines.length);
-            console.log("Selected lines:", lineManager.getSelectedLines().length);
-            
-            console.log("Shape language loaded successfully");
+
             return true;
         } catch (error) {
             console.error("Failed to load shape language:", error);
@@ -555,7 +538,7 @@ currentNumericKeys.forEach(key => {
                 
                 // Load the shape language data
                 p.loadShapeLanguageFromJSON(JSON.stringify(shapeData));
-                console.log("Successfully loaded shape language from URL");
+                
                 return true;
             }
         } catch (error) {
