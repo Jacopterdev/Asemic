@@ -7,8 +7,17 @@ import p5 from 'p5';
 import ShapeGeneratorV2 from '../sketches/ShapeGenerator/ShapeGeneratorV2';
 // Import Effects class
 import Effects from '../sketches/Effects';
+// Import layout constants to maintain consistency with AnatomyState
+import { SPACING as LAYOUT } from '../sketches/States/LayoutConstants';
+// Import RandomPointGenerator for procedural shape generation
+import RandomPointGenerator from '../sketches/RandomPointGenerator';
 
 const GalleryPage = () => {
+  // Calculate the cell size based on the same logic used in AnatomyState
+  const cellWidth = (LAYOUT.GRID_SIZE*1.5 - LAYOUT.MARGIN * 2) / 4; // 4 columns in AnatomyState
+  const cellHeight = cellWidth; // Square cells
+
+  // Rest of your state declarations
   const [shapes, setShapes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -32,8 +41,15 @@ const GalleryPage = () => {
   useEffect(() => {
     const loadGalleryShapes = async () => {
       try {
-        // These would come from your API or local storage in a real app
-        const galleryShapes = getPredefinedShapes();
+        // Get predefined shapes
+        const predefinedShapes = getPredefinedShapes();
+        
+        // Generate additional procedural shapes
+        const randomShapes = generateRandomShapes(4); // Generate 4 random shapes
+        
+        // Combine both sets of shapes
+        const galleryShapes = [...predefinedShapes, ...randomShapes];
+        
         setShapes(galleryShapes);
         setIsLoading(false);
       } catch (error) {
@@ -44,6 +60,90 @@ const GalleryPage = () => {
 
     loadGalleryShapes();
   }, []);
+
+  // Generate additional random shapes using RandomPointGenerator
+  const generateRandomShapes = (count) => {
+    const randomShapes = [];
+    const baseId = 100; // Start with a high ID to avoid conflicts with predefined shapes
+    
+    // Create a temporary p5 instance for generating shapes
+    const p = new p5((sketch) => {
+      sketch.setup = () => {
+        sketch.createCanvas(100, 100);
+        sketch.noLoop();
+      };
+    });
+    
+    // Create shapes with various methods from RandomPointGenerator
+    const shapeTypes = [
+      { name: "Symmetric", method: "generateSymmetricShape" },
+      { name: "Spider Web", method: "generateSpiderWeb" },
+      { name: "Clustered", method: "generateClustered" },
+      { name: "Recursive", method: "generateRecursivePattern" },
+      { name: "Overlapping Polygons", method: "generateOverlappingPolygons" }
+    ];
+    
+    for (let i = 0; i < count; i++) {
+      // Select a random shape type
+      const shapeType = shapeTypes[Math.floor(p.random(shapeTypes.length))];
+      
+      // Create a point generator
+      const generator = new RandomPointGenerator(p, 800, 600, 50);
+      
+      // Generate points and lines
+      const minPoints = 5;
+      const maxPoints = 25;
+      
+      // Use the specified method to generate points and lines
+      const { points, lines } = generator[shapeType.method](minPoints, maxPoints);
+      
+      // Create a shape data object
+      const shapeData = {
+        missArea: Math.floor(p.random(5, 15)),
+        smoothAmount: Math.floor(p.random(8, 20)),
+        lineWidth: { min: Math.floor(p.random(4, 8)), max: Math.floor(p.random(10, 15)) },
+        lineType: p.random() > 0.5 ? 'curved' : 'straight',
+        lineComposition: ['Random', 'Branched', 'Segmented'][Math.floor(p.random(3))],
+        points: points,
+        lines: lines,
+        "1": createRandomSubShape(p, "Circle"),
+        "2": p.random() > 0.5 ? createRandomSubShape(p, "Triangle") : null
+      };
+      
+      // Add the shape to our random shapes array
+      randomShapes.push({
+        id: baseId + i,
+        name: `Random ${shapeType.name} ${i + 1}`,
+        data: shapeData
+      });
+    }
+    
+    // Remove the temporary p5 instance
+    p.remove();
+    
+    return randomShapes;
+  };
+
+  // Helper function to generate random subshape configurations
+  const createRandomSubShape = (p, shapeType) => {
+    const r = Math.floor(p.random(50, 200));
+    const g = Math.floor(p.random(50, 200));
+    const b = Math.floor(p.random(50, 200));
+    
+    return {
+      subShape: shapeType,
+      connection: p.random() > 0.5 ? "Along" : "Endpoints",
+      rotationType: p.random() > 0.5 ? "relative" : "absolute",
+      angle: {min: 0, max: Math.floor(p.random(30, 360))},
+      amount: {min: Math.floor(p.random(1, 3)), max: Math.floor(p.random(3, 6))},
+      size: {min: Math.floor(p.random(15, 30)), max: Math.floor(p.random(30, 80))},
+      distort: {min: 0, max: Math.floor(p.random(0, 20))},
+      strokeColor: { r: r, g: g, b: b, a: 0.8 },
+      fillColor: { r: Math.min(r + 50, 255), g: Math.min(g + 50, 255), b: Math.min(b + 50, 255), a: 0.4 },
+      shapeFill: true,
+      fillOverlap: p.random() > 0.5
+    };
+  };
 
   // Generate thumbnails for each shape using p5.js and ShapeGeneratorV2
   useEffect(() => {
@@ -59,7 +159,8 @@ const GalleryPage = () => {
           
           // Create a new p5 instance for this thumbnail
           new p5(sketch => {
-            const thumbnailSize = 200;
+            // Use the same dimensions as the cells in AnatomyState
+            const thumbnailSize = cellWidth;
             
             sketch.setup = () => {
               sketch.createCanvas(thumbnailSize, thumbnailSize);
@@ -158,7 +259,7 @@ const GalleryPage = () => {
         }
       });
     }
-  }, [shapes, isLoading]);
+  }, [shapes, isLoading, cellWidth]);
 
   const handleShapeClick = (shape) => {
     try {
@@ -173,13 +274,12 @@ const GalleryPage = () => {
     }
   };
 
-  // Define preset shapes for the gallery
+  // Define preset shapes for the gallery with more spread out points
   const getPredefinedShapes = () => {
     return [
       {
         id: 1,
         name: "Organic Circle",
-        description: "A smooth circular shape with organic variations",
         data: {
           missArea: 8,
           numberOfLines: {min: 8, max: 12},
@@ -189,8 +289,8 @@ const GalleryPage = () => {
           lineComposition: 'Branched',
           points: Array(12).fill().map((_, i) => ({
             id: i,
-            x: 400 + Math.cos(i/12 * Math.PI * 2) * 150,
-            y: 300 + Math.sin(i/12 * Math.PI * 2) * 150,
+            x: 400 + Math.cos(i/12 * Math.PI * 2) * 200, // Increased radius from 150 to 200
+            y: 300 + Math.sin(i/12 * Math.PI * 2) * 200, // Increased radius from 150 to 200
             fixed: false
           })),
           lines: Array(12).fill().map((_, i) => ({
@@ -198,21 +298,24 @@ const GalleryPage = () => {
             end: { id: (i+1) % 12 },
             selected: true
           })),
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 50, g: 100, b: 200, a: 0.8 },
-              fillColor: { r: 220, g: 240, b: 255, a: 0.4 },
-              fillOverlap: true
-            }
+          "1": {
+            subShape: "Circle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 2, max: 4},
+            size: {min: 20, max: 80},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 50, g: 100, b: 200, a: 0.8 },
+            fillColor: { r: 220, g: 240, b: 255, a: 0.4 },
+            shapeFill: true,
+            fillOverlap: true
           }
         }
       },
       {
         id: 2,
         name: "Geometric Star",
-        description: "A star-like pattern with sharp geometric styling",
         data: {
           missArea: 5,
           numberOfLines: {min: 5, max: 8},
@@ -221,7 +324,7 @@ const GalleryPage = () => {
           lineType: 'straight',
           lineComposition: 'Segmented',
           points: Array(10).fill().map((_, i) => {
-            const radius = i % 2 === 0 ? 150 : 75;
+            const radius = i % 2 === 0 ? 200 : 100; // Increased from 150/75 to 200/100
             return {
               id: i,
               x: 400 + Math.cos(i/10 * Math.PI * 2) * radius,
@@ -234,21 +337,24 @@ const GalleryPage = () => {
             end: { id: (i+1) % 10 },
             selected: true
           })),
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 180, g: 50, b: 50, a: 0.9 },
-              fillColor: { r: 255, g: 220, b: 220, a: 0.6 },
-              fillOverlap: false
-            }
+          "1": {
+            subShape: "Triangle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 1, max: 3},
+            size: {min: 30, max: 60},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 180, g: 50, b: 50, a: 0.9 },
+            fillColor: { r: 255, g: 220, b: 220, a: 0.6 },
+            shapeFill: true,
+            fillOverlap: false
           }
         }
       },
       {
         id: 3,
         name: "Wavy Square",
-        description: "A square with wavy, flowing lines",
         data: {
           missArea: 12,
           numberOfLines: {min: 4, max: 8},
@@ -257,10 +363,10 @@ const GalleryPage = () => {
           lineType: 'curved',
           lineComposition: 'Random',
           points: [
-            {id: 0, x: 250, y: 200, fixed: false},
-            {id: 1, x: 550, y: 200, fixed: false},
-            {id: 2, x: 550, y: 400, fixed: false},
-            {id: 3, x: 250, y: 400, fixed: false}
+            {id: 0, x: 200, y: 150, fixed: false}, // Was 250, 200
+            {id: 1, x: 600, y: 150, fixed: false}, // Was 550, 200
+            {id: 2, x: 600, y: 450, fixed: false}, // Was 550, 400
+            {id: 3, x: 200, y: 450, fixed: false}  // Was 250, 400
           ],
           lines: [
             {start: {id: 0}, end: {id: 1}, selected: true},
@@ -268,21 +374,24 @@ const GalleryPage = () => {
             {start: {id: 2}, end: {id: 3}, selected: true},
             {start: {id: 3}, end: {id: 0}, selected: true}
           ],
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 70, g: 130, b: 70, a: 1.0 },
-              fillColor: { r: 220, g: 255, b: 220, a: 0.5 },
-              fillOverlap: true
-            }
+          "1": {
+            subShape: "Circle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 2, max: 5},
+            size: {min: 30, max: 60},
+            distort: {min: 0, max: 10},
+            strokeColor: { r: 70, g: 130, b: 70, a: 1.0 },
+            fillColor: { r: 220, g: 255, b: 220, a: 0.5 },
+            shapeFill: true,
+            fillOverlap: true
           }
         }
       },
       {
         id: 4,
         name: "Bold Triangle",
-        description: "A triangular shape with bold lines",
         data: {
           missArea: 15,
           numberOfLines: {min: 3, max: 6},
@@ -291,30 +400,33 @@ const GalleryPage = () => {
           lineType: 'straight',
           lineComposition: 'Branched',
           points: [
-            {id: 0, x: 400, y: 150, fixed: false},
-            {id: 1, x: 250, y: 450, fixed: false},
-            {id: 2, x: 550, y: 450, fixed: false}
+            {id: 0, x: 400, y: 100, fixed: false},  // Was y: 150
+            {id: 1, x: 150, y: 500, fixed: false},  // Was 250, 450
+            {id: 2, x: 650, y: 500, fixed: false}   // Was 550, 450
           ],
           lines: [
             {start: {id: 0}, end: {id: 1}, selected: true},
             {start: {id: 1}, end: {id: 2}, selected: true},
             {start: {id: 2}, end: {id: 0}, selected: true}
           ],
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 50, g: 50, b: 120, a: 0.9 },
-              fillColor: { r: 220, g: 220, b: 255, a: 0.3 },
-              fillOverlap: false
-            }
+          "1": {
+            subShape: "Square",
+            connection: "Endpoints",
+            rotationType: "absolute",
+            angle: {min: 0, max: 90},
+            amount: {min: 1, max: 2},
+            size: {min: 40, max: 100},
+            distort: {min: 0, max: 20},
+            strokeColor: { r: 50, g: 50, b: 120, a: 0.9 },
+            fillColor: { r: 220, g: 220, b: 255, a: 0.3 },
+            shapeFill: true,
+            fillOverlap: false
           }
         }
       },
       {
         id: 5,
         name: "Flowing Abstract",
-        description: "An irregular organic shape with fluid curves",
         data: {
           missArea: 20,
           numberOfLines: {min: 6, max: 12},
@@ -323,12 +435,12 @@ const GalleryPage = () => {
           lineType: 'curved',
           lineComposition: 'Random',
           points: [
-            {id: 0, x: 300, y: 200, fixed: false},
-            {id: 1, x: 500, y: 180, fixed: false},
-            {id: 2, x: 550, y: 300, fixed: false},
-            {id: 3, x: 480, y: 420, fixed: false},
-            {id: 4, x: 320, y: 450, fixed: false},
-            {id: 5, x: 250, y: 320, fixed: false}
+            {id: 0, x: 250, y: 150, fixed: false},  // Was 300, 200
+            {id: 1, x: 550, y: 120, fixed: false},  // Was 500, 180
+            {id: 2, x: 650, y: 300, fixed: false},  // Was 550, 300
+            {id: 3, x: 550, y: 480, fixed: false},  // Was 480, 420
+            {id: 4, x: 250, y: 500, fixed: false},  // Was 320, 450
+            {id: 5, x: 150, y: 300, fixed: false}   // Was 250, 320
           ],
           lines: [
             {start: {id: 0}, end: {id: 1}, selected: true},
@@ -338,27 +450,37 @@ const GalleryPage = () => {
             {start: {id: 4}, end: {id: 5}, selected: true},
             {start: {id: 5}, end: {id: 0}, selected: true}
           ],
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 255, g: 140, b: 0, a: 0.8 },
-              fillColor: { r: 255, g: 245, b: 215, a: 0.5 },
-              fillOverlap: true
-            },
-            2: { // Second tab with a different style
-              shapeFill: true,
-              strokeColor: { r: 150, g: 80, b: 0, a: 0.6 },
-              fillColor: { r: 245, g: 225, b: 195, a: 0.3 },
-              fillOverlap: true
-            }
+          "1": {
+            subShape: "Triangle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 2, max: 4},
+            size: {min: 20, max: 50},
+            distort: {min: 5, max: 20},
+            strokeColor: { r: 255, g: 140, b: 0, a: 0.8 },
+            fillColor: { r: 255, g: 245, b: 215, a: 0.5 },
+            shapeFill: true,
+            fillOverlap: true
+          },
+          "2": {
+            subShape: "Circle",
+            connection: "Endpoints",
+            rotationType: "absolute",
+            angle: {min: 0, max: 360},
+            amount: {min: 1, max: 1},
+            size: {min: 40, max: 80},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 150, g: 80, b: 0, a: 0.6 },
+            fillColor: { r: 245, g: 225, b: 195, a: 0.3 },
+            shapeFill: true,
+            fillOverlap: true
           }
         }
       },
       {
         id: 6,
         name: "Crystalline Hexagon",
-        description: "A structured hexagonal shape with crystalline patterns",
         data: {
           missArea: 7,
           numberOfLines: {min: 6, max: 12},
@@ -368,8 +490,8 @@ const GalleryPage = () => {
           lineComposition: 'Segmented',
           points: Array(6).fill().map((_, i) => ({
             id: i,
-            x: 400 + Math.cos(i/6 * Math.PI * 2) * 150,
-            y: 300 + Math.sin(i/6 * Math.PI * 2) * 150,
+            x: 400 + Math.cos(i/6 * Math.PI * 2) * 220,  // Was 150
+            y: 300 + Math.sin(i/6 * Math.PI * 2) * 220,  // Was 150
             fixed: true
           })),
           lines: Array(6).fill().map((_, i) => ({
@@ -377,14 +499,116 @@ const GalleryPage = () => {
             end: { id: (i+1) % 6 },
             selected: true
           })),
-          // Add subshape parameters for full rendering
-          subShapes: {
-            1: { // First tab
-              shapeFill: true,
-              strokeColor: { r: 100, g: 200, b: 255, a: 0.9 },
-              fillColor: { r: 220, g: 240, b: 255, a: 0.3 },
-              fillOverlap: false
-            }
+          "1": {
+            subShape: "Triangle",
+            connection: "Along",
+            rotationType: "absolute",
+            angle: {min: 0, max: 0},
+            amount: {min: 3, max: 6},
+            size: {min: 20, max: 60},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 100, g: 200, b: 255, a: 0.9 },
+            fillColor: { r: 220, g: 240, b: 255, a: 0.3 },
+            shapeFill: true,
+            fillOverlap: false
+          }
+        }
+      },
+      {
+        id: 7,
+        name: "Pentagon Star",
+        data: {
+          missArea: 10,
+          lineWidth: {min: 8, max: 15},
+          lineType: 'straight',
+          lineComposition: 'Segmented',
+          points: Array(10).fill().map((_, i) => {
+            const radius = i % 2 === 0 ? 220 : 110;  // Was 180, 90
+            return {
+              id: i,
+              x: 400 + Math.cos((i/10 * Math.PI * 2) + Math.PI/10) * radius,
+              y: 300 + Math.sin((i/10 * Math.PI * 2) + Math.PI/10) * radius,
+              fixed: false
+            };
+          }),
+          lines: Array(10).fill().map((_, i) => ({
+            start: { id: i },
+            end: { id: (i+1) % 10 },
+            selected: true
+          })),
+          "1": {
+            subShape: "Square",
+            connection: "Along",
+            rotationType: "relative", 
+            angle: {min: 10, max: 80},
+            amount: {min: 1, max: 2},
+            size: {min: 15, max: 45},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 80, g: 40, b: 150, a: 0.8 },
+            fillColor: { r: 230, g: 210, b: 255, a: 0.4 },
+            shapeFill: true,
+            fillOverlap: true
+          }
+        }
+      },
+      {
+        id: 8,
+        name: "Double Triangle",
+        data: {
+          missArea: 10,
+          numberOfLines: {min: 4, max: 8},
+          smoothAmount: 10,
+          lineWidth: {min: 8, max: 24},
+          lineType: "straight",
+          lineComposition: "Branched",
+          lines: [
+            {start: {id: "1742899657184i34v90d7h", x: 120, y: 480}, end: {id: "1742899657736au6c7maqx", x: 480, y: 520}}, // Wider spread
+            {start: {id: "1742899657184i34v90d7h", x: 120, y: 480}, end: {id: "1742899658463d21dd45tk", x: 480, y: 80}},  // More vertical
+            {start: {id: "1742899657736au6c7maqx", x: 480, y: 520}, end: {id: "1742899658463d21dd45tk", x: 480, y: 80}}   // More vertical
+          ],
+          points: [
+            {id: "1742899657184i34v90d7h", x: 120, y: 480}, // Was 152, 394
+            {id: "1742899657736au6c7maqx", x: 480, y: 520}, // Was 450, 517
+            {id: "1742899658463d21dd45tk", x: 480, y: 80}   // Was 442, 87
+          ],
+          "1": {
+            subShape: "Triangle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 1, max: 3},
+            size: {min: 20, max: 160},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 60, g: 120, b: 190, a: 0.8 },
+            fillColor: { r: 200, g: 230, b: 255, a: 0.4 },
+            shapeFill: true,
+            fillOverlap: true
+          },
+          "2": {
+            subShape: "Square",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 1, max: 3},
+            size: {min: 20, max: 160},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 190, g: 60, b: 120, a: 0.8 },
+            fillColor: { r: 255, g: 200, b: 230, a: 0.4 },
+            shapeFill: true,
+            fillOverlap: true
+          },
+          "3": {
+            subShape: "Circle",
+            connection: "Along",
+            rotationType: "relative",
+            angle: {min: 0, max: 360},
+            amount: {min: 1, max: 3},
+            size: {min: 20, max: 160},
+            distort: {min: 0, max: 0},
+            strokeColor: { r: 120, g: 190, b: 60, a: 0.8 },
+            fillColor: { r: 230, g: 255, b: 200, a: 0.4 },
+            shapeFill: true,
+            fillOverlap: true
           }
         }
       }
@@ -415,30 +639,29 @@ const GalleryPage = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {shapes.map(shape => (
-                <div 
-                  key={shape.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform transition-transform hover:scale-105"
-                  onClick={() => handleShapeClick(shape)}
-                >
-                  <div className="p-2 bg-gray-100">
-                    <div 
-                      ref={el => thumbnailRefs.current[shape.id] = el}
-                      className="h-48 w-full"
-                    ></div>
+            <div className="w-full">
+              <div className="flex flex-wrap justify-center gap-6">
+                {shapes.map(shape => (
+                  <div 
+                    key={shape.id}
+                    className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform transition-transform hover:scale-105"
+                    onClick={() => handleShapeClick(shape)}
+                  >
+                    <div className="p-2 bg-gray-100 flex justify-center">
+                      <div 
+                        ref={el => thumbnailRefs.current[shape.id] = el}
+                        style={{ 
+                          width: `${cellWidth}px`, 
+                          height: `${cellHeight}px` 
+                        }}
+                      ></div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-medium text-gray-800 text-center">{shape.name}</h3>
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-medium text-gray-800">{shape.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {shape.description}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {shape.data.lineType} lines, {shape.data.lineComposition} composition
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -450,7 +673,7 @@ const GalleryPage = () => {
 // Updated drawShapeThumbnail function with better scaling and positioning
 
 function drawPlaceholder(s, shapeData) {
-  const thumbnailSize = 200;
+  const thumbnailSize = s.width;
   const center = thumbnailSize / 2;
   const size = thumbnailSize * 0.6;
   
@@ -474,10 +697,9 @@ function drawPlaceholder(s, shapeData) {
 }
 
 function drawShapeThumbnail(s, shapeData) {
-  const thumbnailSize = 200;
-  
-  // Create a buffer for the shape rendering
+  const thumbnailSize = s.width;
   const buffer = s.createGraphics(thumbnailSize, thumbnailSize);
+  buffer.angleMode(buffer.RADIANS);
   buffer.background(255);
   
   try {
@@ -488,55 +710,66 @@ function drawShapeThumbnail(s, shapeData) {
       return;
     }
     
-    // Find bounds of original points to calculate scaling
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    data.points.forEach(point => {
-      minX = Math.min(minX, point.x);
-      minY = Math.min(minY, point.y);
-      maxX = Math.max(maxX, point.x);
-      maxY = Math.max(maxY, point.y);
-    });
-    
-    const width = maxX - minX || 200;
-    const height = maxY - minY || 200;
-    
-    // Calculate scale to fit the canvas with more padding for safety
-    const padding = 40; // Increased padding
-    const drawableArea = thumbnailSize - (padding * 2);
-    const scale = Math.min(drawableArea / width, drawableArea / height) * 0.9; // Add 10% safety margin
-    
     // Ensure buffer has createVector method
     if (!buffer.createVector) {
       buffer.createVector = function(x, y, z) {
         return s.createVector(x, y, z);
       };
     }
+
+    // Clone the data to avoid modifying original
+    const thumbnailData = JSON.parse(JSON.stringify(data));
     
-    // Use a more centered approach for translation
-    const centerX = thumbnailSize / 2;
-    const centerY = thumbnailSize / 2;
-    const shapeCenter = {
-      x: minX + width / 2,
-      y: minY + height / 2
-    };
-    
-    // Center and scale the shape in the buffer
-    buffer.push();
-    buffer.translate(
-      centerX - shapeCenter.x * scale,
-      centerY - shapeCenter.y * scale
-    );
-    buffer.scale(scale);
-    
-    // Create a modified copy of data with smaller line widths for thumbnails
-    const thumbnailData = {...data};
+    // Make line width smaller for thumbnails
     if (thumbnailData.lineWidth) {
-      // Reduce line width for better thumbnail appearance
       thumbnailData.lineWidth = {
         min: Math.min(5, thumbnailData.lineWidth.min),
         max: Math.min(8, thumbnailData.lineWidth.max)
       };
     }
+
+    // Calculate the actual center of the shape's points
+    let totalX = 0, totalY = 0;
+    const points = data.points;
+    
+    points.forEach(point => {
+      totalX += point.x;
+      totalY += point.y;
+    });
+    
+    const actualCenter = {
+      x: totalX / points.length,
+      y: totalY / points.length
+    };
+    
+    // Find the bounding box to calculate proper scale
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    points.forEach(point => {
+      minX = Math.min(minX, point.x);
+      minY = Math.min(minY, point.y);
+      maxX = Math.max(maxX, point.x);
+      maxY = Math.max(maxY, point.y);
+    });
+    
+    const width = maxX - minX;
+    const height = maxY - minY;
+    
+    // Calculate scale to fit the thumbnail with padding
+    const padding = 20;
+    const targetWidth = thumbnailSize - (padding * 2);
+    const targetHeight = thumbnailSize - (padding * 2);
+    
+    const scaleX = targetWidth / width;
+    const scaleY = targetHeight / height;
+    const scale = Math.min(scaleX, scaleY) * 0.9; // Use 0.9 for a bit of extra padding
+    
+    // Position the shape in the center of the cell
+    buffer.push();
+    buffer.translate(thumbnailSize / 2, thumbnailSize / 2);
+    buffer.scale(scale);
+    buffer.translate(-actualCenter.x, -actualCenter.y);
     
     // Create a new ShapeGeneratorV2 instance
     const shapeGen = new ShapeGeneratorV2(buffer, thumbnailData);
@@ -550,6 +783,15 @@ function drawShapeThumbnail(s, shapeData) {
     
     buffer.pop();
     
+    // Get the smoothAmount from the shape data or use a default value
+    const smoothAmount = thumbnailData.smoothAmount || 0;
+    
+    // Create an Effects instance for the buffer
+    const effectsInstance = new Effects(buffer, smoothAmount);
+    
+    // Apply the effects with appropriate blur scale
+    effectsInstance.applyEffects(0.25);
+    
     // Draw the buffer to the main canvas
     s.image(buffer, 0, 0);
   } catch (error) {
@@ -561,6 +803,35 @@ function drawShapeThumbnail(s, shapeData) {
       buffer.remove();
     }
   }
+}
+
+// Helper function to calculate shape scale similar to defaultSketch.js
+function calculateShapeScale(points, canvasWidth, canvasHeight) {
+  if (!points || points.length === 0) return 1;
+  
+  // Find the bounding box of all points
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+  
+  points.forEach(point => {
+    if (point.x < minX) minX = point.x;
+    if (point.y < minY) minY = point.y;
+    if (point.x > maxX) maxX = point.x;
+    if (point.y > maxY) maxY = point.y;
+  });
+  
+  // Calculate horizontal and vertical deltas
+  const horizontalDelta = maxX - minX;
+  const verticalDelta = maxY - minY;
+  
+  // Calculate horizontal and vertical scales
+  const horizontalScale = horizontalDelta / canvasWidth;
+  const verticalScale = verticalDelta / canvasHeight;
+  
+  // Return the scale based on the larger dimension
+  const scaleFactor = Math.max(horizontalScale, verticalScale);
+  
+  return scaleFactor ? 1/scaleFactor : 1;
 }
 
 export default GalleryPage;
