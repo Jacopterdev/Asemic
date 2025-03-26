@@ -122,35 +122,12 @@ function MainApp() {
     const firstGroupButtons = [
         {
             label: "Edit Skeleton",
-            onClick: () => setIsSecondGroupVisible(true), // Ensure the second group is visible
         },
         {
             label: "Anatomy",
-            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
-
         },
         {
             label: "Composition",
-            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
-
-        },
-    ];
-
-    const secondGroupButtons = [
-        {
-            label: "./radial.svg",
-            type: "radial",
-            onClick: () => console.log("Secondary Button 1 clicked"),
-        },
-        {
-            label: "./rect.svg",
-            type: "rect",
-            onClick: () => console.log("Secondary Button 2 clicked"),
-        },
-        {
-            label: "./noGrid.svg",
-            type: "none",
-            onClick: () => console.log("Secondary Button 2 clicked"),
         },
     ];
 
@@ -163,16 +140,6 @@ function MainApp() {
 
         console.log(`First group selected index: ${index}`);
     };
-    const handleSecondGroupSelection = (index) => {
-        setToolConfig((prevState) => ({
-            ...prevState,
-            grid: secondGroupButtons[index].type, // Update `grid` with the selected label
-        }));
-
-        console.log(`Second group selected index: ${index}`);
-    };
-
-    const [isSecondGroupVisible, setIsSecondGroupVisible] = useState(true); // Track visibility of the second ButtonGroup
 
     const handleSave = () => {
         // Call p5 sketch's saveShapeLanguage method or any other save logic
@@ -253,13 +220,6 @@ function MainApp() {
                             <TabGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
 
                             <div className="flex items-center space-x-2">
-                                {isSecondGroupVisible && (
-                                    <ButtonGroup 
-                                        buttons={secondGroupButtons} 
-                                        onButtonSelect={handleSecondGroupSelection}
-                                    />
-                                )}
-                                
                                 {/* Action buttons in the top bar - using components now */}
                                 {/* Increased margin from ml-4 to ml-8 for more space */}
                                 <div className="flex items-center space-x-2 ml-24">

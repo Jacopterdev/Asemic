@@ -43,6 +43,11 @@ class SkeletonState {
         this.possibleLinesRenderer  = null;
         this.mouseHandler = null;
 
+        this.xray = false;
+        this.resetXrayTimer = null;
+
+
+
         this.createSkeletonButtons();
 
         // Initialize tutorial system
@@ -237,6 +242,7 @@ class SkeletonState {
 
         //this.bufferGrid.drawShapes(true);
         this.bufferGrid.drawGrid(); // Pass buffer as P5 canvas for drawing
+        if (this.xray) this.bufferGrid.drawShapes(true);
 
     }
 
@@ -525,6 +531,16 @@ class SkeletonState {
         this.mergedParams = newMergedParams;
         this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
         this.bufferGrid.updateMergedParams(newMergedParams);
+
+        // Clear any existing timer
+        if (this.resetXrayTimer) {
+            clearTimeout(this.resetXrayTimer);
+        }
+
+        // Set a timer to disable xray mode after 1 second
+        this.resetXrayTimer = setTimeout(() => {
+            this.xray = false;
+        }, 1000);
     }
 
     updateToolConfig(newToolConfig) {
@@ -540,6 +556,11 @@ class SkeletonState {
             if (this.tutorial.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
                 return true; // Tutorial handled the click
             }
+        }
+
+
+        if(!this.isMouseWithinGrid()){
+            this.xray = true;
         }
 
 
@@ -590,6 +611,10 @@ class SkeletonState {
         const knobDragged = this.gridContext.mouseDragged(this.p.mouseX, this.p.mouseY);
         if (knobDragged) return;
         this.mouseHandler.handleMouseDragged();
+
+        if(!this.isMouseWithinGrid()){
+            this.xray = true;
+        }
     }
 
     mouseReleased() {
@@ -597,6 +622,8 @@ class SkeletonState {
         const knobDragged = this.gridContext.mouseReleased();
         if (knobDragged) return;
         this.mouseHandler.handleMouseReleased();
+
+        this.xray = false;
     }
 
     mouseMoved() {
@@ -645,5 +672,20 @@ class SkeletonState {
 
         }
     };
+
+    isMouseWithinGrid() {
+        // Define the grid boundaries (adjust these values as per your grid dimensions)
+        const gridStartX = LAYOUT.MARGIN; // Grid's starting X position
+        const gridStartY = LAYOUT.MARGIN; // Grid's starting Y position
+        const gridEndX = LAYOUT.GRID_SIZE + 2* LAYOUT.MARGIN; // Grid's ending X position
+        const gridEndY = LAYOUT.GRID_SIZE + LAYOUT.MARGIN; // Grid's ending Y position
+
+        // Check if the mouse is within the grid boundaries
+        const isWithinX = this.p.mouseX >= gridStartX && this.p.mouseX <= gridEndX;
+        const isWithinY = this.p.mouseY >= gridStartY && this.p.mouseY <= gridEndY;
+
+        return isWithinX && isWithinY;
+    }
+
 }
 export default SkeletonState;
