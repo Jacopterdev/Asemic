@@ -149,10 +149,11 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.registerPlugin(EssentialsPlugin); // Register Essentials Plugin
 
             pane.addInput(activeTabData.params, "subShape", {
+                label: "Sub-Shape",
                 options: {
-                    square: "Square",
-                    triangle: "Triangle",
-                    circle: "Circle",
+                    Square: "Square",
+                    Triangle: "Triangle",
+                    Circle: "Circle",
                 },
             }).on('change', (event) => {
                 updateParam('subShape', event.value);
