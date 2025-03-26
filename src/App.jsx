@@ -138,7 +138,6 @@ function MainApp() {
             state: firstGroupButtons[index].label, // Update `state` with the selected label
         }));
 
-        console.log(`First group selected index: ${index}`);
     };
 
     const handleSave = () => {

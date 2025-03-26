@@ -246,7 +246,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             points: points,
         };
         //shapeScale = p.calculateOuterScale(points, LAYOUT.GRID_SIZE+LAYOUT.MARGIN, LAYOUT.GRID_SIZE+LAYOUT.MARGIN);
-        const { scale: returnedshapeScale, centerOffset: returnedshapeOffset } = p.analyzeSkeletonScale(
+        const { scale: returnedshapeScale, tlOffset: returnedshapeOffset } = p.analyzeSkeletonScale(
             points,
             LAYOUT.MARGIN, // x-coordinate of the canvas
             LAYOUT.MARGIN, // y-coordinate of the canvas
@@ -384,13 +384,13 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
      * @param {number} canvasY - The y-coordinate of the canvas's top-left corner.
      * @param {number} canvasWidth - The width of the canvas.
      * @param {number} canvasHeight - The height of the canvas.
-     * @returns {{ scale: number, centerOffset: { x: number, y: number } }} - The calculated scale factor and the center offset.
+     * @returns {{ scale: number, tlOffset: { x: number, y: number } }} - The calculated scale factor and the center offset.
      */
     p.analyzeSkeletonScale = (points, canvasX, canvasY, canvasWidth, canvasHeight) => {
         if (!points || points.length < 3) {
             return {
                 scale: 1, // Default scale if no points are provided.
-                centerOffset: { x: 0, y: 0 } // Default offset since there's no point cloud.
+                tlOffset: { x: 0, y: 0 } // Default offset since there's no point cloud.
             };
         }
 
@@ -418,22 +418,16 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
         const scale = horizontalScale > verticalScale ? 1 / horizontalScale : 1 / verticalScale;
 
-        // Step 4: Calculate the center of the point cloud.
-        const cloudCenterX = minX + horizontalDelta / 2;
-        const cloudCenterY = minY + verticalDelta / 2;
-
-        // Step 5: Calculate the center of the canvas.
-        const canvasCenterX = canvasX + canvasWidth / 2;
-        const canvasCenterY = canvasY + canvasHeight / 2;
-
-        // Step 6: Calculate the offset of the point cloud's center from the canvas's center.
-        const centerOffset = {
-            x: cloudCenterX - canvasCenterX,
-            y: cloudCenterY - canvasCenterY
+        // Step 6: Calculate the offset of the point cloud's topleft
+        //console.log("minX,Y,canX,canY, scale",minX, minY, canvasX, canvasY, scale);
+        const tlOffset = {
+            x: minX - canvasX, // Offset from the canvas's top-left corner
+            y: minY - canvasY  // Offset from the canvas's top-left corner
         };
 
+
         // Return both the scale and the center offset.
-        return { scale, centerOffset };
+        return { scale, tlOffset };
     };
 
     // Method to get the current state as JSON
