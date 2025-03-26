@@ -664,6 +664,7 @@ class SkeletonState {
                     12
                 ); // Adjust parameters
             } else if (gridType === "rect") {
+
                 this.gridContext.setGridType(RectGrid, this.p, 3, 3, xStart, yStart, gridSize);
             } else if (gridType === "none") {
                 this.gridContext.setGridType(NoGrid, this.p, xStart, yStart, gridSize);

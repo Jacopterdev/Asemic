@@ -39,35 +39,16 @@ class KeyboardCell {
 
     drawShape(){
         // Scale the shape to fit appropriately in the cell
-        const scaleFactor =  this.size / this.p.width; // Adjust scale factor to fit the cell size
+        const scaleFactor =  this.size / this.buffer.width; // Adjust scale factor to fit the cell size
 
         // Draw the shape if it exists
         if (this.shape) {
             this.buffer.push();
 
-            /**
-            const shapeScale = this.p.getShapeScale();
-            console.log(shapeScale);
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-            const space = this.size - (this.size * LAYOUT.SHAPE_SCALE);
-
-            const shapeSize = this.size * spacedShapeScale;
-
-            // Translate to the center of the cell
-            //this.buffer.translate(this.x - ((spacedShapeScale*this.size)/2) + (space/2), this.y - ((spacedShapeScale*this.size)/2)+ (space/2));
-            this.buffer.translate(this.x, this.y);
-            // Center the scale behavior
-            this.buffer.translate(this.size / 2, this.size / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
-            //this.buffer.translate(shapeSize / 2, shapeSize / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
-
-            this.buffer.scale(scaleFactor * spacedShapeScale);
-
-            this.buffer.translate(-this.size / 2, -this.size / 2); // Move origin back to the original position
-            //this.buffer.translate(-shapeSize / 2, -shapeSize / 2); // Move origin back to the original position
-            */
-
             //Scale the shape
             const shapeScale = this.p.getShapeScale();
+            const shapeOffset = this.p.getShapeOffset();
+
             const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
             const space = this.size;
 
@@ -75,7 +56,6 @@ class KeyboardCell {
             this.buffer.translate(this.x - ((spacedShapeScale*this.size)/2) + (space/2), this.y - ((spacedShapeScale*this.size)/2) + (space/2));
 
             this.buffer.scale(scaleFactor * spacedShapeScale);
-
 
             // Render the shape
             this.shape.draw();

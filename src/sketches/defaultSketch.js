@@ -13,6 +13,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
     let lineManager;
     let shapeScale;
+    let shapeOffset;
 
     let shapeGenerator;
     let mergedParams;
@@ -53,6 +54,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         lineManager = new LineManager();
         
         shapeScale = 1;
+        shapeOffset = { x: 0, y: 0 };
 
         effects = new Effects(p);
         
@@ -243,12 +245,22 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             lines: lines,
             points: points,
         };
-        shapeScale = p.calculateOuterScale(points, p.width - (2*LAYOUT.MARGIN), p.height - (2*LAYOUT.MARGIN));
-        
+        //shapeScale = p.calculateOuterScale(points, LAYOUT.GRID_SIZE+LAYOUT.MARGIN, LAYOUT.GRID_SIZE+LAYOUT.MARGIN);
+        const { scale: returnedshapeScale, centerOffset: returnedshapeOffset } = p.analyzeSkeletonScale(
+            points,
+            LAYOUT.MARGIN, // x-coordinate of the canvas
+            LAYOUT.MARGIN, // y-coordinate of the canvas
+            LAYOUT.GRID_SIZE, // width of the canvas
+            LAYOUT.GRID_SIZE  // height of the canvas
+        );
+        shapeScale = returnedshapeScale;
+        shapeOffset = returnedshapeOffset;
+
         // Make sure to update the React ref
         mergedParamsRef.current = mergedParams;
     }
     p.getShapeScale = () => shapeScale;
+    p.getShapeOffset = () => shapeOffset;
 
     p.applyEffects = (blurScale) => {
         effects.applyEffects(blurScale);
@@ -333,7 +345,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
      * @param {number} canvasWidth - The width of the canvas.
      * @param {number} canvasHeight - The height of the canvas.
      * @returns {number} - The calculated scale factor.
-     */
+
      p.calculateOuterScale = (points, canvasWidth, canvasHeight) => {
         if (!points || points.length === 0) {
             return 1; // Default scale if no points are provided.
@@ -362,7 +374,67 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         const scaleFactor = Math.max(horizontalScale, verticalScale);
 
         return 1/scaleFactor;
-     }
+     }*/
+
+    /**
+     * Analyzes a point cloud to calculate its scale and center offset relative to a canvas.
+     *
+     * @param {Array<{x: number, y: number}>} points - The list of points with absolute `x` and `y` coordinates.
+     * @param {number} canvasX - The x-coordinate of the canvas's top-left corner.
+     * @param {number} canvasY - The y-coordinate of the canvas's top-left corner.
+     * @param {number} canvasWidth - The width of the canvas.
+     * @param {number} canvasHeight - The height of the canvas.
+     * @returns {{ scale: number, centerOffset: { x: number, y: number } }} - The calculated scale factor and the center offset.
+     */
+    p.analyzeSkeletonScale = (points, canvasX, canvasY, canvasWidth, canvasHeight) => {
+        if (!points || points.length < 3) {
+            return {
+                scale: 1, // Default scale if no points are provided.
+                centerOffset: { x: 0, y: 0 } // Default offset since there's no point cloud.
+            };
+        }
+
+        // Step 1: Find the bounding box of the points (in absolute coordinates).
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+
+        points.forEach(point => {
+            const adjustedX = point.x + canvasX; // Adjust relative to the canvas
+            const adjustedY = point.y + canvasY; // Adjust relative to the canvas
+
+            if (adjustedX < minX) minX = adjustedX; // Leftmost point
+            if (adjustedX > maxX) maxX = adjustedX; // Rightmost point
+            if (adjustedY < minY) minY = adjustedY; // Topmost point
+            if (adjustedY > maxY) maxY = adjustedY; // Bottommost point
+        });
+
+        // Step 2: Compute the bounding box dimensions.
+        const horizontalDelta = maxX - minX; // Width of the bounding box
+        const verticalDelta = maxY - minY;   // Height of the bounding box
+
+        // Step 3: Calculate the scale factor.
+        const horizontalScale = horizontalDelta / canvasWidth;
+        const verticalScale = verticalDelta / canvasHeight;
+
+        const scale = horizontalScale > verticalScale ? 1 / horizontalScale : 1 / verticalScale;
+
+        // Step 4: Calculate the center of the point cloud.
+        const cloudCenterX = minX + horizontalDelta / 2;
+        const cloudCenterY = minY + verticalDelta / 2;
+
+        // Step 5: Calculate the center of the canvas.
+        const canvasCenterX = canvasX + canvasWidth / 2;
+        const canvasCenterY = canvasY + canvasHeight / 2;
+
+        // Step 6: Calculate the offset of the point cloud's center from the canvas's center.
+        const centerOffset = {
+            x: cloudCenterX - canvasCenterX,
+            y: cloudCenterY - canvasCenterY
+        };
+
+        // Return both the scale and the center offset.
+        return { scale, centerOffset };
+    };
 
     // Method to get the current state as JSON
     p.getShapeLanguageAsJSON = () => {
