@@ -12,7 +12,18 @@ import {p5 as p} from "p5/lib/p5.js";
 import RandomPointGenerator from '../RandomPointGenerator.js';
 import DisplayGrid from "../DisplayGrid.js";
 import * as buffer from "node:buffer";
-import Effects from "../Effects.js"; // Import DisplayGrid if not already imported
+import Effects from "../Effects.js";
+import DeleteButton from "../SkeletonButtons/DeleteButton.js";
+import FillGridButton from "../SkeletonButtons/FillGridButton.js";
+import HelpButton from "../SkeletonButtons/HelpButton.js";
+import RadialGridButton from "../SkeletonButtons/RadialGridButton.js";
+import RectGridButton from "../SkeletonButtons/RectGridButton.js";
+import NoGridButton from "../SkeletonButtons/NoGridButton.js";
+import ToggleButtonGroup from "../SkeletonButtons/ToggleButtonGroup.js";
+import radialGridButton from "../SkeletonButtons/RadialGridButton.js";
+import rectGridButton from "../SkeletonButtons/RectGridButton.js";
+import noGridButton from "../SkeletonButtons/NoGridButton.js";
+import EraserToolButton from "../SkeletonButtons/EraserToolButton.js"; // Import DisplayGrid if not already imported
 
 
 class SkeletonState {
@@ -22,37 +33,31 @@ class SkeletonState {
         this.mergedParams = mergedParams;
         this.toolConfig = toolConfig;
         this.currentGridType = "none"; // Track the current grid type
+        this.previousGridType = null;
         this.possibleLinesRenderer = null;
         this.pointRenderer = null;
         this.gridContext = null;
         this.points = points;
         this.lineManager = lineManager;
         this.ephemeralLineAnimator = null;
-        this.gridContext  = null;
         this.possibleLinesRenderer  = null;
         this.mouseHandler = null;
 
-        this.deleteButtonSize = { width: 40, height: 40 };
-        this.isDeleteButtonHovered = false;
-        // Add new fill grid button properties
+        this.createSkeletonButtons();
 
-        this.isFillGridButtonHovered = false;
-        
         // Initialize tutorial system
         const tutorialSeen = typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true';
         this.tutorial = new Tutorial(p);
-        this.tutorial.active = !tutorialSeen; // Only show if not seen before
+        this.tutorial.active = false; // Only show if not seen before
         
         // Help button properties
-        this.helpButtonSize = 40;
+        this.helpButtonSize = LAYOUT.BUTTON_SIZE;
         this.helpButtonX = LAYOUT.GRID_SIZE - 60;
-        this.helpButtonY = 20;
+        this.helpButtonY = LAYOUT.MARGIN;
         
         this.init();
 
         //BUFFER
-        this.bufferX = 810; // X-position of the buffer (canvas width + 10px margin)
-        this.bufferY = 0;   // Y-position of the buffer
         this.bufferWidth = 350; // Buffer width
         this.bufferHeight = 800; // Buffer height
 
@@ -61,6 +66,110 @@ class SkeletonState {
         this.initBufferGrid(); // Initialize the buffer grid
 
     }
+
+    createSkeletonButtons(){
+        let x = LAYOUT.GRID_SIZE;
+        let y = LAYOUT.MARGIN;
+
+        const buttonsCanFit = Math.floor((LAYOUT.GRID_SIZE - LAYOUT.BUTTON_SIZE - LAYOUT.MARGIN) / (LAYOUT.BUTTON_SIZE + LAYOUT.BUTTON_PADDING));
+        console.log("Buttons can fit:", buttonsCanFit);
+
+        // Function to calculate button position based on index
+        const calculateButtonY = (index) => {
+            return y + index * (LAYOUT.BUTTON_SIZE + LAYOUT.BUTTON_PADDING);
+        };
+
+        // Create an array to store the buttons
+        this.skeletonButtons = [];
+
+        // Add buttons dynamically based on index
+        this.deleteButton = new DeleteButton(
+            this.p,
+            x, // x-coordinate for all buttons in the column
+            calculateButtonY(buttonsCanFit), // Dynamic y-coordinate for the button
+            () => this.deleteAllPoints() // Define delete callback
+        );
+        this.skeletonButtons.push(this.deleteButton);
+
+        this.fillGridButton = new FillGridButton(
+            this.p,
+            x,
+            calculateButtonY(buttonsCanFit-1),
+            () => this.fillGridWithPoints()
+        );
+        this.skeletonButtons.push(this.fillGridButton);
+
+        this.helpButton = new HelpButton(
+            this.p,
+            x,
+            calculateButtonY(0),
+            () => this.tutorial.toggleTutorial()
+        )
+        this.skeletonButtons.push(this.helpButton);
+
+        /** GRID BUTTONS */
+        this.radialGridButton = new RadialGridButton(
+            this.p,
+            x,
+            calculateButtonY(3),
+            () => {
+                this.setGrid("radial");
+                this.gridButtons.toggle(this.radialGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.radialGridButton);
+
+        this.rectGridButton = new RectGridButton(
+            this.p,
+            x,
+            calculateButtonY(4),
+            () => {
+                this.setGrid("rect");
+                this.gridButtons.toggle(this.rectGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.rectGridButton);
+
+        this.noGridButton = new NoGridButton(
+            this.p,
+            x,
+            calculateButtonY(5),
+            () => {
+                this.setGrid("none");
+                this.gridButtons.toggle(this.noGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.noGridButton);
+
+        this.gridButtons = new ToggleButtonGroup([this.radialGridButton, this.rectGridButton, this.noGridButton]);
+        this.gridButtons.toggle(this.noGridButton); //Default Grid.
+
+        /** TOOL BUTTONS */
+        //Add her, i draw og i onclick.
+        this.eraserToolButton = new EraserToolButton(
+            this.p,
+            x,
+            calculateButtonY(7),
+            () => {
+                //Her kan man kalde den metode der skal kaldes når knappen trykkes på.
+
+                //setTool()
+                this.toolButtons.toggle(this.eraserToolButton);
+            },
+            true
+        )
+
+        //Tilføj tool buttons til denne gruppe:
+        this.toolButtons = new ToggleButtonGroup([this.eraserToolButton]);
+        //Toggle the default tool on:
+        this.toolButtons.toggle(this.eraserToolButton);
+
+    }
+
+
 
     init(){
         // Other initialization code...
@@ -129,140 +238,6 @@ class SkeletonState {
         //this.bufferGrid.drawShapes(true);
         this.bufferGrid.drawGrid(); // Pass buffer as P5 canvas for drawing
 
-    }
-
-
-
-
-    // Update drawDeleteButton method to make the button bigger
-    drawDeleteButton() {
-        const size = 30; // Larger button size (was 24)
-        const iconX = LAYOUT.GRID_SIZE;
-        const iconY = LAYOUT.GRID_SIZE - size - LAYOUT.MARGIN;
-        
-        // Check if mouse is hovering over button
-        this.isDeleteButtonHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
-
-        if(this.isDeleteButtonHovered) this.p.cursor(this.p.HAND);
-        
-        // Match your index.css button styles
-        if(this.isDeleteButtonHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Draw trash can icon in text-gray-600 color (rgb(75, 85, 99))
-        this.p.stroke(75, 85, 99); // text-gray-600
-        this.p.strokeWeight(1);
-        this.p.noFill();
-        
-        // Keep icon size the same - just centered in the larger button
-        const iconSize = 18; // Icon size (unchanged)
-        const margin = (size - iconSize) / 2; // Center the icon
-        const trashWidth = iconSize * 0.6;
-        const trashHeight = iconSize * 0.5;
-        const trashX = iconX + (size - trashWidth) / 2;
-        const trashY = iconY + margin + size * 0.15;
-        
-        // Trash can body
-        this.p.rect(trashX, trashY, trashWidth, trashHeight, 1);
-        
-        // Trash can lid
-        const lidWidth = trashWidth * 1.1;
-        const lidHeight = size * 0.05;
-        const lidX = iconX + (size - lidWidth) / 2;
-        const lidY = trashY - lidHeight - 1;
-        this.p.line(lidX, lidY, lidX + lidWidth, lidY);
-        
-        // Handle on lid
-        const handleWidth = lidWidth * 0.2;
-        const handleHeight = size * 0.05;
-        const handleX = iconX + (size - handleWidth) / 2;
-        const handleY = lidY - handleHeight;
-        this.p.rect(handleX, handleY, handleWidth, handleHeight, 1);
-        
-        // Update position and size properties for hit detection
-        this.deleteButtonPosition = { x: iconX, y: iconY };
-        this.deleteButtonSize = { width: size, height: size };
-    }
-
-    // Update drawFillGridButton method to make the button bigger
-    drawFillGridButton() {
-        const size = 30; // Larger button size (was 24)
-        const iconX = LAYOUT.GRID_SIZE; // Position left of delete button
-        const iconY = LAYOUT.GRID_SIZE - 2*size - LAYOUT.MARGIN - 1 * 0.5 * LAYOUT.PADDING;
-        
-        // Check if mouse is hovering over button
-        this.isFillGridButtonHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
-
-        if(this.isFillGridButtonHovered) this.p.cursor(this.p.HAND);
-        
-        // Match your index.css button styles
-        if(this.isFillGridButtonHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Draw grid fill icon in text-gray-600 color (rgb(75, 85, 99))
-        this.p.stroke(75, 85, 99); // text-gray-600
-        this.p.strokeWeight(1);
-        this.p.noFill();
-        
-        // Keep icon size the same - just centered in the larger button
-        const iconSize = 18; // Icon size
-        const margin = (size - iconSize) / 2; // Center the icon
-        const gridSize = iconSize * 0.8;
-        const gridX = iconX + (size - gridSize) / 2;
-        const gridY = iconY + (size - gridSize) / 2;
-        
-        // Draw grid outline
-        this.p.rect(gridX, gridY, gridSize, gridSize, 1);
-        
-        // Draw grid lines
-        const cellSize = gridSize / 2;
-        
-        // Vertical line
-        this.p.line(gridX + cellSize, gridY, gridX + cellSize, gridY + gridSize);
-        
-        // Horizontal line
-        this.p.line(gridX, gridY + cellSize, gridX + gridSize, gridY + cellSize);
-        
-        // Draw points at the intersections
-        this.p.noStroke();
-        this.p.fill(75, 85, 99); // text-gray-600
-        const dotSize = 2; // Small dots
-        
-        // Draw points at intersections
-        for (let i = 0; i <= 2; i++) {
-            for (let j = 0; j <= 2; j++) {
-                this.p.ellipse(
-                    gridX + i * cellSize,
-                    gridY + j * cellSize,
-                    dotSize,
-                    dotSize
-                );
-            }
-        }
-        
-        // Update position and size properties for hit detection
-        this.fillGridButtonPosition = { x: iconX, y: iconY };
-        this.fillGridButtonSize = { width: size, height: size };
     }
 
     // Add method to fill grid with points
@@ -481,7 +456,7 @@ class SkeletonState {
 
     // Modify the draw method to handle the null selectedPoint
     draw() {
-        this.p.cursor(this.p.ARROW)
+        this.p.cursor(this.p.ARROW);
         this.updateGridContext();
         const missRadius = this.mergedParams.missArea;
         this.pointRenderer.setMissRadius(missRadius);
@@ -515,20 +490,28 @@ class SkeletonState {
         if (anyHovered) this.p.cursor(this.p.HAND);
 
         // Draw the delete button
-        this.drawDeleteButton();
+        //this.drawDeleteButton();
+        this.deleteButton.draw();
         
         // Draw the fill grid button
-        this.drawFillGridButton();
+        //this.drawFillGridButton();
+        this.fillGridButton.draw();
         
         // Draw help button if tutorial is inactive
         if (this.tutorial && !this.tutorial.active) {
-            this.drawHelpButton();
+            this.helpButton.draw();
         }
         
         // Draw tutorial overlay last so it appears on top
         if (this.tutorial && this.tutorial.active) {
             this.tutorial.draw();
         }
+
+        this.radialGridButton.draw();
+        this.rectGridButton.draw();
+        this.noGridButton.draw();
+
+        this.eraserToolButton.draw();
 
         this.drawBufferGrid();
         // Render the buffer on the right-hand side of the canvas
@@ -537,51 +520,6 @@ class SkeletonState {
         this.p.image(this.buffer, bufferX, bufferY);
     }
 
-    // Update drawHelpButton method to make the button bigger
-    drawHelpButton() {
-        this.p.push();
-    
-        // Make the button the same size as utility buttons
-        const size = 30; // Larger button size (was 24)
-    
-        // Position at top-right
-        const iconX = LAYOUT.GRID_SIZE;
-        const iconY = LAYOUT.MARGIN; // Keep it at the top
-    
-        // Update the class properties to reflect size and position
-        this.helpButtonSize = size;
-        this.helpButtonX = iconX;
-        this.helpButtonY = iconY;
-    
-        // Check if mouse is hovering over button
-        const isHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
-    
-        // Change cursor to hand when hovering
-        if(isHovered) this.p.cursor(this.p.HAND);
-    
-        // Match your index.css button styles
-        if(isHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Keep question mark size similar but centered in the larger button
-        this.p.fill(75, 85, 99); // text-gray-600
-        this.p.noStroke();
-        this.p.textSize(16); // Appropriate size for the question mark
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("?", iconX + size/2, iconY + size/2 + 1); // +1 for better vertical alignment
-    
-        this.p.pop();
-    }
 
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
@@ -603,28 +541,43 @@ class SkeletonState {
                 return true; // Tutorial handled the click
             }
         }
-        
-        // Check if the delete button was clicked
-        if (this.isDeleteButtonHovered) {
-            this.deleteAllPoints();
+
+
+        if(this.deleteButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.deleteButton.click();
             return;
         }
         
         // Check if the fill grid button was clicked
-        if (this.isFillGridButtonHovered) {
-            this.fillGridWithPoints();
+        if (this.fillGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.fillGridButton.click();
             return;
         }
         
         // Check for help button clicks when tutorial is inactive
-        if (this.tutorial && !this.tutorial.active &&
-            this.p.mouseX >= this.helpButtonX && 
-            this.p.mouseX <= this.helpButtonX + this.helpButtonSize &&
-            this.p.mouseY >= this.helpButtonY && 
-            this.p.mouseY <= this.helpButtonY + this.helpButtonSize) {
-            
-            this.tutorial.toggleTutorial();
-            return true;
+        if (this.helpButton.checkHover(this.p.mouseX, this.p.mouseY) && !this.tutorial.active) {
+            this.helpButton.click();
+            return;
+        }
+
+        if(this.radialGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.radialGridButton.click();
+            return;
+        }
+
+        if(this.rectGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.rectGridButton.click();
+            return;
+        }
+
+        if(this.noGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.noGridButton.click();
+            return;
+        }
+
+        if(this.eraserToolButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.eraserToolButton.click();
+            return;
         }
         
         const knobDragged = this.gridContext.mousePressed(this.p.mouseX, this.p.mouseY);
@@ -656,22 +609,24 @@ class SkeletonState {
         this.bufferGrid.handleScroll(event.delta);
     }
 
+    setGrid(type = "none"){
+        this.currentGridType = type;
+    }
+
     updateGridContext = () => {
         let xStart = LAYOUT.MARGIN;
         let yStart = LAYOUT.MARGIN;
         let gridSize = LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2;
 
-        // Position the delete button at the bottom right corner of the canvas
-        this.deleteButtonPosition = { 
-            x: LAYOUT.GRID_SIZE - this.deleteButtonSize.width - LAYOUT.MARGIN,
-            y: LAYOUT.GRID_SIZE - this.deleteButtonSize.height - LAYOUT.MARGIN
-        };
-
         // Retrieve the latest grid type from toolConfig
-        const toolConfig = this.toolConfig;
-        const gridType = toolConfig?.grid || "none";
+        //const toolConfig = this.toolConfig;
+        //const gridType = toolConfig?.grid || "none";
+
+        const gridType = this.currentGridType;
+        const previousGridType = this.previousGridType;
+
         // Only update the gridContext if the gridType has changed
-        if (this.currentGridType !== gridType) {
+        if (previousGridType !== gridType) {
             if (gridType === "radial") {
                 this.gridContext.setGridType(RadialGrid,
                     this.p,
@@ -686,7 +641,8 @@ class SkeletonState {
             } else if (gridType === "none") {
                 this.gridContext.setGridType(NoGrid, this.p, xStart, yStart, gridSize);
             }
-            this.currentGridType = gridType; // Update current grid type
+            this.previousGridType = gridType; // Backup the current grid type
+
         }
     };
 }
