@@ -6,7 +6,7 @@ import DownloadButton from "./DownloadButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 
 class DisplayGrid {
-    constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
+    constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams, buffer=null) {
         this.p = p;
         this.cols = cols;
         this.rows = rows;
@@ -32,10 +32,12 @@ class DisplayGrid {
         this.downloadButtons = [];
         
         // Create initial buttons for all cells
-        this.createDownloadButtons();
+        if(!buffer) this.createDownloadButtons();
 
         this.hoveredCellRow = -1;
         this.hoveredCellCol = -1;
+
+        this.buffer = buffer;
     }
 
     // Initialize the grid and assign letters
@@ -70,6 +72,7 @@ class DisplayGrid {
                 }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if(this.buffer){shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);}
 
                 // Get noise position for the letter from the ShapeDictionary
                 const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
@@ -112,7 +115,10 @@ class DisplayGrid {
     }
 
     drawGrid() {
-        const p = this.p;
+        let p = this.p;
+        if (this.buffer) {
+            p = this.buffer;
+        }
 
         // First check which cell is being hovered
         this.updateHoveredCell();
@@ -147,6 +153,9 @@ class DisplayGrid {
                 p.text(cell.letter, cell.x + LAYOUT.PADDING, cellYWithScroll + LAYOUT.PADDING + 10);
             }
         }
+
+        //Only draw download buttons if its not a buffer.
+        if(this.buffer) return;
         
         // Draw buttons for visible cells
         for (let j = 0; j < this.grid.length; j++) {
@@ -180,14 +189,19 @@ class DisplayGrid {
                 
                 // Draw the button if visible
                 if (button.isVisible) {
-                    //button.draw(); //TODO
+                    button.draw();
                 }
             }
         }
     }
 
     drawShapes(xray = false){
-        const p = this.p;
+        let p = this.p;
+        if (this.buffer) {
+            p = this.buffer;
+        }
+
+
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
@@ -196,15 +210,16 @@ class DisplayGrid {
                 if (cell.shape !== null) {
                     p.push(); // Save current transformation state
 
+
                     //Scale the shape
                     const shapeScale = this.p.getShapeScale();
                     const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
                     const space = cell.w;
 
                     //Find the new margin offset.
-                    this.p.translate(cell.x - ((spacedShapeScale*cell.w)/2) + (space/2), cellYWithScroll - ((spacedShapeScale*cell.w)/2) + (space/2));
+                    p.translate(cell.x - ((spacedShapeScale*cell.w)/2) + (space/2), cellYWithScroll - ((spacedShapeScale*cell.w)/2) + (space/2));
 
-                    this.p.scale(this.scale * spacedShapeScale);
+                    p.scale(this.scale * spacedShapeScale);
 
                     /**
                     // Translate to the top-left corner of the current cell
@@ -231,6 +246,7 @@ class DisplayGrid {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 cell.shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if(this.buffer){cell.shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);}
 
                 // Get noise position for the letter from the ShapeDictionary
                 const { x: noiseX, y: noiseY } = shapeDictionary.getValue(cell.letter);
@@ -336,6 +352,7 @@ class DisplayGrid {
                 }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if(this.buffer){shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);}
                 // Get noise position for the letter from the ShapeDictionary
                 //const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
 
