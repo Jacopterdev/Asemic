@@ -217,9 +217,7 @@ class DisplayGrid {
                     // Compute the total scale relative to the cell size
                     const totalScale = this.scale * spacedShapeScale;
 
-                    const posOffset = (cell.w - (cell.w*(totalScale)));
-                    console.log("shapeOffset", shapeOffset);
-
+                    const posOffset = (cell.w - (cell.w*(spacedShapeScale)));
                     // Calculate the translation needed to center the shape
                     //const centerX = cell.x + cell.w / 2;
                     //const centerY = cellYWithScroll + cell.h / 2;
@@ -230,7 +228,7 @@ class DisplayGrid {
 
                     // Apply translation and scaling transformation
                     //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
-                    p.translate(cell.x + posOffset - (shapeOffset.x*totalScale), cellYWithScroll + posOffset - (shapeOffset.y*totalScale));
+                    p.translate(cell.x + posOffset + (shapeOffset.x), cellYWithScroll + posOffset + (shapeOffset.y));
 
                     p.scale(totalScale);
 
