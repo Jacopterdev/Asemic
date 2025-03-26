@@ -24,7 +24,9 @@ import radialGridButton from "../SkeletonButtons/RadialGridButton.js";
 import rectGridButton from "../SkeletonButtons/RectGridButton.js";
 import noGridButton from "../SkeletonButtons/NoGridButton.js";
 import EraserToolButton from "../SkeletonButtons/EraserToolButton.js"; // Import DisplayGrid if not already imported
-
+import ConnectToOneButton from "../SkeletonButtons/ConnectToOneButton.js";
+import ConnectWithoutCrossingButton from "../SkeletonButtons/ConnectWithoutCrossingButton.js";
+import ConnectToAllButton from "../SkeletonButtons/ConnectToAllButton.js";
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -154,18 +156,62 @@ class SkeletonState {
             x,
             calculateButtonY(7),
             () => {
-                //Her kan man kalde den metode der skal kaldes når knappen trykkes på.
-
-                //setTool()
+                this.setTool("eraser"); // Define the tool type for eraser
                 this.toolButtons.toggle(this.eraserToolButton);
             },
             true
         )
+        this.skeletonButtons.push(this.eraserToolButton);
 
-        //Tilføj tool buttons til denne gruppe:
-        this.toolButtons = new ToggleButtonGroup([this.eraserToolButton]);
-        //Toggle the default tool on:
-        this.toolButtons.toggle(this.eraserToolButton);
+        // Connect to one button (simple line between two points)
+        this.connectToOneButton = new ConnectToOneButton(
+            this.p,
+            x,
+            calculateButtonY(8),
+            () => {
+                this.setTool("connectToOne");
+                this.toolButtons.toggle(this.connectToOneButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectToOneButton);
+
+        // Connect without crossing (four connected points forming a square)
+        this.connectWithoutCrossingButton = new ConnectWithoutCrossingButton(
+            this.p,
+            x,
+            calculateButtonY(9),
+            () => {
+                this.setTool("connectWithoutCrossing");
+                this.toolButtons.toggle(this.connectWithoutCrossingButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectWithoutCrossingButton);
+
+        // Connect to all (six points with crossing connections)
+        this.connectToAllButton = new ConnectToAllButton(
+            this.p,
+            x,
+            calculateButtonY(10),
+            () => {
+                this.setTool("connectToAll");
+                this.toolButtons.toggle(this.connectToAllButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectToAllButton);
+
+        // Create the toggle button group
+        this.toolButtons = new ToggleButtonGroup([
+            this.eraserToolButton, 
+            this.connectToOneButton, 
+            this.connectWithoutCrossingButton,
+            this.connectToAllButton
+        ]);
+
+        // Set connectToOneButton as the default tool
+        this.toolButtons.toggle(this.connectToOneButton);
 
     }
 
@@ -417,6 +463,24 @@ class SkeletonState {
         }
     }
 
+    // Add this method to your SkeletonState class
+    setTool(toolType) {
+        // You can store the current tool type for use in other methods
+        this.currentToolType = toolType;
+        
+        // Update the mouseHandler behavior based on the selected tool
+        if (this.mouseHandler) {
+            this.mouseHandler.setToolMode(toolType);
+            
+            // Reset the lastAddedPoint when switching to connectToOne tool
+            if (toolType === "connectToOne") {
+                this.mouseHandler.lastAddedPoint = null;
+            }
+        }
+        
+        console.log(`Tool changed to: ${toolType}`);
+    }
+
     // Add this method to handle delete functionality
     deleteAllPoints() {
         // Record state before deletion if recordCurrentState exists
@@ -512,6 +576,9 @@ class SkeletonState {
         this.noGridButton.draw();
 
         this.eraserToolButton.draw();
+        this.connectToOneButton.draw();
+        this.connectWithoutCrossingButton.draw();
+        this.connectToAllButton.draw();
 
         this.drawBufferGrid();
         // Render the buffer on the right-hand side of the canvas
@@ -577,6 +644,21 @@ class SkeletonState {
 
         if(this.eraserToolButton.checkHover(this.p.mouseX, this.p.mouseY)) {
             this.eraserToolButton.click();
+            return;
+        }
+        
+        if(this.connectToOneButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToOneButton.click();
+            return;
+        }
+        
+        if(this.connectWithoutCrossingButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectWithoutCrossingButton.click();
+            return;
+        }
+        
+        if(this.connectToAllButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToAllButton.click();
             return;
         }
         
