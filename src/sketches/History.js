@@ -63,6 +63,8 @@ class History {
         } catch (error) {
             console.error("Error adding state to history:", error);
         }
+
+        console.log(this.currentIndex, "index");
     }
 
     // Helper method to check if a state is significantly different from the last recorded state
@@ -102,8 +104,38 @@ class History {
         
         // Check if any parameters changed
         const newParamKeys = Object.keys(newState.params);
+        const lastParamKeys = Object.keys(lastState.params);
+
+        // Check for added or removed numeric keys (subshapes)
+        const newNumericKeys = newParamKeys.filter(key => !isNaN(parseInt(key)));
+        const lastNumericKeys = lastParamKeys.filter(key => !isNaN(parseInt(key)));
+
+        // Log for debugging
+        console.log("Numeric keys (subshapes) in new state:", newNumericKeys);
+        console.log("Numeric keys (subshapes) in last state:", lastNumericKeys);
+
+        // If the number of numeric keys changed, a subshape was added or removed
+        if (newNumericKeys.length !== lastNumericKeys.length) {
+            console.log("Subshape count changed, detecting difference in history");
+            return true;
+        }
+
+        // Check numeric keys first (subshapes)
+        for (const key of newNumericKeys) {
+            if (!lastState.params[key] || 
+                JSON.stringify(newState.params[key]) !== JSON.stringify(lastState.params[key])) {
+                console.log(`Subshape ${key} changed or is new`);
+                return true;
+            }
+        }
+
+        // Check regular parameters
         for (const key of newParamKeys) {
+            // Skip numeric keys as we already checked them
+            if (!isNaN(parseInt(key))) continue;
+            
             if (JSON.stringify(newState.params[key]) !== JSON.stringify(lastState.params[key])) {
+                console.log(`Parameter ${key} changed`);
                 return true;
             }
         }
@@ -144,6 +176,7 @@ class History {
     }
     
     canUndo() {
+        console.log(this.currentIndex, "index af undo");
         return this.currentIndex > 0;
     }
     

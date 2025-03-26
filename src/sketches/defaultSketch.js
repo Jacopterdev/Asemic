@@ -79,6 +79,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     const recordCurrentState = (changedParam = null) => {
         if (isUndoRedoOperation) return; // Don't record during undo/redo
 
+        console.log("Subshapesstaate:", mergedParams);
 
         const state = {
             points: JSON.parse(JSON.stringify(points)),
@@ -88,6 +89,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         // Only push if it's different from the last state
         if (history.isDifferentFromLastState(state)) {
+            console.log("CHHAAAAANGE", state);
             history.pushState(state, changedParam);
         }
     };
@@ -114,7 +116,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         try {
             // Restore points
             points.length = 0;
-            state.points.forEach(point => points.push({...point}));
+            state.points.forEach(point => points.push({ ...point }));
             
             // Restore lines
             if (lineManager) {
@@ -131,18 +133,42 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                     }
                 });
             }
-            
-            // Restore parameters
+            console.log("state", JSON.parse(JSON.stringify(state.params)));            // Restore parameters
+            // First clear all existing parameters that are numeric (subshapes)
+const currentNumericKeys = Object.keys(mergedParamsRef.current).filter(key => !isNaN(parseInt(key)));
+currentNumericKeys.forEach(key => {
+    delete mergedParamsRef.current[key];
+});
+
+            console.log("before update", JSON.parse(JSON.stringify(mergedParamsRef.current)));            // Restore parameters
             Object.keys(state.params).forEach(key => {
                 mergedParamsRef.current[key] = state.params[key];
             });
-            
+
+            console.log("after update", JSON.parse(JSON.stringify(mergedParamsRef.current)));
+
+
             // Update local mergedParams
             mergedParams = mergedParamsRef.current;
+            console.log("after2 update", JSON.parse(JSON.stringify(mergedParams)));            // Restore parameters
+
             
-            // Update Tweakpane UI
+            // Update Tweakpane UI with explicit information about subshapes
+            const uiParams = {};
+
+            // First copy all parameters except points and lines
+            Object.keys(state.params).forEach(key => {
+                if (key !== 'points' && key !== 'lines') {
+                    uiParams[key] = state.params[key];
+                }
+            });
+
+            // Set a special flag to ensure complete UI refresh 
+            uiParams.updateSubshapes = true;
+
+            // Dispatch the event with clean parameters
             const tweakpaneUpdateEvent = new CustomEvent('tweakpane-update', {
-                detail: mergedParams
+                detail: uiParams
             });
             window.dispatchEvent(tweakpaneUpdateEvent);
             
@@ -249,12 +275,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         // Record state after mouse release (likely a point was added, moved, or removed)
         if (!isUndoRedoOperation) {
-            console.log(lineManager, "lineManagerMOUSE RELEASED");
             if (lineManager) {
-                console.log(lineManager, "lineManagerMOUSE RELEASEDAFTER CHECK");
                 recordCurrentState("mouseAction");
             }
-            //recordCurrentState("mouseAction");
         }
         
         return result;
@@ -262,7 +285,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     p.keyPressed = (evt) => {
         // Handle Undo - Cmd+Z (Mac) or Ctrl+Z (Windows)
         if ((evt.key === 'z' || evt.key === 'Z') && (evt.ctrlKey || evt.metaKey)) {
+            console.log("s");
+
             if (history?.canUndo()) {
+                console.log("Undo in progress");
                 const state = history.undo();
                 if (restoreState(state)) {
                     console.log("Undo successful");

@@ -111,7 +111,7 @@ function MainApp() {
     }, []);
 
     const mergedParams = { ...params, ...subShapeParams };
-    console.log("lastupdated param",lastUpdatedParam);
+
 
     // NEW: State for managing selected buttons for each group
     const [toolConfig, setToolConfig] = useState({
