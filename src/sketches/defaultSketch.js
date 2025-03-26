@@ -51,11 +51,11 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         //gridSize = p.width - margin * 2;
 
         lineManager = new LineManager();
-        console.log("LineManager created", lineManager);
+        
         shapeScale = 1;
 
         effects = new Effects(p);
-        console.log(shapeDictionary.getDictionary());
+        
 
         /** STATE MANAGEMENT */
         // Pre-create each state and store them
@@ -83,7 +83,6 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     // Add function to record current state
     const recordCurrentState = (changedParam = null) => {
         if (isUndoRedoOperation) return; // Don't record during undo/redo
-
 
         const state = {
             points: JSON.parse(JSON.stringify(points)),
@@ -119,7 +118,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         try {
             // Restore points
             points.length = 0;
-            state.points.forEach(point => points.push({...point}));
+            state.points.forEach(point => points.push({ ...point }));
             
             // Restore lines
             if (lineManager) {
@@ -138,16 +137,38 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             }
             
             // Restore parameters
+            // First clear all existing parameters that are numeric (subshapes)
+            const currentNumericKeys = Object.keys(mergedParamsRef.current).filter(key => !isNaN(parseInt(key)));
+            currentNumericKeys.forEach(key => {
+                delete mergedParamsRef.current[key];
+            });
+
+            // Restore parameters
             Object.keys(state.params).forEach(key => {
                 mergedParamsRef.current[key] = state.params[key];
             });
-            
+
             // Update local mergedParams
             mergedParams = mergedParamsRef.current;
             
-            // Update Tweakpane UI
+            // Update Tweakpane UI with explicit information about subshapes
+            const uiParams = {};
+
+            // First copy all parameters except points and lines
+            Object.keys(state.params).forEach(key => {
+                if (key !== 'points' && key !== 'lines') {
+                    uiParams[key] = state.params[key];
+                }
+            });
+
+            // Set a special flag to ensure complete UI refresh 
+            uiParams.updateSubshapes = true;
+            
+ 
+
+            // Dispatch the event with clean parameters
             const tweakpaneUpdateEvent = new CustomEvent('tweakpane-update', {
-                detail: mergedParams
+                detail: uiParams
             });
             window.dispatchEvent(tweakpaneUpdateEvent);
             
@@ -270,12 +291,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         // Record state after mouse release (likely a point was added, moved, or removed)
         if (!isUndoRedoOperation) {
-            console.log(lineManager, "lineManagerMOUSE RELEASED");
             if (lineManager) {
-                console.log(lineManager, "lineManagerMOUSE RELEASEDAFTER CHECK");
                 recordCurrentState("mouseAction");
             }
-            //recordCurrentState("mouseAction");
         }
         
         return result;
@@ -283,10 +301,13 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     p.keyPressed = (evt) => {
         // Handle Undo - Cmd+Z (Mac) or Ctrl+Z (Windows)
         if ((evt.key === 'z' || evt.key === 'Z') && (evt.ctrlKey || evt.metaKey)) {
+            
+
             if (history?.canUndo()) {
+                
                 const state = history.undo();
                 if (restoreState(state)) {
-                    console.log("Undo successful");
+                    
                     return false; // Prevent default behavior
                 }
             }
@@ -393,7 +414,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 }
             });
             
-            console.log("UI params to update:", uiParams);
+            
             
             // Update mergedParams with loaded data
             Object.keys(loadedData).forEach(key => {
@@ -407,16 +428,13 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             if (loadedData.points && Array.isArray(loadedData.points)) {
                 points.length = 0; // Clear existing points
                 loadedData.points.forEach(point => points.push({...point})); // Create fresh objects
-                console.log(`Loaded ${points.length} points`);
+                
             }
             
             if (loadedData.lines && Array.isArray(loadedData.lines)) {
                 lineManager.clearAllLines();
                 
-                // Check if all loaded lines have selected property
-                const allHaveSelectedProp = loadedData.lines.every(line => 'selected' in line);
-                console.log(`All lines have selected property: ${allHaveSelectedProp}`);
-                
+               
                 loadedData.lines.forEach(line => {
                     // Find the actual point objects in our points array
                     const startPoint = points.find(p => p.id === line.start.id);
@@ -432,8 +450,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                     }
                 });
                 
-                console.log(`Loaded ${lineManager.lines.length} lines`);
-                console.log(`Selected lines after push: ${lineManager.getSelectedLines().length}`);
+
             }
             
             // Rebuild the skeleton with loaded data
@@ -442,11 +459,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             // Force selection of all lines in case the line manager has internal state
             if (lineManager && typeof lineManager.selectAllLines === 'function') {
                 lineManager.selectAllLines();
-                console.log(`Selected lines after selectAllLines: ${lineManager.getSelectedLines().length}`);
             } else {
                 // If no selectAllLines method, manually set all to selected
                 lineManager.lines.forEach(line => line.selected = true);
-                console.log(`Manually set all lines to selected: ${lineManager.getSelectedLines().length}`);
+                
             }
             
             // Update current state
@@ -464,14 +480,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 detail: uiParams
             });
             window.dispatchEvent(tweakpaneUpdateEvent);
-            
-            // Debug logging
-            console.log("State after loading:", currentState?.name);
-            console.log("Points loaded:", points.length);
-            console.log("Lines loaded:", lineManager.lines.length);
-            console.log("Selected lines:", lineManager.getSelectedLines().length);
-            
-            console.log("Shape language loaded successfully");
+
             return true;
         } catch (error) {
             console.error("Failed to load shape language:", error);
@@ -529,7 +538,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 
                 // Load the shape language data
                 p.loadShapeLanguageFromJSON(JSON.stringify(shapeData));
-                console.log("Successfully loaded shape language from URL");
+                
                 return true;
             }
         } catch (error) {

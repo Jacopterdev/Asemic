@@ -42,26 +42,14 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         }
 
     };
-    const [tabs, setTabs] = useState([
-        {
-            id: 1,
-            params: {
-                subShape: "Triangle",
-                connection: "Along", // Default value
-                rotationType: "relative", // Default value
-                angle: {min: 0, max: 360},
-                amount: {min: 1, max: 3}, // Default interval
-                size: {min: 20, max: 160}, // Default interval
-                distort: {min: 0, max: 0}, // Default interval
-            },
-            pane: null,
-        },
-    ]); // Initial tabs with parameters
+   
+    // Initialize with an empty array instead of a default tab
+    const [tabs, setTabs] = useState([]); // No initial tabs
 
-    const [activeTab, setActiveTab] = useState(tabs.length > 0 ? tabs[0].id : null);
+    const [activeTab, setActiveTab] = useState(null); // No active tab initially
     const paneContainerRefs = useRef({}); // Track container refs for each tab
     const panes = useRef({}); // Track Tweakpane instances for each tab
-    const nextTabId = useRef(2); // Start with 2 because tabs 1 already exist
+    const nextTabId = useRef(1); // Start with ID 1 for the first tab that will be added
 
     useEffect(() => {
         const initialParams = {};
@@ -273,7 +261,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         const handleTweakpaneUpdate = (event) => {
             if (!event.detail) return;
             
-            console.log("TabsWithPanes received update event:", event.detail);
+            
             
             // Check if we have any subshape data in the loaded parameters
             const subShapeData = {};
@@ -289,69 +277,76 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 }
             });
             
-            if (hasSubShapeData) {
-                console.log("Found subshape data in loaded file:", subShapeData);
+            // Detect if we need a full refresh (e.g., during undo/redo operations)
+            const needsFullRefresh = event.detail.forceRebuild || event.detail.updateSubshapes;
+            
+            if (hasSubShapeData || needsFullRefresh) {
                 
-                // Update the tabs with the loaded data
+                
+                // Get the current tab IDs from the event data or use an empty set
+                const currentTabIds = event.detail.subshapeKeys || 
+                                    Object.keys(subShapeData).map(id => parseInt(id));
+                
+                // IMPORTANT: Instead of updating existing tabs, replace them entirely
+                // This ensures tabs that no longer exist are removed
                 setTabs(prevTabs => {
-                    // Create a map of existing tabs by ID for quick lookup
-                    const tabMap = {};
-                    prevTabs.forEach(tab => tabMap[tab.id] = tab);
+                    // Create new tabs array based solely on the data in the event
+                    const newTabs = [];
                     
-                    // Create an array to hold our updated tabs
-                    const updatedTabs = [];
-                    
-                    // Process existing tabs first
-                    prevTabs.forEach(tab => {
-                        if (subShapeData[tab.id]) {
-                            // Update existing tab with loaded data
-                            updatedTabs.push({
-                                ...tab,
-                                params: { ...tab.params, ...subShapeData[tab.id] }
-                            });
-                            delete subShapeData[tab.id]; // Remove from subShapeData so we don't add it twice
-                        } else {
-                            // Keep existing tab as is
-                            updatedTabs.push(tab);
-                        }
-                    });
-                    
-                    // Add any remaining tabs from the loaded data
-                    Object.entries(subShapeData).forEach(([tabId, params]) => {
-                        const numTabId = parseInt(tabId);
-                        updatedTabs.push({
-                            id: numTabId,
-                            params: params,
-                            pane: null
-                        });
+                    // Add tabs that exist in the event data
+                    currentTabIds.forEach(tabId => {
+                        // Try to find existing tab data to preserve references
+                        const existingTab = prevTabs.find(tab => tab.id === parseInt(tabId));
+                        const tabParams = subShapeData[tabId] || {};
                         
-                        // Update nextTabId if needed
-                        if (numTabId >= nextTabId.current) {
-                            nextTabId.current = numTabId + 1;
-                        }
+                        newTabs.push({
+                            id: parseInt(tabId),
+                            params: {...(existingTab?.params || {}), ...tabParams},
+                            pane: null // Force recreation of pane
+                        });
                     });
                     
-                    return updatedTabs;
+                    // Update nextTabId to be higher than any existing tab ID
+                    if (newTabs.length > 0) {
+                        const maxId = Math.max(...newTabs.map(tab => tab.id));
+                        nextTabId.current = maxId + 1;
+                    }
+                    
+                    return newTabs;
                 });
                 
                 // Update parent's state with all tabs' params
-                const allTabParams = {};
-                Object.entries(subShapeData).forEach(([tabId, params]) => {
-                    allTabParams[tabId] = params;
+                setParams(prev => {
+                    // Start with a clean slate
+                    const newParams = {};
+                    
+                    // Add only the tabs from the event data
+                    Object.entries(subShapeData).forEach(([tabId, params]) => {
+                        newParams[tabId] = params;
+                    });
+                    
+                    // For non-subshape parameters, copy from the previous state or event data
+                    Object.keys(prev).forEach(key => {
+                        if (isNaN(parseInt(key))) {
+                            newParams[key] = event.detail[key] || prev[key];
+                        }
+                    });
+                    
+                    return newParams;
                 });
                 
-                setParams(prev => ({
-                    ...prev,
-                    ...allTabParams
-                }));
-                
-                // Force refresh the panes by destroying and recreating them
+                // Force refresh the panes by destroying all of them
                 Object.keys(panes.current).forEach(tabId => {
                     if (panes.current[tabId]) {
                         panes.current[tabId].dispose();
                         delete panes.current[tabId];
                     }
                 });
+                
+                // Set active tab to first tab if none are currently active
+                if (currentTabIds.length > 0) {
+                    setActiveTab(parseInt(currentTabIds[currentTabIds.length-1]));
+                }
             }
         };
         
