@@ -669,9 +669,13 @@ class SkeletonState {
 
     mouseDragged() {
         if (!this.mouseHandler) return;
+        // First check if the grid is being interacted with
         const knobDragged = this.gridContext.mouseDragged(this.p.mouseX, this.p.mouseY);
-        if (knobDragged) return;
-        this.mouseHandler.handleMouseDragged();
+        
+        // Only handle mouse dragging if not interacting with grid
+        if (!knobDragged) {
+            this.mouseHandler.handleMouseDragged();
+        }
     }
 
     mouseReleased() {
