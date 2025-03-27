@@ -544,6 +544,100 @@ class SkeletonState {
         // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
         this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
 
+        // Draw all lines
+        this.lineManager.getLines().forEach(line => {
+            this.possibleLinesRenderer.drawLines([line], null, this.hoveredLine);
+        });
+        
+        // Draw preview lines (add this line)
+        this.mouseHandler.drawPreviewLines();
+
+        //For changing the cursor
+        let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
+
+        // Update the points drawing part of the draw method
+        this.points.forEach((point) => {
+            const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
+            const isSelected = this.mouseHandler.selectedPoint && this.mouseHandler.selectedPoint.id === point.id;
+            
+            if (isHovered) {
+                anyHovered = true; // At least one point is hovered
+            }
+            
+            // Render the point with hover and selected states
+            this.pointRenderer.draw(point, isHovered, isSelected);
+        });
+
+        // Update cursor based on whether any point is hovered
+        if (anyHovered) this.p.cursor(this.p.HAND);
+
+        // Draw the delete button
+        //this.drawDeleteButton();
+        this.deleteButton.draw();
+        
+        // Draw the fill grid button
+        //this.drawFillGridButton();
+        this.fillGridButton.draw();
+        
+        // Draw help button if tutorial is inactive
+        if (this.tutorial && !this.tutorial.active) {
+            this.helpButton.draw();
+        }
+        
+        // Draw tutorial overlay last so it appears on top
+        if (this.tutorial && this.tutorial.active) {
+            this.tutorial.draw();
+        }
+
+        this.radialGridButton.draw();
+        this.rectGridButton.draw();
+        this.noGridButton.draw();
+
+        this.eraserToolButton.draw();
+        this.connectToOneButton.draw();
+        this.connectWithoutCrossingButton.draw();
+        this.connectToAllButton.draw();
+
+        this.drawBufferGrid();
+        // Render the buffer on the right-hand side of the canvas
+        const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
+        const bufferY = 0; // Position 0px from the top
+        this.p.image(this.buffer, bufferX, bufferY);
+    }
+
+    // Modify the draw method to handle the null selectedPoint
+    draw() {
+        this.p.cursor(this.p.ARROW);
+        this.updateGridContext();
+        const missRadius = this.mergedParams.missArea;
+        this.pointRenderer.setMissRadius(missRadius);
+
+        this.p.noStroke();
+        this.p.fill(0); // Color: black
+
+        this.ephemeralLineAnimator.updateAndDraw();
+
+        this.gridContext.draw();
+
+        // Get the currently hovered line for the hover effect
+        const hoveredLine = this.mouseHandler.getHoveredLineForRendering();
+        
+        // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
+        this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
+
+        // Get the line to hide from preview (if any)
+        const lineToHide = this.mouseHandler.drawPreviewLines();
+
+        // Draw all lines (except the one being split in preview)
+        this.lineManager.getLines().forEach(line => {
+            // Skip drawing the original line if it's being split in the preview
+            if (lineToHide && line === lineToHide) {
+                return;
+            }
+            
+            this.possibleLinesRenderer.drawLines([line], null, this.hoveredLine);
+        });
+
         //For changing the cursor
         let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
 

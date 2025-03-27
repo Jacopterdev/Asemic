@@ -26,6 +26,10 @@
         this.toolMode = "connectToOne"; // Default tool
         this.lastAddedPoint = null; // For connect-to-one tool
         this.selectedPoint = null; // Currently selected point (for highlighting and deletion)
+
+        // Add these new properties for line previewing
+        this.previewLines = []; // Array to store preview lines
+        this.previewPoint = null; // Virtual point for previews
     }
     
     /**
@@ -46,6 +50,9 @@
      * Handles mouse pressed event based on the current tool mode
      */
     handleMousePressed() {
+        // Clear preview lines when interacting
+        this.previewLines = [];
+
         if (!this.isInCanvas()) return;
         
         // Record state at the beginning of any mouse interaction
@@ -452,6 +459,9 @@
      * Handles mouse dragged event
      */
     handleMouseDragged() {
+        // Clear preview lines during drag
+        this.previewLines = [];
+
         if (!this.isInCanvas()) return;
         
         // Special handling for eraser tool - continuously erase while dragging
@@ -548,21 +558,29 @@
         if (hoveredPoint || hoveredLine) {
             this.p.cursor(this.p.HAND);
         }
+
+        // Update preview lines after operation
+        this.updatePreviewLines();
     }
     
     /**
      * Handles mouse moved event
      */
     handleMouseMoved() {
-        if (!this.isInCanvas()) return;
+        if (!this.isInCanvas()) {
+            this.previewLines = []; // Clear previews when outside canvas
+            return;
+        }
         
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
         if (hoveredPoint) {
             this.p.cursor(this.p.HAND); // Change cursor to hand when over a point
+            this.previewLines = []; // Clear previews when over a point
         } else if (this.hoveredLine) {
             this.p.cursor(this.p.HAND); // Also change cursor when over a line
         } else {
             this.p.cursor(this.p.ARROW); // Reset cursor when not over interactive elements
+            this.updatePreviewLines(); // Update preview lines when in empty space
         }
         
         this.updateHoveredLine();
@@ -812,6 +830,262 @@
         const projectedY = y1 + t * (y2 - y1);
         
         return { x: projectedX, y: projectedY };
+    }
+
+    // Add this new method to handle preview line generation
+    updatePreviewLines() {
+        // Clear previous preview lines
+        this.previewLines = [];
+        
+        // If not in canvas or dragging a point, don't show previews
+        if (!this.isInCanvas() || this.draggingPoint) {
+            return;
+        }
+        
+        // Get current mouse position, with snapping if applicable
+        const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+        const previewX = snapPosition ? snapPosition.x : this.p.mouseX;
+        const previewY = snapPosition ? snapPosition.y : this.p.mouseY;
+        
+        // Check if we're hovering over an existing point - if so, no preview needed
+        const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
+        if (hoveredPoint) {
+            return;
+        }
+        
+        // Create a virtual point for the preview that will always be at the current position
+        this.previewPoint = { x: previewX, y: previewY, id: 'preview' };
+        
+        // Check if we're hovering over a line
+        const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+        
+        // Different preview behavior based on tool mode
+        switch (this.toolMode) {
+            case "connectToOne":
+                // If hovering over a line, show how it would split
+                if (hoveredLine) {
+                    // Get the projected point on the line for more accurate preview
+                    const projectedPoint = this.getProjectedPointOnLine(
+                        this.p.mouseX, this.p.mouseY, hoveredLine
+                    );
+                    
+                    // Use the snapped position if available, otherwise use the projected point
+                    const splitX = snapPosition ? snapPosition.x : projectedPoint.x;
+                    const splitY = snapPosition ? snapPosition.y : projectedPoint.y;
+                    
+                    // Update the preview point position to be exactly on the line (or snapped)
+                    this.previewPoint.x = splitX;
+                    this.previewPoint.y = splitY;
+                    
+                    // Add the preview for both segments of the split line
+                    this.previewLines.push({
+                        start: hoveredLine.start,
+                        end: this.previewPoint,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    this.previewLines.push({
+                        start: this.previewPoint,
+                        end: hoveredLine.end,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                } 
+                // Show a single connection to last added point if not over a line
+                else if (this.lastAddedPoint) {
+                    this.previewLines.push({
+                        start: this.lastAddedPoint,
+                        end: this.previewPoint,
+                        preview: true
+                    });
+                }
+                break;
+                
+            case "connectToAll":
+                // If hovering over a line, show how it would split PLUS connections to all other points
+                if (hoveredLine) {
+                    // Get the projected point on the line for more accurate preview
+                    const projectedPoint = this.getProjectedPointOnLine(
+                        this.p.mouseX, this.p.mouseY, hoveredLine
+                    );
+                    
+                    // Use the snapped position if available, otherwise use the projected point
+                    const splitX = snapPosition ? snapPosition.x : projectedPoint.x;
+                    const splitY = snapPosition ? snapPosition.y : projectedPoint.y;
+                    
+                    // Update the preview point position to be exactly on the line (or snapped)
+                    this.previewPoint.x = splitX;
+                    this.previewPoint.y = splitY;
+                    
+                    // Add the preview for both segments of the split line
+                    this.previewLines.push({
+                        start: hoveredLine.start,
+                        end: this.previewPoint,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    this.previewLines.push({
+                        start: this.previewPoint,
+                        end: hoveredLine.end,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    
+                    // Also show connections to all other points
+                    for (const point of this.points) {
+                        // Skip the endpoints of the hovered line
+                        if (point.id === hoveredLine.start.id || point.id === hoveredLine.end.id) {
+                            continue;
+                        }
+                        
+                        this.previewLines.push({
+                            start: point,
+                            end: this.previewPoint,
+                            preview: true
+                        });
+                    }
+                } 
+                // Show connections to all points when not over a line
+                else {
+                    for (const point of this.points) {
+                        this.previewLines.push({
+                            start: point,
+                            end: this.previewPoint,
+                            preview: true
+                        });
+                    }
+                }
+                break;
+                
+            case "connectWithoutCrossing":
+                // If hovering over a line, show how it would split PLUS valid connections
+                if (hoveredLine) {
+                    // Get the projected point on the line for more accurate preview
+                    const projectedPoint = this.getProjectedPointOnLine(
+                        this.p.mouseX, this.p.mouseY, hoveredLine
+                    );
+                    
+                    // Use the snapped position if available, otherwise use the projected point
+                    const splitX = snapPosition ? snapPosition.x : projectedPoint.x;
+                    const splitY = snapPosition ? snapPosition.y : projectedPoint.y;
+                    
+                    // Update the preview point position to be exactly on the line (or snapped)
+                    this.previewPoint.x = splitX;
+                    this.previewPoint.y = splitY;
+                    
+                    // Add the preview for both segments of the split line
+                    this.previewLines.push({
+                        start: hoveredLine.start,
+                        end: this.previewPoint,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    this.previewLines.push({
+                        start: this.previewPoint,
+                        end: hoveredLine.end,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    
+                    // Temporarily add these preview segments to check for valid connections
+                    const tempLines = [...this.lineManager.getLines()];
+                    tempLines.push({
+                        start: hoveredLine.start,
+                        end: this.previewPoint,
+                        preview: true
+                    });
+                    tempLines.push({
+                        start: this.previewPoint,
+                        end: hoveredLine.end,
+                        preview: true
+                    });
+                    
+                    // Also show connections that won't cross with the new segments
+                    for (const point of this.points) {
+                        // Skip the endpoints of the hovered line
+                        if (point.id === hoveredLine.start.id || point.id === hoveredLine.end.id) {
+                            continue;
+                        }
+                        
+                        // Check against the temporary line set
+                        const wouldCross = this.wouldLineCrossExisting(point, this.previewPoint);
+                        if (!wouldCross) {
+                            this.previewLines.push({
+                                start: point,
+                                end: this.previewPoint,
+                                preview: true
+                            });
+                        }
+                    }
+                } 
+                // Show valid connections when not over a line
+                else {
+                    for (const point of this.points) {
+                        const wouldCross = this.wouldLineCrossExisting(point, this.previewPoint);
+                        if (!wouldCross) {
+                            this.previewLines.push({
+                                start: point,
+                                end: this.previewPoint,
+                                preview: true
+                            });
+                        }
+                    }
+                }
+                break;
+                
+            case "eraser":
+                // No preview lines for eraser tool
+                break;
+        }
+    }
+
+    // Add a method to draw the preview lines
+    drawPreviewLines() {
+        if (this.previewLines.length === 0) return;
+        
+        this.p.push();
+        
+        // Track if we're showing a line split preview
+        const isSplittingLine = this.previewLines.some(line => line.originalLine);
+        let originalLineToHide = null;
+        
+        if (isSplittingLine) {
+            // Find the original line we should hide
+            for (const line of this.previewLines) {
+                if (line.originalLine) {
+                    originalLineToHide = line.originalLine;
+                    break;
+                }
+            }
+        }
+        
+        // Use dashed line for preview
+        this.p.strokeWeight(1);
+        this.p.stroke(250, 140, 0, 150); // Semi-transparent orange
+        
+        // Draw dashed lines for previews
+        this.p.drawingContext.setLineDash([5, 3]); // Dashed line pattern [dash, gap]
+        
+        for (const line of this.previewLines) {
+            this.p.line(
+                line.start.x, line.start.y,
+                line.end.x, line.end.y
+            );
+        }
+        
+        // Reset line dash
+        this.p.drawingContext.setLineDash([]);
+        
+        // Draw the preview point
+        if (this.previewPoint) {
+            this.p.fill(250, 140, 0, 100);
+            this.p.ellipse(this.previewPoint.x, this.previewPoint.y, 12, 12);
+        }
+        
+        this.p.pop();
+        
+        // Return the original line that should be hidden during rendering
+        return originalLineToHide;
     }
 }
 
