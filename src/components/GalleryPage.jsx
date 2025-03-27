@@ -106,8 +106,7 @@ const GalleryPage = () => {
         lineComposition: ['Random', 'Branched', 'Segmented'][Math.floor(p.random(3))],
         points: points,
         lines: lines,
-        "1": createRandomSubShape(p, "Circle"),
-        "2": p.random() > 0.5 ? createRandomSubShape(p, "Triangle") : null
+        "1": createRandomSubShape(p, "Circle")
       };
       
       // Add the shape to our random shapes array
@@ -132,7 +131,7 @@ const GalleryPage = () => {
     
     return {
       subShape: shapeType,
-      connection: p.random() > 0.5 ? "Along" : "Endpoints",
+      connection: p.random() > 0.5 ? "Along" : "atEnd",
       rotationType: p.random() > 0.5 ? "relative" : "absolute",
       angle: {min: 0, max: Math.floor(p.random(30, 360))},
       amount: {min: Math.floor(p.random(1, 3)), max: Math.floor(p.random(3, 6))},
@@ -411,7 +410,7 @@ const GalleryPage = () => {
           ],
           "1": {
             subShape: "Square",
-            connection: "Endpoints",
+            connection: "atEnd",
             rotationType: "absolute",
             angle: {min: 0, max: 90},
             amount: {min: 1, max: 2},
@@ -465,7 +464,7 @@ const GalleryPage = () => {
           },
           "2": {
             subShape: "Circle",
-            connection: "Endpoints",
+            connection: "atEnd",
             rotationType: "absolute",
             angle: {min: 0, max: 360},
             amount: {min: 1, max: 1},
@@ -697,10 +696,13 @@ function drawPlaceholder(s, shapeData) {
 }
 
 function drawShapeThumbnail(s, shapeData) {
+  s.noiseSeed(1);
   const thumbnailSize = s.width;
   const buffer = s.createGraphics(thumbnailSize, thumbnailSize);
   buffer.angleMode(buffer.RADIANS);
   buffer.background(255);
+
+  const bufferScale = thumbnailSize / LAYOUT.GRID_SIZE;
   
   try {
     const data = shapeData.data;
@@ -719,7 +721,9 @@ function drawShapeThumbnail(s, shapeData) {
 
     // Clone the data to avoid modifying original
     const thumbnailData = JSON.parse(JSON.stringify(data));
-    
+    console.log(thumbnailData);
+
+    /**
     // Make line width smaller for thumbnails
     if (thumbnailData.lineWidth) {
       thumbnailData.lineWidth = {
@@ -764,18 +768,19 @@ function drawShapeThumbnail(s, shapeData) {
     const scaleX = targetWidth / width;
     const scaleY = targetHeight / height;
     const scale = Math.min(scaleX, scaleY) * 0.9; // Use 0.9 for a bit of extra padding
-    
+    */
+    //buffer.ellipse(10,10,20,20);
     // Position the shape in the center of the cell
     buffer.push();
-    buffer.translate(thumbnailSize / 2, thumbnailSize / 2);
-    buffer.scale(scale);
-    buffer.translate(-actualCenter.x, -actualCenter.y);
+    //buffer.translate(thumbnailSize / 2, thumbnailSize / 2);
+    buffer.scale(bufferScale);
+    //buffer.translate(-actualCenter.x, -actualCenter.y);
     
     // Create a new ShapeGeneratorV2 instance
     const shapeGen = new ShapeGeneratorV2(buffer, thumbnailData);
     
     // Set noise position for consistent thumbnails
-    shapeGen.setNoisePosition(0.5, 0.5);
+    shapeGen.setNoisePosition(0, 0);
     
     // Generate and draw the shape
     shapeGen.generate();
@@ -790,8 +795,8 @@ function drawShapeThumbnail(s, shapeData) {
     const effectsInstance = new Effects(buffer, smoothAmount);
     
     // Apply the effects with appropriate blur scale
-    effectsInstance.applyEffects(0.25);
-    
+    effectsInstance.applyEffects(bufferScale);
+
     // Draw the buffer to the main canvas
     s.image(buffer, 0, 0);
   } catch (error) {
@@ -805,33 +810,5 @@ function drawShapeThumbnail(s, shapeData) {
   }
 }
 
-// Helper function to calculate shape scale similar to defaultSketch.js
-function calculateShapeScale(points, canvasWidth, canvasHeight) {
-  if (!points || points.length === 0) return 1;
-  
-  // Find the bounding box of all points
-  let minX = Infinity, minY = Infinity;
-  let maxX = -Infinity, maxY = -Infinity;
-  
-  points.forEach(point => {
-    if (point.x < minX) minX = point.x;
-    if (point.y < minY) minY = point.y;
-    if (point.x > maxX) maxX = point.x;
-    if (point.y > maxY) maxY = point.y;
-  });
-  
-  // Calculate horizontal and vertical deltas
-  const horizontalDelta = maxX - minX;
-  const verticalDelta = maxY - minY;
-  
-  // Calculate horizontal and vertical scales
-  const horizontalScale = horizontalDelta / canvasWidth;
-  const verticalScale = verticalDelta / canvasHeight;
-  
-  // Return the scale based on the larger dimension
-  const scaleFactor = Math.max(horizontalScale, verticalScale);
-  
-  return scaleFactor ? 1/scaleFactor : 1;
-}
 
 export default GalleryPage;
