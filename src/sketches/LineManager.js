@@ -101,6 +101,19 @@
     clearAllLines() {
         this.lines = [];
     }
+
+    /**
+     * Check if a line between two points already exists
+     * @param {Object} point1 - First endpoint
+     * @param {Object} point2 - Second endpoint
+     * @returns {Boolean} True if the line exists
+     */
+    lineExists(point1, point2) {
+        return this.lines.some(line => 
+            (line.start.id === point1.id && line.end.id === point2.id) || 
+            (line.start.id === point2.id && line.end.id === point1.id)
+        );
+    }
 }
 
 export default LineManager;

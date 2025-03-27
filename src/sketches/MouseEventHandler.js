@@ -267,6 +267,141 @@
             return true;
         }
         
+        // CONNECT-WITHOUT-CROSSING TOOL MODE
+        else if (this.toolMode === "connectWithoutCrossing") {
+            // If hovering over an existing point
+            if (hoveredPoint) {
+                // Get all points except the hovered one
+                const otherPoints = this.points.filter(p => p.id !== hoveredPoint.id);
+                
+                // Try to connect to all other points, skipping those that would create crossings
+                if (otherPoints.length > 0) {
+                    let addedAtLeastOneLine = false;
+                    
+                    // Try connecting to each point
+                    otherPoints.forEach(otherPoint => {
+                        // Skip if line already exists
+                        if (this.lineManager.lineExists(hoveredPoint, otherPoint)) {
+                            return;
+                        }
+                        
+                        // Check if this connection would cross any existing lines
+                        const wouldCross = this.wouldLineCrossExisting(hoveredPoint, otherPoint);
+                        
+                        // Add line if it won't cause crossings
+                        if (!wouldCross) {
+                            this.lineManager.addLine(hoveredPoint, otherPoint, true);
+                            addedAtLeastOneLine = true;
+                        }
+                    });
+                    
+                    this.didAddLine = addedAtLeastOneLine;
+                }
+                
+                // Set up dragging and selection
+                this.draggingPoint = hoveredPoint;
+                this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
+                this.isDragging = false;
+                this.selectedPoint = hoveredPoint;
+                
+                return true;
+            }
+            
+            // Check if clicking on a line (to split it)
+            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+            if (hoveredLine) {
+                // Create a new point at the position where the line was clicked
+                const projectedPoint = this.getProjectedPointOnLine(
+                    this.p.mouseX, this.p.mouseY, hoveredLine
+                );
+                
+                // Get the snapped position if grid snapping is active
+                const snapPosition = this.gridContext.getSnapPosition(projectedPoint.x, projectedPoint.y);
+                
+                // Use the snapped position or the projected point
+                const newPointPosition = snapPosition || projectedPoint;
+                
+                // Create the new point
+                const newPoint = this.createPoint(newPointPosition.x, newPointPosition.y);
+                this.points.push(newPoint);
+                this.didAddPoint = true;
+                
+                // Remove the original line
+                this.lineManager.removeLine(hoveredLine);
+                
+                // Add two new lines connecting the original endpoints to the new point
+                this.lineManager.addLine(hoveredLine.start, newPoint, true);
+                this.lineManager.addLine(newPoint, hoveredLine.end, true);
+                
+                // Now try to connect to all other points without crossing
+                const otherPoints = this.points.filter(p => 
+                    p.id !== newPoint.id && 
+                    p.id !== hoveredLine.start.id && 
+                    p.id !== hoveredLine.end.id
+                );
+                
+                // Try connecting to each point that doesn't cause crossings
+                otherPoints.forEach(otherPoint => {
+                    // Check if this connection would cross any existing lines
+                    const wouldCross = this.wouldLineCrossExisting(newPoint, otherPoint);
+                    
+                    // Add line if it won't cause crossings
+                    if (!wouldCross) {
+                        this.lineManager.addLine(newPoint, otherPoint, true);
+                    }
+                });
+                
+                this.didAddLine = true;
+                this.selectedPoint = newPoint;
+                
+                // Add pulse effect for the new point if available
+                if (this.ephemeralLineAnimator) {
+                    this.ephemeralLineAnimator.addPoint(newPoint);
+                }
+                
+                return true;
+            }
+            
+            // If not hovering over a point or line, create a new point and connect without crossing
+            const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+            const newPoint = this.createPoint(
+                snapPosition ? snapPosition.x : this.p.mouseX,
+                snapPosition ? snapPosition.y : this.p.mouseY
+            );
+            
+            // Add the new point
+            this.points.push(newPoint);
+            this.didAddPoint = true;
+            
+            // Connect to all other points that won't cause crossings
+            if (this.points.length > 1) {
+                const otherPoints = this.points.filter(p => p.id !== newPoint.id);
+                
+                // Try connecting to each point
+                otherPoints.forEach(otherPoint => {
+                    // Check if this connection would cross any existing lines
+                    const wouldCross = this.wouldLineCrossExisting(newPoint, otherPoint);
+                    
+                    // Add line if it won't cause crossings
+                    if (!wouldCross) {
+                        this.lineManager.addLine(newPoint, otherPoint, true);
+                    }
+                });
+                
+                this.didAddLine = true;
+            }
+            
+            // Update selected point
+            this.selectedPoint = newPoint;
+            
+            // Add pulse effect for the new point if available
+            if (this.ephemeralLineAnimator) {
+                this.ephemeralLineAnimator.addPoint(newPoint);
+            }
+            
+            return true;
+        }
+        
         // Other tools will be implemented later
         // Default behavior for now: allow dragging points
         else {
@@ -560,6 +695,108 @@
      */
     setEphemeralLineAnimator(animator) {
         this.ephemeralLineAnimator = animator;
+    }
+
+    /**
+     * Check if a new line would cross any existing lines
+     * @param {Object} point1 - First endpoint of the new line
+     * @param {Object} point2 - Second endpoint of the new line
+     * @returns {Boolean} True if the new line would cross an existing line
+     */
+    wouldLineCrossExisting(point1, point2) {
+        // Get all existing lines
+        const existingLines = this.lineManager.getLines();
+        
+        // Check each line for intersection
+        for (const line of existingLines) {
+            // Skip lines that share an endpoint with the new line
+            if (
+                line.start.id === point1.id || 
+                line.start.id === point2.id || 
+                line.end.id === point1.id || 
+                line.end.id === point2.id
+            ) {
+                continue;
+            }
+            
+            // Check for intersection between the new line and this existing line
+            if (this.doLineSegmentsIntersect(
+                point1.x, point1.y, point2.x, point2.y,
+                line.start.x, line.start.y, line.end.x, line.end.y
+            )) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if two line segments intersect
+     * @param {Number} x1 - First line first point x
+     * @param {Number} y1 - First line first point y
+     * @param {Number} x2 - First line second point x
+     * @param {Number} y2 - First line second point y
+     * @param {Number} x3 - Second line first point x
+     * @param {Number} y3 - Second line first point y
+     * @param {Number} x4 - Second line second point x
+     * @returns {Boolean} True if the lines intersect
+     */
+    doLineSegmentsIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+        // Calculate the direction of the lines
+        const d1x = x2 - x1;
+        const d1y = y2 - y1;
+        const d2x = x4 - x3;
+        const d2y = y4 - y3;
+        
+        // Calculate the determinant
+        const determinant = d1x * d2y - d1y * d2x;
+        
+        // If determinant is zero, lines are parallel or collinear
+        if (Math.abs(determinant) < 0.0001) {
+            return false;
+        }
+        
+        // Calculate the parameters for the intersection point
+        const dx = x3 - x1;
+        const dy = y3 - y1;
+        const t = (dx * d2y - dy * d2x) / determinant;
+        const u = (dx * d1y - dy * d1x) / determinant;
+        
+        // Check if the intersection is within both line segments
+        return (t >= 0 && t <= 1 && u >= 0 && u <= 1);
+    }
+
+    /**
+     * Project a point onto a line segment
+     * @param {Number} mouseX - The x-coordinate of the point to project
+     * @param {Number} mouseY - The y-coordinate of the point to project
+     * @param {Object} line - The line object with start and end points
+     * @returns {Object} The projected point coordinates
+     */
+    getProjectedPointOnLine(mouseX, mouseY, line) {
+        const { x: x1, y: y1 } = line.start;
+        const { x: x2, y: y2 } = line.end;
+        
+        // Calculate the line length squared
+        const lineLengthSq = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        
+        // If the line is a point, return that point
+        if (lineLengthSq === 0) {
+            return { x: x1, y: y1 };
+        }
+        
+        // Calculate the projection parameter t
+        let t = ((mouseX - x1) * (x2 - x1) + (mouseY - y1) * (y2 - y1)) / lineLengthSq;
+        
+        // Clamp t to the range [0, 1] to stay within the line segment
+        t = Math.max(0, Math.min(1, t));
+        
+        // Calculate the projected point coordinates
+        const projectedX = x1 + t * (x2 - x1);
+        const projectedY = y1 + t * (y2 - y1);
+        
+        return { x: projectedX, y: projectedY };
     }
 }
 
