@@ -440,6 +440,21 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         return { scale, centerOffset };
     };
 
+    p.findScale = (localScale, localX, localY, localSize) => {
+        // Retrieve the shapeScale and shapeOffset
+        const shapeScale = p.getShapeScale(); // Scale based on outermost points
+        const shapeOffset = p.getShapeOffset(); // Offset from center
+        const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
+        // Compute the total scale relative to the cell size
+        const totalScale = localScale * spacedShapeScale;
+        // Apply translation and scaling transformation
+        //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
+        const newX = localX - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localSize/2) + (localSize*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.x);
+        const newY = localY - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localSize/2) + (localSize*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.y);
+
+        return {totalScale, newX, newY};
+    }
+
 
     // Method to get the current state as JSON
     p.getShapeLanguageAsJSON = () => {
