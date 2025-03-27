@@ -213,22 +213,18 @@ class DisplayGrid {
                     const shapeScale = this.p.getShapeScale(); // Scale based on outermost points
                     const shapeOffset = this.p.getShapeOffset(); // Offset from center
                     const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-
                     // Compute the total scale relative to the cell size
                     const totalScale = this.scale * spacedShapeScale;
 
-                    const posOffset = (cell.w - (cell.w*(spacedShapeScale)));
-                    // Calculate the translation needed to center the shape
-                    //const centerX = cell.x + cell.w / 2;
-                    //const centerY = cellYWithScroll + cell.h / 2;
-
-                    // Factor in the scaling offset based on the shape's size
-                    //const offsetX = (cell.w * totalScale) / 2;
-                    //const offsetY = (cell.h * totalScale) / 2;
-
+                    const localX = cell.x;
+                    const localY = cellYWithScroll;
+                    const localW = cell.w;
                     // Apply translation and scaling transformation
                     //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
-                    p.translate(cell.x + posOffset + (shapeOffset.x), cellYWithScroll + posOffset + (shapeOffset.y));
+                    const newX = localX - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.x);
+                    const newY = localY - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.y);
+
+                    p.translate(newX, newY);
 
                     p.scale(totalScale);
 

@@ -246,7 +246,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             points: points,
         };
         //shapeScale = p.calculateOuterScale(points, LAYOUT.GRID_SIZE+LAYOUT.MARGIN, LAYOUT.GRID_SIZE+LAYOUT.MARGIN);
-        const { scale: returnedshapeScale, tlOffset: returnedshapeOffset } = p.analyzeSkeletonScale(
+        const { scale: returnedshapeScale, centerOffset: returnedshapeOffset } = p.analyzeSkeletonScale(
             points,
             LAYOUT.MARGIN, // x-coordinate of the canvas
             LAYOUT.MARGIN, // y-coordinate of the canvas
@@ -384,23 +384,24 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
      * @param {number} canvasY - The y-coordinate of the canvas's top-left corner.
      * @param {number} canvasWidth - The width of the canvas.
      * @param {number} canvasHeight - The height of the canvas.
-     * @returns {{ scale: number, tlOffset: { x: number, y: number } }} - The calculated scale factor and the center offset.
+     * @returns {{ scale: number, centerOffset: { x: number, y: number } }} - The calculated scale factor and the center offset.
      */
     p.analyzeSkeletonScale = (points, canvasX, canvasY, canvasWidth, canvasHeight) => {
         if (!points || points.length < 3) {
             return {
                 scale: 1, // Default scale if no points are provided.
-                tlOffset: { x: 0, y: 0 } // Default offset since there's no point cloud.
+                centerOffset: { x: 0, y: 0 } // Default offset since there's no point cloud.
             };
         }
 
+        // Step 1: Find the bounding box of the points (in absolute coordinates).
         // Step 1: Find the bounding box of the points (in absolute coordinates).
         let minX = Infinity, minY = Infinity;
         let maxX = -Infinity, maxY = -Infinity;
 
         points.forEach(point => {
-            const adjustedX = point.x + canvasX; // Adjust relative to the canvas
-            const adjustedY = point.y + canvasY; // Adjust relative to the canvas
+            const adjustedX = point.x + canvasX; // Points are already relative to canvas's top-left corner.
+            const adjustedY = point.y + canvasY;
 
             if (adjustedX < minX) minX = adjustedX; // Leftmost point
             if (adjustedX > maxX) maxX = adjustedX; // Rightmost point
@@ -415,20 +416,30 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         // Step 3: Calculate the scale factor.
         const horizontalScale = horizontalDelta / canvasWidth;
         const verticalScale = verticalDelta / canvasHeight;
-
         const scale = horizontalScale > verticalScale ? 1 / horizontalScale : 1 / verticalScale;
 
-        // Step 6: Calculate the offset of the point cloud's topleft
-        //console.log("minX,Y,canX,canY, scale",minX, minY, canvasX, canvasY, scale);
-        const tlOffset = {
-            x: minX - canvasX, // Offset from the canvas's top-left corner
-            y: minY - canvasY  // Offset from the canvas's top-left corner
+        // Step 4: Calculate the bounding box center.
+        const boundingBoxCenter = {
+            x: minX + horizontalDelta / 2,
+            y: minY + verticalDelta / 2
         };
 
+        // Step 5: Calculate the center of the canvas.
+        const canvasCenter = {
+            x: canvasX + canvasWidth / 2,
+            y: canvasY + canvasHeight / 2
+        };
+
+        // Step 6: Calculate the center offset.
+        const centerOffset = {
+            x: boundingBoxCenter.x - canvasCenter.x,
+            y: boundingBoxCenter.y - canvasCenter.y
+        };
 
         // Return both the scale and the center offset.
-        return { scale, tlOffset };
+        return { scale, centerOffset };
     };
+
 
     // Method to get the current state as JSON
     p.getShapeLanguageAsJSON = () => {
