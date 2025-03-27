@@ -209,20 +209,7 @@ class DisplayGrid {
                 if (cell.shape !== null) {
                     p.push(); // Save the current transformation state
 
-                    // Retrieve the shapeScale and shapeOffset
-                    const shapeScale = this.p.getShapeScale(); // Scale based on outermost points
-                    const shapeOffset = this.p.getShapeOffset(); // Offset from center
-                    const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-                    // Compute the total scale relative to the cell size
-                    const totalScale = this.scale * spacedShapeScale;
-
-                    const localX = cell.x;
-                    const localY = cellYWithScroll;
-                    const localW = cell.w;
-                    // Apply translation and scaling transformation
-                    //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
-                    const newX = localX - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.x);
-                    const newY = localY - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.y);
+                    const {totalScale, newX, newY} = this.p.findScale(this.scale, cell.x, cellYWithScroll, cell.w);
 
                     p.translate(newX, newY);
 

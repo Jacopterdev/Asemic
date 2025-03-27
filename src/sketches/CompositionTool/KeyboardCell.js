@@ -43,38 +43,10 @@ class KeyboardCell {
 
         // Draw the shape if it exists
         if (this.shape) {
-            /**
-            this.buffer.push();
-
-            //Scale the shape
-            const shapeScale = this.p.getShapeScale();
-            const shapeOffset = this.p.getShapeOffset();
-
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-            const space = this.size;
-
-            //Find the new margin offset.
-            this.buffer.translate(this.x - ((spacedShapeScale*this.size)/2) + (space/2), this.y - ((spacedShapeScale*this.size)/2) + (space/2));
-
-            this.buffer.scale(scaleFactor * spacedShapeScale);
-                */
 
             this.buffer.push(); // Save the current transformation state
 
-            // Retrieve the shapeScale and shapeOffset
-            const shapeScale = this.p.getShapeScale(); // Scale based on outermost points
-            const shapeOffset = this.p.getShapeOffset(); // Offset from center
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-            // Compute the total scale relative to the cell size
-            const totalScale = scaleFactor * spacedShapeScale;
-
-            const localX = this.x;
-            const localY = this.y;
-            const localW = this.size;
-            // Apply translation and scaling transformation
-            //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
-            const newX = localX - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.x);
-            const newY = localY - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.y);
+            const {totalScale, newX, newY} = this.p.findScale(scaleFactor, this.x, this.y, this.size);
 
             this.buffer.translate(newX, newY);
 
