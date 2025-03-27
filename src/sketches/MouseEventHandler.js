@@ -406,7 +406,6 @@
         // Default behavior for now: allow dragging points
         else {
             if (hoveredPoint) {
-                console.log("Starting drag operation"); // Debug output
                 this.draggingPoint = hoveredPoint;
                 this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
                 this.isDragging = false;
@@ -455,14 +454,30 @@
     handleMouseDragged() {
         if (!this.isInCanvas()) return;
         
-        // No dragging in eraser mode
-        if (this.toolMode === "eraser") return;
-        console.log("Dragging point"); // Debug output
-
-        // Handle point dragging
-        if (this.draggingPoint) {
-            console.log("Dragging point:", this.draggingPoint.id); // Debug output
+        // Special handling for eraser tool - continuously erase while dragging
+        if (this.toolMode === "eraser") {
+            // Check if hovering over a point to erase
+            const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
+            if (hoveredPoint) {
+                // Remove point and its associated lines
+                this.removePoint(hoveredPoint);
+                this.didRemovePoint = true;
+                return true;
+            }
             
+            // Check if hovering over a line to erase
+            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+            if (hoveredLine) {
+                this.lineManager.removeLine(hoveredLine);
+                this.didRemoveLine = true;
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Handle normal point dragging (for other tools)
+        if (this.draggingPoint) {
             // Update isDragging flag
             if (!this.isDragging) {
                 const dragDistance = this.p.dist(
