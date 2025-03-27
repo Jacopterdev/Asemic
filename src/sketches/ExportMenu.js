@@ -73,8 +73,8 @@
             }
 
             // Draw option label
-            const textX = optionXStart + 8; // Padding for text inside the option
-            const textY = menuY + 15; // Vertically centered text
+            const textX = optionXStart + 10; // Padding for text inside the option
+            const textY = menuY + 14; // Vertically centered text
             p.noStroke();
             p.text(option.label, textX, textY);
         });
