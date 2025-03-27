@@ -170,6 +170,103 @@
             return true;
         }
         
+        // CONNECT-TO-ALL TOOL MODE
+        else if (this.toolMode === "connectToAll") {
+            // If hovering over an existing point, connect it to all other points
+            if (hoveredPoint) {
+                // Get all points except the hovered one
+                const otherPoints = this.points.filter(p => p.id !== hoveredPoint.id);
+                
+                // Add lines from this point to all other points
+                if (otherPoints.length > 0) {
+                    const addedLines = this.lineManager.addLinesForPoint(hoveredPoint, otherPoints, true);
+                    this.didAddLine = addedLines; // Set to true if any lines were added
+                }
+                
+                // Set as selected point and allow dragging
+                this.selectedPoint = hoveredPoint;
+                this.draggingPoint = hoveredPoint;
+                this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
+                this.isDragging = false;
+                
+                return true;
+            }
+            
+            // Check if clicking on a line (to split it)
+            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+            if (hoveredLine) {
+                // Create a new point at the position where the line was clicked
+                const projectedPoint = this.getProjectedPointOnLine(
+                    this.p.mouseX, this.p.mouseY, hoveredLine
+                );
+                
+                // Get the snapped position if grid snapping is active
+                const snapPosition = this.gridContext.getSnapPosition(projectedPoint.x, projectedPoint.y);
+                
+                // Use the snapped position or the projected point
+                const newPointPosition = snapPosition || projectedPoint;
+                
+                // Create the new point
+                const newPoint = this.createPoint(newPointPosition.x, newPointPosition.y);
+                this.points.push(newPoint);
+                this.didAddPoint = true;
+                
+                // Remove the original line
+                this.lineManager.removeLine(hoveredLine);
+                
+                // Add two new lines connecting the original endpoints to the new point
+                this.lineManager.addLine(hoveredLine.start, newPoint, true);
+                this.lineManager.addLine(newPoint, hoveredLine.end, true);
+                
+                // Connect the new point to all other points
+                const otherPoints = this.points.filter(p => 
+                    p.id !== newPoint.id && 
+                    p.id !== hoveredLine.start.id && 
+                    p.id !== hoveredLine.end.id
+                );
+                this.lineManager.addLinesForPoint(newPoint, otherPoints, true);
+                this.didAddLine = true;
+                
+                // Update last added point and selected point
+                this.selectedPoint = newPoint;
+                
+                // Add pulse effect for the new point if available
+                if (this.ephemeralLineAnimator) {
+                    this.ephemeralLineAnimator.addPoint(newPoint);
+                }
+                
+                return true;
+            }
+            
+            // If not hovering over a point or line, create a new point and connect to all others
+            const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+            const newPoint = this.createPoint(
+                snapPosition ? snapPosition.x : this.p.mouseX,
+                snapPosition ? snapPosition.y : this.p.mouseY
+            );
+            
+            // Add the new point
+            this.points.push(newPoint);
+            this.didAddPoint = true;
+            
+            // Connect the new point to all other existing points
+            if (this.points.length > 1) {
+                const otherPoints = this.points.filter(p => p.id !== newPoint.id);
+                this.lineManager.addLinesForPoint(newPoint, otherPoints, true);
+                this.didAddLine = true;
+            }
+            
+            // Set as selected point
+            this.selectedPoint = newPoint;
+            
+            // Add pulse effect for the new point if available
+            if (this.ephemeralLineAnimator) {
+                this.ephemeralLineAnimator.addPoint(newPoint);
+            }
+            
+            return true;
+        }
+        
         // Other tools will be implemented later
         // Default behavior for now: allow dragging points
         else {
