@@ -272,7 +272,7 @@ class LineGenerator {
         // Continue adding branches until we have enough lines
         while (selectedLines.length < numOfLines && selectedLines.length < allLines.length) {
             // Get remaining available lines
-            const remainingLines = allLines.filter(line => !selectedLines.includes(line));
+            let remainingLines = allLines.filter(line => !selectedLines.includes(line));
             if (remainingLines.length === 0) break;
 
             // Shuffle to randomize branch selection
@@ -347,9 +347,26 @@ class LineGenerator {
             }
 
             // If we couldn't find any connecting line, we're done
-            // Don't create disconnected components!
-            if (!foundBranch) break;
+            // Don't create disconnected components! EDIT: DO create disconnected components if necessary, make sure to utilize the full lineCount.
+            // If still no line is found, start a new disconnected segment
+            if (!foundBranch) {
+                const newStartLine = remainingLines[0]; // Take the first remaining line
+                selectedLines.push(newStartLine);
+
+                // Add its points to the used set and branchable points
+                const newStartPointStr = this.pointToString(newStartLine.start);
+                const newEndPointStr = this.pointToString(newStartLine.end);
+
+                usedPointsSet.add(newStartPointStr);
+                usedPointsSet.add(newEndPointStr);
+                branchablePoints.add(newStartPointStr);
+                branchablePoints.add(newEndPointStr);
+
+                // Update remaining lines
+                remainingLines = remainingLines.filter(line => line !== newStartLine);
+            }
         }
+
 
         return selectedLines;
     }
