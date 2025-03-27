@@ -25,6 +25,7 @@
         // Tool management
         this.toolMode = "connectToOne"; // Default tool
         this.lastAddedPoint = null; // For connect-to-one tool
+        this.selectedPoint = null; // Currently selected point (for highlighting and deletion)
     }
     
     /**
@@ -52,6 +53,11 @@
         
         // Determine if mouse is over an existing point
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
+        
+        // Update selected point
+        if (hoveredPoint) {
+            this.selectedPoint = hoveredPoint;
+        }
         
         // ERASER TOOL MODE
         if (this.toolMode === "eraser") {
@@ -125,6 +131,7 @@
                 
                 // Update last added point
                 this.lastAddedPoint = newPoint;
+                this.selectedPoint = newPoint; // Make sure to set this as the selected point
                 
                 // Add pulse effect for the new point if available
                 if (this.ephemeralLineAnimator) {
@@ -153,7 +160,8 @@
             
             // Update last added point
             this.lastAddedPoint = newPoint;
-            
+            this.selectedPoint = newPoint; // Set as selected point too
+
             // Add pulse effect for the new point if available
             if (this.ephemeralLineAnimator) {
                 this.ephemeralLineAnimator.addPoint(newPoint);
@@ -271,6 +279,11 @@
             this.onStateChange("end");
         }
         
+        // Reset cursor when dragging ends
+        if (this.isDragging) {
+            this.p.cursor(this.p.ARROW);
+        }
+        
         // Reset dragging flags
         this.draggingPoint = null;
         this.mouseDragStart = null;
@@ -281,6 +294,13 @@
         this.didAddLine = false;
         this.didRemovePoint = false;
         this.didRemoveLine = false;
+        
+        // Re-check cursor after releasing
+        const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
+        const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+        if (hoveredPoint || hoveredLine) {
+            this.p.cursor(this.p.HAND);
+        }
     }
     
     /**

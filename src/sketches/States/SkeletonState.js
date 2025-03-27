@@ -547,15 +547,19 @@ class SkeletonState {
         //For changing the cursor
         let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
 
-        // Draw all points with hover effect
+        // Update the points drawing part of the draw method
         this.points.forEach((point) => {
             const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
+            const isSelected = this.mouseHandler.selectedPoint && this.mouseHandler.selectedPoint.id === point.id;
+            
             if (isHovered) {
                 anyHovered = true; // At least one point is hovered
             }
-            this.pointRenderer.draw(point, isHovered); // Render the point with hover state
-
+            
+            // Render the point with hover and selected states
+            this.pointRenderer.draw(point, isHovered, isSelected);
         });
+
         // Update cursor based on whether any point is hovered
         if (anyHovered) this.p.cursor(this.p.HAND);
 
@@ -769,6 +773,33 @@ class SkeletonState {
         const isWithinY = this.p.mouseY >= gridStartY && this.p.mouseY <= gridEndY;
 
         return isWithinX && isWithinY;
+    }
+
+    // Add this method to the SkeletonState class
+    keyPressed(evt) {
+        // Check if the key is backspace
+        if (evt.key === "Backspace" || evt.key === "Delete") {
+            // Delete the selected point if there is one
+            if (this.mouseHandler && this.mouseHandler.selectedPoint) {
+                // Record state before deletion if recordCurrentState exists
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("beforePointDelete");
+                }
+                
+                // Call the removePoint method from MouseEventHandler
+                this.mouseHandler.removePoint(this.mouseHandler.selectedPoint);
+                this.mouseHandler.selectedPoint = null; // Clear the selected point reference
+                
+                // Record state after deletion if recordCurrentState exists
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("afterPointDelete");
+                }
+                
+                return true; // Indicate that we handled the keypress
+            }
+        }
+        
+        return false; // We didn't handle the keypress
     }
 
 }
