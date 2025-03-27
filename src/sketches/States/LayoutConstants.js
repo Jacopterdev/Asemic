@@ -1,7 +1,7 @@
 ﻿export const SPACING = (() => {
     const MARGIN = 24;
     const PADDING = 8;
-    const SHAPE_SCALE = 0.7;
+    const SHAPE_SCALE = 0.65;
     const GRID_SIZE = 800;
     const BUTTON_SIZE = 32;
 

@@ -22,7 +22,7 @@ class DisplayGrid {
         this.scrollOffset = 0;
 
         this.mergedParams = mergedParams;
-        this.scale = 1/rows;
+        this.scale = this.cellWidth / p.width;
 
         this.suffix = 0;
 
@@ -201,41 +201,38 @@ class DisplayGrid {
             p = this.buffer;
         }
 
-
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
 
                 if (cell.shape !== null) {
-                    p.push(); // Save current transformation state
+                    p.push(); // Save the current transformation state
 
-
-                    //Scale the shape
-                    const shapeScale = this.p.getShapeScale();
+                    // Retrieve the shapeScale and shapeOffset
+                    const shapeScale = this.p.getShapeScale(); // Scale based on outermost points
+                    const shapeOffset = this.p.getShapeOffset(); // Offset from center
                     const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-                    const space = cell.w;
+                    // Compute the total scale relative to the cell size
+                    const totalScale = this.scale * spacedShapeScale;
 
-                    //Find the new margin offset.
-                    p.translate(cell.x - ((spacedShapeScale*cell.w)/2) + (space/2), cellYWithScroll - ((spacedShapeScale*cell.w)/2) + (space/2));
+                    const localX = cell.x;
+                    const localY = cellYWithScroll;
+                    const localW = cell.w;
+                    // Apply translation and scaling transformation
+                    //p.translate(centerX - offsetX + (shapeOffset.x * totalScale), centerY - offsetY + (shapeOffset.y * totalScale));
+                    const newX = localX - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.x);
+                    const newY = localY - (1-LAYOUT.SHAPE_SCALE)*((shapeScale)-(1/LAYOUT.SHAPE_SCALE))*(localW/2) + (localW*(1-LAYOUT.SHAPE_SCALE)/2) - (totalScale*shapeOffset.y);
 
-                    p.scale(this.scale * spacedShapeScale);
+                    p.translate(newX, newY);
 
-                    /**
-                    // Translate to the top-left corner of the current cell
-                    p.translate(cell.x, cellYWithScroll);
+                    p.scale(totalScale);
 
-                    // Scale down the shape to fit within the cell dimensions
-                    const scaleX = (p.w / cell.w) * 0.1;
-                    const scaleY = (p.h / cell.h) * 0.1;
-                    p.scale(this.scale);
-                    */
-
-
-                    // Draw the shape relative to the translated origin (scaled to fit)
+                    // Draw the shape relative to the translated and scaled origin
                     cell.shape.draw(xray);
 
                     p.pop(); // Restore the previous transformation state
+
                 }
             }
         }

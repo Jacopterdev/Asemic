@@ -149,49 +149,14 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.registerPlugin(EssentialsPlugin); // Register Essentials Plugin
 
             pane.addInput(activeTabData.params, "subShape", {
+                label: "Sub-Shape",
                 options: {
-                    square: "Square",
-                    triangle: "Triangle",
-                    circle: "Circle",
+                    Square: "Square",
+                    Triangle: "Triangle",
+                    Circle: "Circle",
                 },
             }).on('change', (event) => {
                 updateParam('subShape', event.value);
-            });
-
-            // Add `connection`
-            pane.addInput(activeTabData.params, "connection", {
-                label: "Connection", // Optional: Add a label
-                options: {
-                    "At End": "atEnd",  // Displayed: "At End", Value: "atEnd"
-                    "Along": "Along",   // Displayed: "Along", Value: "Along"
-                },
-            }).on("change", (event) => {
-                updateParam("connection", event.value); // Update the state
-            });
-
-
-            // Add `rotationType`
-            pane.addInput(activeTabData.params, "rotationType", {
-                label: "Rotation Type", // Optional: Add a label
-                options: {
-                    Relative: "relative",  // Displayed: "Relative", Value: "relative"
-                    Absolute: "absolute",  // Displayed: "Absolute", Value: "absolute"
-                },
-            }).on("change", (event) => {
-                updateParam("rotationType", event.value); // Update the state
-            });
-
-
-
-            // Add a point2D input to the pane
-            pane.addInput(activeTabData.params, "angle", {
-                view: "slider", // Use slider for a single value or interval for ranges
-                min: 0,         // Minimum slider value (e.g., 0 degrees)
-                max: 360,       // Maximum slider value (e.g., 360 degrees)
-                step: 1,        // Slider step increment (e.g., 1 degree per step)
-                label: "Angle", // Label to display next to the slider
-            }).on("change", (event) => {
-                updateParam("angle", event.value); // Update the angle value in state
             });
 
 
@@ -223,6 +188,40 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 label: "Distort",
             }).on('change', (event) => {
                 updateParam('distort', event.value);
+            });
+
+            // Add `connection`
+            pane.addInput(activeTabData.params, "connection", {
+                label: "Connection", // Optional: Add a label
+                options: {
+                    "At End": "atEnd",  // Displayed: "At End", Value: "atEnd"
+                    "Along": "Along",   // Displayed: "Along", Value: "Along"
+                },
+            }).on("change", (event) => {
+                updateParam("connection", event.value); // Update the state
+            });
+
+
+            // Add `rotationType`
+            pane.addInput(activeTabData.params, "rotationType", {
+                label: "Rotation Type", // Optional: Add a label
+                options: {
+                    Relative: "relative",  // Displayed: "Relative", Value: "relative"
+                    Absolute: "absolute",  // Displayed: "Absolute", Value: "absolute"
+                },
+            }).on("change", (event) => {
+                updateParam("rotationType", event.value); // Update the state
+            });
+
+            // Add a point2D input to the pane
+            pane.addInput(activeTabData.params, "angle", {
+                view: "slider", // Use slider for a single value or interval for ranges
+                min: 0,         // Minimum slider value (e.g., 0 degrees)
+                max: 360,       // Maximum slider value (e.g., 360 degrees)
+                step: 1,        // Slider step increment (e.g., 1 degree per step)
+                label: "Angle", // Label to display next to the slider
+            }).on("change", (event) => {
+                updateParam("angle", event.value); // Update the angle value in state
             });
 
             // Save the pane instance
