@@ -10,7 +10,7 @@
         
         this.draggingPoint = null; // Currently dragged point
         this.mouseDragStart = null; // Start position of mouse drag
-        this.snapThreshold = 10; // Hover distance to detect points
+        this.snapThreshold = 18; // Hover distance to detect points
         
         // Hover state tracking
         this.hoveredLine = null; // Currently hovered line

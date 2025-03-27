@@ -23,7 +23,11 @@
      * @returns {Boolean} True if hovering, otherwise false.
      */
     isHovered(point, mouseX, mouseY) {
-        const isHovered = this.p.dist(point.x, point.y, mouseX, mouseY) < this.normalSize;
+        // Use a self-defined value for the hit area radius
+        // This is larger than the visual size of the point
+        const hitRadius = 18; // Adjust this value to make hit area bigger or smaller
+        
+        const isHovered = this.p.dist(point.x, point.y, mouseX, mouseY) < hitRadius;
         return isHovered;
     }
 
