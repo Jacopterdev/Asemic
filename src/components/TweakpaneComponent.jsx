@@ -189,11 +189,19 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
                     // Get the new max value (at least 1)
                     const newMax = Math.max(linesCount, 1);
                     console.log("Setting new max:", newMax);
-  
-                    // First update the React state
-                    updateParam('numberOfLines', newMax);
 
-                    
+                    // Don't update the React state unless necessary
+                    // Keep the current value unless it exceeds the new maximum
+                    const currentValue = params.numberOfLines;
+                    const newValue = currentValue > newMax ? newMax : currentValue;
+
+                    if (newValue !== currentValue) {
+                        console.log(`Current value ${currentValue} exceeds new max ${newMax}, reducing to ${newValue}`);
+                        updateParam('numberOfLines', newValue);
+                    } else {
+                        console.log(`Keeping current value at ${currentValue}`);
+                    }
+
                     try {
                         // Access the slider properties using plain JavaScript
                         const controller = NofLinesFolder.controller_;
@@ -204,7 +212,13 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
                                 
                                 // Set the min and max values
                                 sliderProps.set('minValue', 1);
-                                sliderProps.set('maxValue', newMax);  // Use newMax instead of hardcoded 10
+                                sliderProps.set('maxValue', newMax);
+                                
+                                // This is the key part - manually set the current value to maintain it
+                                if (valueController.value !== undefined) {
+                                    valueController.value = newValue;
+                                }
+                                
                                 console.log("Successfully updated slider min/max values");
                             } else {
                                 console.log("Could not find sc_.sliderProps on valueController:", valueController);
@@ -218,7 +232,6 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
                     } catch (error) {
                         console.error("Error updating slider properties:", error);
                     }
-
 
                     // Force refresh of the UI to reflect the changes
                     paneRef.current.refresh();
