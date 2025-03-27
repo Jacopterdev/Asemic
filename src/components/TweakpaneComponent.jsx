@@ -6,7 +6,7 @@ import '../index.css';
 const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
     const paneRef = useRef(null);
     const paneContainerRef = useRef(null); // The actual DOM container for Tweakpane
-
+    let skeletonLinesCount = 10; // Default value for the number of lines
     // Using React state to manage all tweakpane parameters
     const [params, updateParams] = useState(defaultParams);
 
@@ -21,6 +21,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         if (onParamChange) {
             onParamChange(key, value); // Send the updated key and value only
         }
+        console.log("Updated", key, "to", value);
     };
 
     // Add event listener for tweakpane-update
@@ -49,6 +50,8 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         };
     }, []);
 
+    let NofLinesFolder;
+
     useEffect(() => {
         if (!paneContainerRef.current || paneRef.current) return;
 
@@ -69,11 +72,12 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         });
 
         const anatomyFolder = pane.addFolder({ title: 'Anatomy' });
-        anatomyFolder.addInput(params, 'numberOfLines', {
+        //const linesCount = window.skeletonLinesCount || 10; // Default to 10 if not available
+        NofLinesFolder = anatomyFolder.addInput(params, 'numberOfLines', {
             label: 'Number of Lines',
             view: "interval",
             min: 1,
-            max: 30,
+            max: skeletonLinesCount,
             step: 1,
         }).on('change', (event) => {
             updateParam('numberOfLines', event.value);
@@ -134,6 +138,104 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             paneRef.current.importPreset(params);
         }
     }, [defaultParams]); // Sync React state only if defaultParams change
+
+    useEffect(() => {
+        // Listen for skeleton-update events that contain information about line count
+        const handleSkeletonUpdate = (event) => {
+            console.log("Skeleton update event received:", event.detail);
+            
+            if (!event.detail || event.detail.skeletonLinesCount === undefined) {
+                console.log("No valid skeletonLinesCount in event");
+                return;
+            }
+
+            const linesCount = event.detail.skeletonLinesCount;
+            console.log("New lines count:", linesCount);
+            
+            // Update the global variable for future reference
+            skeletonLinesCount = linesCount;
+            console.log("Updated skeletonLinesCount to", skeletonLinesCount);
+            
+            // Update the Tweakpane UI for numberOfLines max value
+            if (paneRef.current) {
+                try {
+                    // Find the "Number of Lines" input in the Anatomy folder
+                    const anatomyFolder = paneRef.current.children.find(child => 
+                        child.title === 'Anatomy'
+                    );
+                    
+                    if (!anatomyFolder) {
+                        console.log("Anatomy folder not found");
+                        return;
+                    }
+                    
+                    // First look for the input controller
+                    let linesInput = null;
+                    for (const child of anatomyFolder.children) {
+                        // Look at the bound parameter name
+                        if (child.label === 'Number of Lines') {
+                            linesInput = child;
+                            break;
+                        }
+                    }
+                    
+                    if (!linesInput) {
+                        console.log("Number of Lines input not found");
+                        return;
+                    }
+                    
+                    console.log("Found input controller:", linesInput);
+                    
+                    // Get the new max value (at least 1)
+                    const newMax = Math.max(linesCount, 1);
+                    console.log("Setting new max:", newMax);
+  
+                    // First update the React state
+                    updateParam('numberOfLines', newMax);
+
+                    
+                    try {
+                        // Access the slider properties using plain JavaScript
+                        const controller = NofLinesFolder.controller_;
+                        if (controller && controller.valueController) {
+                            const valueController = controller.valueController;
+                            if (valueController.sc_ && valueController.sc_.sliderProps) {
+                                const sliderProps = valueController.sc_.sliderProps;
+                                
+                                // Set the min and max values
+                                sliderProps.set('minValue', 1);
+                                sliderProps.set('maxValue', newMax);  // Use newMax instead of hardcoded 10
+                                console.log("Successfully updated slider min/max values");
+                            } else {
+                                console.log("Could not find sc_.sliderProps on valueController:", valueController);
+                            }
+                        } else {
+                            console.log("Could not find controller or valueController:", controller);
+                        }
+                        
+                        // Force refresh of the UI to reflect the changes
+                        paneRef.current.refresh();
+                    } catch (error) {
+                        console.error("Error updating slider properties:", error);
+                    }
+
+
+                    // Force refresh of the UI to reflect the changes
+                    paneRef.current.refresh();
+
+                    console.log("Updated Number of Lines max value to", newMax);
+                } catch (error) {
+                    console.error("Error updating Tweakpane:", error);
+                }
+            }
+        };
+
+        window.addEventListener('skeleton-update', handleSkeletonUpdate);
+        
+        return () => {
+            window.removeEventListener('skeleton-update', handleSkeletonUpdate);
+        };
+    }, []); // Remove the dependency to avoid re-creating the listener
 
     return <div ref={paneContainerRef} className="relative p-4 theme-translucent" />;
 };

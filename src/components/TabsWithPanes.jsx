@@ -356,6 +356,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         };
     }, [setParams]); // Only re-run if setParams changes
 
+   
     return (
         <div className="tabs-with-panes w-full !mt-2">
             {/* Tabs List */}

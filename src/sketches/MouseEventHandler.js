@@ -1,11 +1,10 @@
 ﻿class MouseEventHandler {
-    constructor(p, gridContext, points, lineManager, possibleLinesRenderer, pointRenderer, onStateChange = null) {
+    constructor(p, gridContext, points, lineManager, possibleLinesRenderer, onStateChange = null) {
         this.p = p; // Reference to p5 instance
         this.gridContext = gridContext; // GridContext to handle snapping
         this.points = points; // Array to store points
         this.lineManager = lineManager; // Reference to the LineManager
         this.possibleLinesRenderer = possibleLinesRenderer; // Reference to the PossibleLinesRenderer
-        this.pointRenderer = pointRenderer; // Reference to the PointRenderer
         this.onStateChange = onStateChange; // Callback for state changes
         
         this.draggingPoint = null; // Currently dragged point
@@ -529,7 +528,7 @@
     handleMouseReleased() {
         if (!this.isInCanvas()) return;
         
-        // Notify state change if we did something
+       
         const didOperation = this.didAddPoint || this.didAddLine || this.didRemovePoint || this.didRemoveLine || this.isDragging;
         
         if (didOperation && this.onStateChange) {

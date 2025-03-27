@@ -72,6 +72,7 @@ class SkeletonState {
         this.buffer = p.createGraphics(this.bufferWidth, this.bufferHeight);
         this.initBufferGrid(); // Initialize the buffer grid
 
+   
     }
 
     createSkeletonButtons(){
@@ -250,12 +251,16 @@ class SkeletonState {
             this.possibleLinesRenderer, // Pass the renderer
             // Add callback for state changes
             () => {
+                console.log("incallback");
+
                 // Record state after significant changes
                 if (typeof this.p.recordCurrentState === 'function') {
                     this.p.recordCurrentState("skeletonChange");
                 }
+                console.log("incallback");
                 this.p.previousPoints = JSON.parse(JSON.stringify(this.points));
                 this.p.previousLines = JSON.parse(JSON.stringify(this.lineManager.getLines()));
+                this.notifyLinesCountChanged();
             }
         );
 
@@ -894,6 +899,24 @@ class SkeletonState {
         }
         
         return false; // We didn't handle the keypress
+    }
+
+    // Add this method to your SkeletonState class
+    notifyLinesCountChanged() {
+        // Get the current count of lines
+        const linesCount = this.lineManager.getLines().length;
+        console.log("Dispatching skeleton-update event with lines count:", linesCount);
+        
+        // Update the global variable
+        window.skeletonLinesCount = linesCount;
+        
+        // Dispatch an event to notify components
+        const event = new CustomEvent('skeleton-update', {
+            detail: {
+                skeletonLinesCount: linesCount
+            }
+        });
+        window.dispatchEvent(event);
     }
 
 }
