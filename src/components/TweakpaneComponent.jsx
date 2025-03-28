@@ -102,9 +102,26 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             },
         }).on('change', (event) => {
             updateParam('lineType', event.value);
+            if (event.value === 'straight') {
+                curvinessInput.hidden = true; // Hide curviness
+                curveOffsetInput.hidden = true; // Hide curveOffset
+                curveRatio.hidden = true;
+            } else if (event.value === 'curved'){
+                curvinessInput.hidden = false; // Show curviness
+                curveOffsetInput.hidden = false; // Show curveOffset
+                curveRatio.hidden = true;
+            } else {
+                curvinessInput.hidden = false; // Show curviness
+                curveOffsetInput.hidden = false; // Show curveOffset
+                curveRatio.hidden = false;
+            }
+            // Refresh the pane to apply the changes
+            pane.refresh();
+
+
         });
 
-        anatomyFolder.addInput(params, 'curviness', {
+        const curvinessInput = anatomyFolder.addInput(params, 'curviness', {
             label: 'Curviness',
             view: "interval",
             min: 0,
@@ -114,7 +131,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('curviness', event.value);
         })
 
-        anatomyFolder.addInput(params, 'curveOffset', {
+        const curveOffsetInput = anatomyFolder.addInput(params, 'curveOffset', {
             label: 'Curve Offset',
             view: "interval",
             min: 0,
@@ -123,6 +140,33 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         }).on('change', (event) => {
             updateParam('curveOffset', event.value);
         })
+
+        const curveRatio = anatomyFolder.addInput(params, 'curveRatio', {
+            label: 'Curve Ratio',
+            step: 1,
+            min: 0,
+            max: 100,
+        }).on('change', (event) => {
+            updateParam('curveRatio', event.value);
+        })
+
+        // Initial check for the visibility of inputs based on default lineType
+        if (params.lineType === 'straight') {
+            curvinessInput.hidden = true; // Hide curviness
+            curveOffsetInput.hidden = true; // Hide curveOffset
+            curveRatio.hidden = true;
+        } else if (params.lineType === 'curved'){
+            curvinessInput.hidden = false; // Show curviness
+            curveOffsetInput.hidden = false; // Show curveOffset
+            curveRatio.hidden = true;
+        } else {
+            curvinessInput.hidden = false; // Show curviness
+            curveOffsetInput.hidden = false; // Show curveOffset
+            curveRatio.hidden = false;
+        }
+        // Refresh the pane to apply the changes
+        pane.refresh();
+
 
         anatomyFolder.addInput(params, 'lineComposition', {
             label: 'Line Composition',

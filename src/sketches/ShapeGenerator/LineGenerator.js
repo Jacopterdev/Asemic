@@ -86,7 +86,7 @@ class LineGenerator {
 
             // For the "both" type, randomly choose between straight and curved for each line
             const shouldBeCurved = lineType === LINE_TYPE.CURVED ||
-                (lineType === LINE_TYPE.BOTH && this.cNoise.noiseMap(this.noisePos, 0, 1) > 0.5);
+                (lineType === LINE_TYPE.BOTH && this.cNoise.noiseMap(this.noisePos, 0, 1) < lineParams.curveRatio/100);
 
             if (!shouldBeCurved) {
                 // Create a straight line

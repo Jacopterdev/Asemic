@@ -22,6 +22,7 @@ function MainApp() {
         lineType: 'straight',
         curviness: {min: 0, max: 100},
         curveOffset: {min: 0, max: 100},
+        curveRatio: 50,
         lineComposition: 'Branched',
     });
 

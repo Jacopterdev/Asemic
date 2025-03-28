@@ -176,7 +176,8 @@ class ConfigParser {
       curveOffset:{
         min: this.config.curveOffset?.min || 0,
         max: this.config.curveOffset?.max || 0
-      }
+      },
+      curveRatio: this.config.curveRatio || 0,
     };
   }
 
