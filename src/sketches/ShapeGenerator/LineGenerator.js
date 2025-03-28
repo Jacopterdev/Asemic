@@ -122,13 +122,22 @@ class LineGenerator {
                 const curveOffset = this.cNoise.noiseMap(this.noisePos, minCurveOffset, maxCurveOffset) / 100;
 
 
+                const perpDirectionNoise = this.cNoise.noiseMap(this.noisePos, 0, 1);
+                // Parallel direction noise (to decide up/down skew)
+                const parallelDirectionNoise = this.cNoise.noiseMap(this.noisePos, 0, 1); // Offset noise position for variety
+
+                const perpDirection = perpDirectionNoise < 0.5 ? -1 : 1;
+                // Parallel direction: +1 (up) or -1 (down)
+                const parallelDirection = parallelDirectionNoise < 0.5 ? -1 : 1;
+
+
                 // Apply percentage-based perpendicular offset to the midpoint
-                midpoint.x += (-dy / lineLength) * perpDistance * lineLength;
-                midpoint.y += (dx / lineLength) * perpDistance * lineLength;
+                midpoint.x += perpDirection * (-dy / lineLength) * perpDistance * lineLength;
+                midpoint.y += perpDirection * (dx / lineLength) * perpDistance * lineLength;
 
                 // Apply percentage-based parallel offset to the midpoint
-                midpoint.x += (dx / lineLength) * curveOffset * lineLength;
-                midpoint.y += (dy / lineLength) * curveOffset * lineLength;
+                midpoint.x += parallelDirection * (dx / lineLength) * curveOffset * lineLength;
+                midpoint.y += parallelDirection * (dy / lineLength) * curveOffset * lineLength;
 
 
                 const offsetCP = this.getOffsetPosition(midpoint, missAreaRadius);

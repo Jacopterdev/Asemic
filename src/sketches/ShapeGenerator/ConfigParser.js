@@ -164,8 +164,8 @@ class ConfigParser {
     return {
       lineCount: lineCountObj,
       lineWidth: {
-        min: this.config.lineWidth?.min || 2,
-        max: this.config.lineWidth?.max || 15
+        min: this.config.lineWidth?.min || 1,
+        max: this.config.lineWidth?.max || 1
       },
       missArea: this.config.missArea || 0,
       smoothAmount: this.config.smoothAmount || 0,
