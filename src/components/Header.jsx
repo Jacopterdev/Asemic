@@ -24,17 +24,25 @@ function Header() {
                 </div>
 
                 {/* Center-aligned content using container */}
-                <div className="container mx-auto flex items-center gap-3 px-6">
-                    {/* Small SVG Logo */}
-                    <div>
-                        <img src="/shapes/circle.svg" alt="S icon" className="h-5 w-5" />
+
+                    <div className="container mx-auto flex items-center gap-3 px-6">
+                        {/* Small SVG Logo */}
+                        <div>
+                            <img src="/shapes/circle.svg" alt="S icon" className="h-5 w-5" />
+                        </div>
+
+                        {/* Title */}
+                        <h1 className="text-sm text-gray-600 font-medium select-none">
+                            Asemic
+                        </h1>
+                        <h1 className="text-sm text-gray-600 font-light select-none">
+                            |
+                        </h1>
+                        <h1 className="text-sm text-gray-600 font-light select-none">
+                            Form Language Generator
+                        </h1>
                     </div>
 
-                    {/* Title */}
-                    <h1 className="text-sm font-medium text-gray-600 font-light select-none">
-                        Form Language Generator
-                    </h1>
-                </div>
 
                 {/* Placeholder for right-aligned group */}
                 <div className="flex items-center gap-3 pr-6"></div>
