@@ -99,55 +99,49 @@ class LineGenerator {
                 });
             } else {
                 // Create a curved line
-                // Find a point that's not one of the endpoints
-                const otherPoints = this.points.filter(p =>
-                    !this.pointsEqual(p, line.start) &&
-                    !this.pointsEqual(p, line.end)
+                // Create a midpoint with offset
+                const midpoint = this.p.createVector(
+                    (line.start.x + line.end.x) / 2,
+                    (line.start.y + line.end.y) / 2
                 );
 
-                if (otherPoints.length > 0) {
-                    //const cp = this.p.random(otherPoints);
-                    const cpIndex = Math.floor(this.cNoise.noiseMap(this.noisePos, 0, otherPoints.length)); // Get the index
-                    const cp = otherPoints[cpIndex];
-                    const offsetCP = this.getOffsetPosition(cp, missAreaRadius);
+                // Add some perpendicular offset to make it curved
+                const dx = line.end.x - line.start.x;
+                const dy = line.end.y - line.start.y;
 
-                    this.curves.push({
-                        p1: offsetStart,
-                        cp: offsetCP,
-                        p2: offsetEnd,
-                        origP1: line.start,
-                        origP2: line.end,
-                        origCP: cp,
-                        lineWidth
-                    });
-                } else {
-                    //console.log("Creating own midpoint for line: " + line.start + " -> " + line.end + "");
-                    // If no other points available, create a midpoint with offset
-                    const midpoint = this.p.createVector(
-                        (line.start.x + line.end.x) / 2,
-                        (line.start.y + line.end.y) / 2
-                    );
+                const lineLength = this.p.sqrt(dx * dx + dy * dy);
 
-                    // Add some perpendicular offset to make it curved
-                    const dx = line.end.x - line.start.x;
-                    const dy = line.end.y - line.start.y;
-                    const perpDistance = 50; // Control curvature amount
+                const minCurviness = lineParams.curviness.min;
+                const maxCurviness = lineParams.curviness.max;
 
-                    midpoint.x += -dy / this.p.sqrt(dx*dx + dy*dy) * perpDistance;
-                    midpoint.y += dx / this.p.sqrt(dx*dx + dy*dy) * perpDistance;
 
-                    const offsetCP = this.getOffsetPosition(midpoint, missAreaRadius);
+                const perpDistance = this.cNoise.noiseMap(this.noisePos, minCurviness, maxCurviness) / 100;
 
-                    this.curves.push({
-                        p1: offsetStart,
-                        cp: offsetCP,
-                        p2: offsetEnd,
-                        origP1: line.start,
-                        origP2: line.end,
-                        origCP: midpoint,
-                        lineWidth
-                    });
-                }
+                const minCurveOffset = lineParams.curveOffset.min;
+                const maxCurveOffset = lineParams.curveOffset.max;
+                const curveOffset = this.cNoise.noiseMap(this.noisePos, minCurveOffset, maxCurveOffset) / 100;
+
+
+                // Apply percentage-based perpendicular offset to the midpoint
+                midpoint.x += (-dy / lineLength) * perpDistance * lineLength;
+                midpoint.y += (dx / lineLength) * perpDistance * lineLength;
+
+                // Apply percentage-based parallel offset to the midpoint
+                midpoint.x += (dx / lineLength) * curveOffset * lineLength;
+                midpoint.y += (dy / lineLength) * curveOffset * lineLength;
+
+
+                const offsetCP = this.getOffsetPosition(midpoint, missAreaRadius);
+
+                this.curves.push({
+                    p1: offsetStart,
+                    cp: offsetCP,
+                    p2: offsetEnd,
+                    origP1: line.start,
+                    origP2: line.end,
+                    origCP: midpoint,
+                    lineWidth
+                });
             }
         }
     }
@@ -387,5 +381,7 @@ class LineGenerator {
     pointsEqual(p1, p2) {
         return Math.abs(p1.x - p2.x) < 0.1 && Math.abs(p1.y - p2.y) < 0.1;
     }
+
+
 }
 export default LineGenerator;

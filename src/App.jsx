@@ -20,6 +20,8 @@ function MainApp() {
         smoothAmount: 10,
         lineWidth: {min: 8, max: 24},
         lineType: 'straight',
+        curviness: {min: 0, max: 100},
+        curveOffset: {min: 0, max: 100},
         lineComposition: 'Branched',
     });
 

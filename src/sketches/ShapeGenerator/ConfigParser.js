@@ -168,7 +168,15 @@ class ConfigParser {
         max: this.config.lineWidth?.max || 15
       },
       missArea: this.config.missArea || 0,
-      smoothAmount: this.config.smoothAmount || 0
+      smoothAmount: this.config.smoothAmount || 0,
+      curviness: {
+        min: this.config.curviness?.min || 0,
+        max: this.config.curviness?.max || 0
+      },
+      curveOffset:{
+        min: this.config.curveOffset?.min || 0,
+        max: this.config.curveOffset?.max || 0
+      }
     };
   }
 
