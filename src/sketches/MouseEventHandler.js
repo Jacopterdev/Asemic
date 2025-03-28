@@ -571,18 +571,20 @@
             return;
         }
         
+        // First update the hoveredLine state
+        this.updateHoveredLine();
+        
         const hoveredPoint = this.getHoveredPoint(this.p.mouseX, this.p.mouseY);
         if (hoveredPoint) {
             this.p.cursor(this.p.HAND); // Change cursor to hand when over a point
             this.previewLines = []; // Clear previews when over a point
         } else if (this.hoveredLine) {
             this.p.cursor(this.p.HAND); // Also change cursor when over a line
+            this.updatePreviewLines(); // Update preview lines when over a line
         } else {
             this.p.cursor(this.p.ARROW); // Reset cursor when not over interactive elements
             this.updatePreviewLines(); // Update preview lines when in empty space
         }
-        
-        this.updateHoveredLine();
     }
     
     /**
@@ -772,6 +774,7 @@
      * @param {Number} x3 - Second line first point x
      * @param {Number} y3 - Second line first point y
      * @param {Number} x4 - Second line second point x
+     * @param {Number} y4 - Second line second point y
      * @returns {Boolean} True if the lines intersect
      */
     doLineSegmentsIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -1040,23 +1043,18 @@
 
     // Add a method to draw the preview lines
     drawPreviewLines() {
-        if (this.previewLines.length === 0) return;
+        if (this.previewLines.length === 0) return null;
         
-        this.p.push();
-        
-        // Track if we're showing a line split preview
-        const isSplittingLine = this.previewLines.some(line => line.originalLine);
-        let originalLineToHide = null;
-        
-        if (isSplittingLine) {
-            // Find the original line we should hide
-            for (const line of this.previewLines) {
-                if (line.originalLine) {
-                    originalLineToHide = line.originalLine;
-                    break;
-                }
+        // Return the line to hide (if any) for the parent component to avoid rendering it twice
+        let lineToHide = null;
+        for (const line of this.previewLines) {
+            if (line.originalLine) {
+                lineToHide = line.originalLine;
+                break;
             }
         }
+        
+        this.p.push();
         
         // Use dashed line for preview
         this.p.strokeWeight(1);
@@ -1083,8 +1081,7 @@
         
         this.p.pop();
         
-        // Return the original line that should be hidden during rendering
-        return originalLineToHide;
+        return lineToHide;
     }
 }
 

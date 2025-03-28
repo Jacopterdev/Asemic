@@ -121,7 +121,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             label: 'Smooth Amount',
             step: 1,
             min: 0,
-            max: 30,
+            max: 40,
         }).on('change', (event) => {
             updateParam('smoothAmount', event.value);
         });

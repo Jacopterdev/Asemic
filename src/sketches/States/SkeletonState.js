@@ -492,23 +492,37 @@ class SkeletonState {
         console.log(`Tool changed to: ${toolType}`);
     }
 
-    // Add this method to handle delete functionality
+    /**
+     * Delete all points and lines
+     */
     deleteAllPoints() {
-        // Record state before deletion if recordCurrentState exists
-        if (typeof this.p.recordCurrentState === 'function') {
-            this.p.recordCurrentState("beforeDelete");
-        }
-        
         // Clear all points
         this.points.length = 0;
         
-        // Remove all lines
+        // Clear all lines in the line manager
         this.lineManager.clearAllLines();
         
-        // Record state after deletion if recordCurrentState exists
-        if (typeof this.p.recordCurrentState === 'function') {
-            this.p.recordCurrentState("deleteAll");
+        // IMPORTANT: Reset all references to points in MouseEventHandler
+        if (this.mouseHandler) {
+            this.mouseHandler.lastAddedPoint = null;
+            this.mouseHandler.selectedPoint = null;
+            this.mouseHandler.draggingPoint = null;
+            this.mouseHandler.mouseDragStart = null;
+            this.mouseHandler.isDragging = false;
+            this.mouseHandler.previewLines = [];
+            this.mouseHandler.previewPoint = null;
+            this.mouseHandler.hoveredLine = null;
         }
+        
+        // Notify about state change
+        if (this.onStateChange) {
+            this.onStateChange("end");
+        }
+        
+        // Notify about lines count change
+        this.notifyLinesCountChanged();
+        
+        console.log("All points and lines deleted");
     }
 
     // Add a method to generate random points
