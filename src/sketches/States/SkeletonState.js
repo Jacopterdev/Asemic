@@ -244,9 +244,9 @@ class SkeletonState {
         this.possibleLinesRenderer = new PossibleLinesRenderer(this.p); // Initialize PossibleLinesRenderer
 
         //Animator
-        this.ephemeralLineAnimator = new EphemeralLineAnimator(this.p, this.lineManager);
+        //this.ephemeralLineAnimator = new EphemeralLineAnimator(this.p, this.lineManager);
 
-        this.ephemeralLineAnimator.start(); // Start the animation
+        //this.ephemeralLineAnimator.start(); // Start the animation
 
         // Create the possible lines renderer
         this.possibleLinesRenderer = new PossibleLinesRenderer(this.p);
@@ -562,7 +562,7 @@ class SkeletonState {
         this.p.noStroke();
         this.p.fill(0); // Color: black
 
-        this.ephemeralLineAnimator.updateAndDraw();
+        //this.ephemeralLineAnimator.updateAndDraw();
 
         this.gridContext.draw();
 

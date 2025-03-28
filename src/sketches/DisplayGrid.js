@@ -150,6 +150,7 @@ class DisplayGrid {
                 p.fill(64);
                 p.noStroke();
                 p.textSize(12);
+                p.textAlign(p.LEFT, p.CENTER);
                 p.text(cell.letter, cell.x + LAYOUT.PADDING, cellYWithScroll + LAYOUT.PADDING + 10);
             }
         }
