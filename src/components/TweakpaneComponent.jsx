@@ -104,11 +104,31 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('lineType', event.value);
         });
 
+        anatomyFolder.addInput(params, 'curviness', {
+            label: 'Curviness',
+            view: "interval",
+            min: 0,
+            max: 125,
+            step: 1,
+        }).on('change', (event) => {
+            updateParam('curviness', event.value);
+        })
+
+        anatomyFolder.addInput(params, 'curveOffset', {
+            label: 'Curve Offset',
+            view: "interval",
+            min: 0,
+            max: 125,
+            step: 1,
+        }).on('change', (event) => {
+            updateParam('curveOffset', event.value);
+        })
+
         anatomyFolder.addInput(params, 'lineComposition', {
             label: 'Line Composition',
             options: {
                 Branched: 'Branched',
-                Continuous: 'Segmented',
+                Sequential: 'Segmented',
                 Random: 'Random',
             },
         }).on('change', (event) => {
