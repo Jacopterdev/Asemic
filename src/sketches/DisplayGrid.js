@@ -30,7 +30,7 @@ class DisplayGrid {
 
         // Initialize downloadButtons array
         this.downloadButtons = [];
-        
+
         // Create initial buttons for all cells
         if(!buffer) this.createDownloadButtons();
 
@@ -38,6 +38,8 @@ class DisplayGrid {
         this.hoveredCellCol = -1;
 
         this.buffer = buffer;
+
+        this.addRows(5);
     }
 
     // Initialize the grid and assign letters
@@ -91,6 +93,10 @@ class DisplayGrid {
                 };
             }
         }
+
+        const visibleHeight = this.p.height - this.yStart;
+        this.maxScroll = Math.max(0, this.rows * this.cellHeight - visibleHeight);
+
     }
 
     // New method to create buttons for all grid cells
@@ -112,6 +118,31 @@ class DisplayGrid {
                 );
             }
         }
+    }
+
+    drawScrollbar() {
+        const p = this.p;
+
+        const visibleHeight = p.height - this.yStart; // Available height for the visible grid
+        const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+        const proportionVisible = visibleHeight / gridHeight;
+
+        // Calculate scrollbar height based on visible proportion
+        const scrollbarHeight = Math.max(20, visibleHeight * proportionVisible); // Minimum scrollbar height is 20
+        const maxScrollbarMovement = visibleHeight - scrollbarHeight; // Max movement for the scrollbar
+        const scrollbarPosition = (Math.abs(this.scrollOffset) / (gridHeight - visibleHeight)) * maxScrollbarMovement;
+
+        // Clamp scrollbar position to remain within bounds
+        const clampedScrollbarY = this.yStart + Math.min(maxScrollbarMovement, scrollbarPosition);
+
+        // Define scrollbar dimensions
+        const scrollbarWidth = 10;
+        const scrollbarX = this.xStart + this.gridSize + 5; // Position on the right of the grid
+
+        // Draw the actual scrollbar handle
+        this.p.fill(156, 163, 175);
+        this.p.noStroke();
+        p.rect(scrollbarX, clampedScrollbarY, scrollbarWidth, scrollbarHeight, 5);
     }
 
     drawGrid() {
@@ -194,6 +225,7 @@ class DisplayGrid {
                 }
             }
         }
+        this.drawScrollbar();
     }
 
     drawShapes(xray = false){
@@ -274,7 +306,7 @@ class DisplayGrid {
 
     handleScroll(md) {
         const SCROLL_THRESHOLD = 400; // Pixels near the viewport bottom
-        const ADD_ROW_COUNT = 5; // Pre-add this many rows
+        const ADD_ROW_COUNT = 3; // Pre-add this many rows
 
         // Update scroll offset by the mouse delta
         this.scrollOffset -= md * 1; // Adjust speed of scroll scaling if needed
@@ -283,6 +315,10 @@ class DisplayGrid {
         if (this.scrollOffset > 0) {
             this.scrollOffset = 0;
         }
+
+        // Clamp scroll offset to remain within bounds
+        this.scrollOffset = this.p.constrain(this.scrollOffset, -this.maxScroll, 0);
+
 
         // Calculate the viewport's bottom edge relative to `scrollOffset`
         const viewportBottomEdge = Math.abs(this.scrollOffset) + this.p.height;
@@ -385,6 +421,8 @@ class DisplayGrid {
                 );
             }
         }
+        const visibleHeight = this.p.height - this.yStart;
+        this.maxScroll = Math.max(0, this.rows * this.cellHeight - visibleHeight);
     }
 
     // Add this helper method to get the last letter's ASCII code
@@ -489,6 +527,5 @@ class DisplayGrid {
             }
         }
     }
-
 }
 export default DisplayGrid;
