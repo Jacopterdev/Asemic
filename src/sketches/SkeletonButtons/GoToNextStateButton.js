@@ -1,11 +1,12 @@
 ﻿import SkeletonButton from "./SkeletonButton.js";
 
 class GoToNextStateButton extends SkeletonButton{
-    constructor(p, x, y, onGoToNextState) {
+    constructor(p, x, y, onGoToNextState, flipped=false) {
         super(p, x, y, onGoToNextState);
         this.size = 40;
         this.width = this.size / 3;
         this.height = this.size /3*6;
+        this.flipped = flipped;
     }
     draw() {
         const width = this.width;
@@ -44,15 +45,25 @@ class GoToNextStateButton extends SkeletonButton{
         const arrowHeight = this.size * 0.2; // Height of the '>' icon
         const arrowWidth = this.size * 0.1; // Width of the '>' icon
 
-        const centerX = this.x + width/2*1.1;
+        const opticalOffset = 0.1;
+        const centerX = this.x + width / 2 * (this.flipped ? 1-opticalOffset : 1+opticalOffset);
         const centerY = this.y + height/2;
 
         // Calculate positions for the two lines
-        const x1 = centerX - arrowWidth / 2;       // Left point
+        let x1 = centerX - arrowWidth / 2;       // Left point
         const y1 = centerY - arrowHeight / 2;     // Top point
-        const x2 = centerX - arrowWidth / 2;       // Bottom point
+        let x2 = centerX - arrowWidth / 2;       // Bottom point
         const y2 = centerY + arrowHeight / 2;
-        const x3 = centerX + arrowWidth / 2;       // Right tip (point outward)
+        let x3 = centerX + arrowWidth / 2;       // Right tip (point outward)
+
+
+        // Flip the icon if flipped is true
+        if (this.flipped) {
+            // Mirror the points horizontally by swapping x1 and x3
+            const temp = x1;
+            x1 = x3;
+            x3 = temp;
+        }
 
         // Draw lines forming the '>'
         this.p.line(x1, y1, x3, centerY); // Top line

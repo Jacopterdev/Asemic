@@ -1,6 +1,7 @@
 ﻿import DisplayGrid from "../DisplayGrid.js";
 import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
+import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 
 class AnatomyState {
     constructor(p, points, mergedParams) {
@@ -12,7 +13,19 @@ class AnatomyState {
         this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray
-
+        this.previousStateButton = new GoToNextStateButton(this.p,
+            LAYOUT.PREVIOUS_STATE_BUTTON_X,
+            LAYOUT.PREVIOUS_STATE_BUTTON_Y,
+            () => {
+                this.p.changeState("Edit Skeleton");
+            },
+            true);
+        this.nextStateButton = new GoToNextStateButton(this.p,
+            LAYOUT.NEXT_STATE_BUTTON_X,
+            LAYOUT.NEXT_STATE_BUTTON_Y,
+            () => {
+                this.p.changeState("Composition");
+            })
     }
 
     draw() {
@@ -20,6 +33,8 @@ class AnatomyState {
         this.p.applyEffects(this.blurScale);
         this.displayGrid.drawGrid();
         if (this.xray) this.displayGrid.drawShapes(true);
+        this.previousStateButton.draw();
+        this.nextStateButton.draw();
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
@@ -46,11 +61,16 @@ class AnatomyState {
     mousePressed() {
         // Delegate button handling to DisplayGrid
         this.displayGrid.handleMousePressed();
-        
-        // If no button was clicked, set xray mode
-        //if (!buttonClicked) {
-            this.xray = true;
-        //}
+
+        this.xray = true;
+
+        if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.previousStateButton.click();
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.nextStateButton.click();
+        }
 
     }
 

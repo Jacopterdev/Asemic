@@ -57,7 +57,7 @@ class SkeletonState {
             LAYOUT.NEXT_STATE_BUTTON_X,
             LAYOUT.NEXT_STATE_BUTTON_Y,
             () => {
-                this.changeState("Anatomy");
+                this.p.changeState("Anatomy");
             }
         );
 
@@ -950,9 +950,7 @@ class SkeletonState {
         window.dispatchEvent(event);
     }
 
-    changeState(newState){
-        window.dispatchEvent(new CustomEvent('toolConfig', { detail: newState }));
-    }
+
 
 }
 export default SkeletonState;

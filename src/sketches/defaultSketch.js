@@ -639,6 +639,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         return false;
     };
+
+    p.changeState = (newState) => {
+        window.dispatchEvent(new CustomEvent('toolConfig', { detail: newState }));
+    }
 };
 
 export default defaultSketch;
