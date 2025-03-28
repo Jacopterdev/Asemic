@@ -25,6 +25,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
     };
 
     // Add event listener for tweakpane-update
+    // Add event listener for tweakpane-update
     useEffect(() => {
         const handleTweakpaneUpdate = (event) => {
             if (event.detail) {

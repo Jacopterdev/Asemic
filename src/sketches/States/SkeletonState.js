@@ -27,6 +27,7 @@ import EraserToolButton from "../SkeletonButtons/EraserToolButton.js"; // Import
 import ConnectToOneButton from "../SkeletonButtons/ConnectToOneButton.js";
 import ConnectWithoutCrossingButton from "../SkeletonButtons/ConnectWithoutCrossingButton.js";
 import ConnectToAllButton from "../SkeletonButtons/ConnectToAllButton.js";
+import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -51,6 +52,14 @@ class SkeletonState {
 
 
         this.createSkeletonButtons();
+        this.nextStateButton = new GoToNextStateButton(
+            this.p,
+            LAYOUT.NEXT_STATE_BUTTON_X,
+            LAYOUT.NEXT_STATE_BUTTON_Y,
+            () => {
+                this.changeState("Anatomy");
+            }
+        );
 
         // Initialize tutorial system
         const tutorialSeen = typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true';
@@ -622,8 +631,11 @@ class SkeletonState {
         const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
         const bufferY = 0; // Position 0px from the top
         this.p.image(this.buffer, bufferX, bufferY);
+
+        this.nextStateButton.draw();
     }
 
+    /** DUPLICATE DRAW METHOD???
     // Modify the draw method to handle the null selectedPoint
     draw() {
         this.p.cursor(this.p.ARROW);
@@ -708,7 +720,7 @@ class SkeletonState {
         const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
         const bufferY = 0; // Position 0px from the top
         this.p.image(this.buffer, bufferX, bufferY);
-    }
+    }*/
 
 
     updateMergedParams(newMergedParams) {
@@ -797,6 +809,11 @@ class SkeletonState {
         
         if(this.connectToAllButton.checkHover(this.p.mouseX, this.p.mouseY)) {
             this.connectToAllButton.click();
+            return;
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.nextStateButton.click();
             return;
         }
         
@@ -931,6 +948,10 @@ class SkeletonState {
             }
         });
         window.dispatchEvent(event);
+    }
+
+    changeState(newState){
+        window.dispatchEvent(new CustomEvent('toolConfig', { detail: newState }));
     }
 
 }

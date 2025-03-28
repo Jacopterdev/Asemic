@@ -28,6 +28,7 @@ function MainApp() {
 
     const [subShapeParams, setSubShapeParams] = useState({});
     const [lastUpdatedParam, setLastUpdatedParam] = useState(null); // Track last updated param
+    const [selectedButtonIndex, setSelectedButtonIndex] = useState(0); // Default to the first button
     const location = useLocation();
 
     // Check URL for shape data when the page loads
@@ -122,6 +123,37 @@ function MainApp() {
         grid: "radial", // Default selection for the second group
     });
 
+    useEffect(() => {
+        const handleToolConfigEvent = (event) => {
+            if (event && event.detail && typeof event.detail === 'string') {
+                console.log("Received toolConfig update:", event.detail);
+
+                setToolConfig((prev) => {
+                    const updatedToolConfig = {
+                        ...prev,
+                        state: event.detail, // Update the state key
+                    };
+
+                    // Automatically update TabGroup selection based on button label
+                    const tabIndex = firstGroupButtons.findIndex((button) => button.label === event.detail);
+                    if (tabIndex !== -1) {
+                        setSelectedButtonIndex(tabIndex); // Update state for TabGroup
+                    }
+
+                    return updatedToolConfig;
+                });
+            }
+        };
+
+        window.addEventListener('toolConfig', handleToolConfigEvent);
+
+        return () => {
+            window.removeEventListener('toolConfig', handleToolConfigEvent);
+        };
+    }, []);
+
+
+
     const firstGroupButtons = [
         {
             label: "Edit Skeleton",
@@ -136,11 +168,11 @@ function MainApp() {
 
     // Callback for handling button selection in the first group
     const handleFirstGroupSelection = (index) => {
-        setToolConfig((prevState) => ({
-            ...prevState,
-            state: firstGroupButtons[index].label, // Update `state` with the selected label
+        setSelectedButtonIndex(index); // Update state in MainApp
+        setToolConfig((prev) => ({
+            ...prev,
+            state: firstGroupButtons[index].label, // Update toolConfig.state as well
         }));
-
     };
 
     const handleSave = () => {
@@ -219,7 +251,10 @@ function MainApp() {
 
                     <div className="flex-1 bg-gray-100 shadow p-4 rounded">
                         <div className="flex justify-between items-center h-6">
-                            <TabGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
+                            <TabGroup buttons={firstGroupButtons}
+                                      selectedButton={selectedButtonIndex}
+                                      onButtonSelect={handleFirstGroupSelection}
+                            />
 
                             <div className="flex items-center space-x-2">
                                 {/* Action buttons in the top bar - using components now */}
