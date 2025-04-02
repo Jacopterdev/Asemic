@@ -317,21 +317,19 @@ class ShapeSaver {
         const filteredAlphabet = alphabet.split('').filter(char => char !== ' ');
         
         // Define grid layout parameters
-        const shapeSize = 600;
-        const spacing = 200;
+        const shapeSize = LAYOUT.GRID_SIZE-(LAYOUT.MARGIN*2);
+        const spacing = LAYOUT.MARGIN*4;
         const columns = 5;
         const rows = Math.ceil(filteredAlphabet.length / columns);
         
         // Fix the buffer dimensions to include ALL shapes properly
-        // Don't subtract spacing - that's what's causing shapes to get cut off
-        const bufferWidth = columns * (shapeSize + spacing);
-        const bufferHeight = rows * (shapeSize + spacing);
+        const bufferWidth = (columns * (shapeSize + spacing))+LAYOUT.MARGIN*4;
+        const bufferHeight = (rows * (shapeSize + spacing))+LAYOUT.MARGIN*4;
         
         console.log(`Creating buffer with dimensions ${bufferWidth}x${bufferHeight}`);
         
         // Create two buffers - one for shapes (with effects) and one for text (without effects)
         const shapeBuffer = this.p.createGraphics(bufferWidth, bufferHeight);
-        const finalBuffer = this.p.createGraphics(bufferWidth, bufferHeight);
         
         // Fill shape buffer with white background
         shapeBuffer.background(255);
@@ -345,8 +343,8 @@ class ShapeSaver {
             const row = Math.floor(i / columns);
             
             // Calculate pixel position
-            const x = col * (shapeSize + spacing);
-            const y = row * (shapeSize + spacing);
+            const x = (col * (shapeSize + spacing)) + LAYOUT.MARGIN*4;
+            const y = (row * (shapeSize + spacing)) + LAYOUT.MARGIN*4;
             
             // Get noise position from dictionary
             const noisePos = shapeDictionary.getValue(char);
@@ -357,8 +355,8 @@ class ShapeSaver {
             
             // Draw the shape only to shape buffer
             shapeBuffer.push();
-            shapeBuffer.translate(x + shapeSize/2, y + shapeSize/2); // Center in cell
-            shapeBuffer.scale(0.8);
+            shapeBuffer.translate(x, y); // Center in cell
+            shapeBuffer.scale(1);
             
             const shape = new ShapeGeneratorV2(shapeBuffer, this.mergedParams);
             shape.setNoisePosition(noisePos.x, noisePos.y);
@@ -371,11 +369,7 @@ class ShapeSaver {
         // Apply effects to the shape buffer only
         const effect = new Effects(shapeBuffer);
         effect.setSmoothAmount(this.mergedParams.smoothAmount);
-        effect.applyEffects(0.4);
-        
-        // Draw the processed shape buffer to the final buffer
-        finalBuffer.background(255);
-        finalBuffer.image(shapeBuffer, 0, 0);
+        effect.applyEffects(1);
         
         // Add text labels on top (not affected by smoothing)
         for (let i = 0; i < filteredAlphabet.length; i++) {
@@ -386,23 +380,21 @@ class ShapeSaver {
             const row = Math.floor(i / columns);
             
             // Calculate pixel position
-            const x = col * (shapeSize + spacing);
-            const y = row * (shapeSize + spacing);
+            const x = (col * (shapeSize + spacing)) + LAYOUT.MARGIN*4;
+            const y = (row * (shapeSize + spacing)) + LAYOUT.MARGIN*4;
             
             // Draw character label on the final buffer
-            finalBuffer.fill(0);
-            finalBuffer.noStroke();
-            finalBuffer.textSize(48);
-            finalBuffer.textAlign(finalBuffer.CENTER);
-            finalBuffer.text(char, x + shapeSize/2, y + 40);
+            shapeBuffer.fill(0);
+            shapeBuffer.noStroke();
+            shapeBuffer.textSize(48);
+            shapeBuffer.textAlign(shapeBuffer.LEFT, shapeBuffer.TOP);
+            shapeBuffer.text(char, x, y + LAYOUT.MARGIN);
         }
         
         // Save the final composition
-        finalBuffer.save(`shape_catalog_${Date.now()}.png`);
-        
+        shapeBuffer.save(`shape_catalog_${Date.now()}.png`);
         // Clean up
         shapeBuffer.remove();
-        finalBuffer.remove();
         
         console.log("Shape catalog downloaded successfully");
         return true;

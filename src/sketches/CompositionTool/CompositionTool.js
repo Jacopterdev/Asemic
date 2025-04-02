@@ -68,7 +68,7 @@ class CompositionTool {
             
             try {
                 // Use ShapeSaver's method instead of direct implementation
-                const allCharacters = "QWERTYUIOPASDFGHJKL ZXCVBNM"; // Match your grid layout
+                const allCharacters = "QWERTYUIOPASDFGHJKLZXCVBNM"; // Match your grid layout
                 shapeSaver.init(this.p, this.mergedParams)
                     .downloadAllShapes(this.p, this.mergedParams, allCharacters);
                 return true;
