@@ -275,7 +275,6 @@ function MainApp() {
                                 toolConfig={toolConfig}
                                 lastUpdatedParam={lastUpdatedParam}
                             />
-                            <div className="bg-gray-50 flex-1 rounded m-4"></div>
                         </div>
                     </div>
                 </div>
