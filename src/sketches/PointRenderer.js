@@ -11,7 +11,7 @@
         
         // Point sizes
         this.normalSize = 12; 
-        this.hoverSize = 22;
+        this.hoverSize = 18;
         this.hoverBorderWeight = 2; // Border thickness for hovered points
     }
 
@@ -49,6 +49,7 @@
         
         // Then draw the point on top
         if (isSelected) {
+            /**
             // Draw a blurred highlight effect for selected point
             this.p.drawingContext.shadowBlur = 10;
             this.p.drawingContext.shadowColor = this.p.color(250, 140, 0, 200);
@@ -57,6 +58,11 @@
             this.p.fill(this.p.color(255, 200, 100));
             this.p.ellipse(point.x, point.y, this.hoverSize + 2, this.hoverSize + 2);
             this.p.drawingContext.shadowBlur = 0;
+                */
+            this.p.stroke(this.hoverBorderColor);
+            this.p.strokeWeight(this.hoverBorderWeight);
+            this.p.fill(this.hoverColor);
+            this.p.ellipse(point.x, point.y, this.hoverSize, this.hoverSize);
         } else if (isHovered) {
             this.p.stroke(this.hoverBorderColor);
             this.p.strokeWeight(this.hoverBorderWeight);
