@@ -139,6 +139,7 @@ class DisplayGrid {
         // Clamp scrollbar position to remain within bounds
         const clampedScrollbarY = this.yStart + Math.min(maxScrollbarMovement, scrollbarPosition);
 
+
         // Define scrollbar dimensions
         const scrollbarWidth = 10;
         const scrollbarX = this.xStart + this.gridSize + 5; // Position on the right of the grid
@@ -322,7 +323,6 @@ class DisplayGrid {
 
         // Clamp scroll offset to remain within bounds
         this.scrollOffset = this.p.constrain(this.scrollOffset, -this.maxScroll, 0);
-
 
         // Calculate the viewport's bottom edge relative to `scrollOffset`
         const viewportBottomEdge = Math.abs(this.scrollOffset) + this.p.height;
@@ -511,6 +511,8 @@ class DisplayGrid {
         const maxScrollbarMovement = visibleHeight - scrollbarHeight; // Max movement for the scrollbar
         const scrollbarStart = (Math.abs(this.scrollOffset) / (gridHeight - visibleHeight)) * maxScrollbarMovement;
 
+        const clampedScrollbarY = this.yStart + Math.min(maxScrollbarMovement, scrollbarStart);
+
         const mx = this.p.mouseX;
         const my = this.p.mouseY;
 
@@ -519,8 +521,8 @@ class DisplayGrid {
 
         if (mx > scrollbarX &&
             mx < scrollbarX + scrollbarWidth &&// Condition: Inside scrollbar (adjust these as per actual scrollbar bounds)
-            my >= scrollbarStart &&
-            my <= scrollbarStart+scrollbarHeight) {
+            my >= clampedScrollbarY &&
+            my <= clampedScrollbarY+scrollbarHeight) {
             this.isDragging = true;
             this.lastMouseY = my;
         }
@@ -534,8 +536,12 @@ class DisplayGrid {
             const my = this.p.mouseY;
             const md = my - this.lastMouseY;
 
+            const visibleHeight = this.p.height - this.yStart; // Available height for the visible grid
+            const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+            const proportionVisible = visibleHeight / gridHeight;
+
             // Update scroll offset by the mouse delta
-            this.scrollOffset -= md * 3; // Adjust speed of scroll scaling if needed
+            this.scrollOffset -= md * 1/proportionVisible; // Adjust speed of scroll scaling if needed
 
             // Prevent scrolling above the topmost position
             if (this.scrollOffset > 0) {
