@@ -20,6 +20,8 @@ class DisplayGrid {
         this.hoveredCell = null;
 
         this.scrollOffset = 0;
+        this.isDragging = false; // Track if user is dragging
+        this.lastMouseY = 0;     // Track last mouse Y position
 
         this.mergedParams = mergedParams;
         this.scale = this.cellWidth / p.width;
@@ -40,6 +42,8 @@ class DisplayGrid {
         this.buffer = buffer;
 
         this.addRows(5);
+
+
     }
 
     // Initialize the grid and assign letters
@@ -496,8 +500,73 @@ class DisplayGrid {
                 }
             }
         }
-        
+
+        const p = this.p;
+        const visibleHeight = p.height - this.yStart; // Available height for the visible grid
+        const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+        const proportionVisible = visibleHeight / gridHeight;
+
+        // Calculate scrollbar height based on visible proportion
+        const scrollbarHeight = Math.max(20, visibleHeight * proportionVisible); // Minimum scrollbar height is 20
+        const maxScrollbarMovement = visibleHeight - scrollbarHeight; // Max movement for the scrollbar
+        const scrollbarStart = (Math.abs(this.scrollOffset) / (gridHeight - visibleHeight)) * maxScrollbarMovement;
+
+        const mx = this.p.mouseX;
+        const my = this.p.mouseY;
+
+        const scrollbarWidth = 10;
+        const scrollbarX = this.xStart + this.gridSize + 5; // Position on the right of the grid
+
+        if (mx > scrollbarX &&
+            mx < scrollbarX + scrollbarWidth &&// Condition: Inside scrollbar (adjust these as per actual scrollbar bounds)
+            my >= scrollbarStart &&
+            my <= scrollbarStart+scrollbarHeight) {
+            this.isDragging = true;
+            this.lastMouseY = my;
+        }
         return false; // No button was clicked
+    }
+    handleMouseDragged(){
+        if (this.isDragging) {
+            const SCROLL_THRESHOLD = 400; // Pixels near the viewport bottom
+            const ADD_ROW_COUNT = 3; // Pre-add this many rows
+
+            const my = this.p.mouseY;
+            const md = my - this.lastMouseY;
+
+            // Update scroll offset by the mouse delta
+            this.scrollOffset -= md * 3; // Adjust speed of scroll scaling if needed
+
+            // Prevent scrolling above the topmost position
+            if (this.scrollOffset > 0) {
+                this.scrollOffset = 0;
+            }
+
+            // Clamp scroll offset to remain within bounds
+            this.scrollOffset = this.p.constrain(this.scrollOffset, -this.maxScroll, 0);
+
+            this.lastMouseY = my; // Update the last recorded mouse position
+
+            // Calculate the viewport's bottom edge relative to `scrollOffset`
+            const viewportBottomEdge = Math.abs(this.scrollOffset) + this.p.height;
+
+            // The bottom edge of the last row
+            const lastRowBottomEdge = this.grid[this.grid.length - 1][0].y + this.cellHeight;
+
+            // Check if we need to add rows
+            if (viewportBottomEdge + SCROLL_THRESHOLD > lastRowBottomEdge) {
+                this.addRows(ADD_ROW_COUNT);
+            }
+
+            // Purge rows above the visible area
+            this.purgeOffscreenRows();
+
+            // Reset download buttons array since positions will change
+            this.downloadButtons = [];
+        }
+    }
+    handleMouseReleased(){
+        this.isDragging = false;
     }
 
     updateHoveredCell() {

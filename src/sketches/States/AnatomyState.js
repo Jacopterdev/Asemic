@@ -29,6 +29,7 @@ class AnatomyState {
     }
 
     draw() {
+        this.p.cursor(this.p.ARROW);
         this.displayGrid.drawShapes();
         this.p.applyEffects(this.blurScale);
         this.displayGrid.drawGrid();
@@ -75,11 +76,13 @@ class AnatomyState {
     }
 
     mouseDragged() {
+        this.displayGrid.handleMouseDragged();
         this.xray = true;
         // No mouse drag interaction in this state
     }
 
     mouseReleased() {
+        this.displayGrid.handleMouseReleased();
         this.xray = false;
         this.p.animateSmoothAmount();
     }
