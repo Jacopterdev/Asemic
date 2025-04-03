@@ -67,8 +67,8 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             params: {
                 subShape: "Square",
                 sides: 4,
-                stretch: 0,
-                curve: 0,
+                stretch: {min: 0, max: 100},
+                curve: {min: -5, max: 5},
                 connection: "Along", // Default value
                 rotationType: "relative", // Default value
                 angle: {min: 0, max: 360},
