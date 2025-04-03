@@ -259,17 +259,21 @@ class SkeletonState {
             this.lineManager,
             this.possibleLinesRenderer, // Pass the renderer
             // Add callback for state changes
-            () => {
-                console.log("incallback");
+            (eventType) => { // Add parameter to receive the event type
+                console.log(`In callback: ${eventType}`);
 
                 // Record state after significant changes
                 if (typeof this.p.recordCurrentState === 'function') {
                     this.p.recordCurrentState("skeletonChange");
                 }
-                console.log("incallback");
+
                 this.p.previousPoints = JSON.parse(JSON.stringify(this.points));
                 this.p.previousLines = JSON.parse(JSON.stringify(this.lineManager.getLines()));
-                this.notifyLinesCountChanged();
+                
+                // Only notify when the operation ends (mouse released)
+                if (eventType === "end") {
+                    this.notifyLinesCountChanged();
+                }
             }
         );
 
@@ -481,6 +485,9 @@ class SkeletonState {
         if (typeof this.p.recordCurrentState === 'function') {
             this.p.recordCurrentState("fillGrid");
         }
+
+        this.notifyLinesCountChanged();
+
     }
 
     // Add this method to your SkeletonState class

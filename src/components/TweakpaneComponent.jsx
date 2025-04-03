@@ -207,7 +207,6 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
     useEffect(() => {
         // Listen for skeleton-update events that contain information about line count
         const handleSkeletonUpdate = (event) => {
-            console.log("Skeleton update event received:", event.detail);
             
             if (!event.detail || event.detail.skeletonLinesCount === undefined) {
                 console.log("No valid skeletonLinesCount in event");
@@ -215,45 +214,24 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             }
 
             const linesCount = event.detail.skeletonLinesCount;
-            console.log("New lines count:", linesCount);
             
             // Update the global variable for future reference
+                                           
+                                // Calculate how many lines were added by comparing with the previous count
+                                // skeletonLinesCount was updated above, so it now has the new value
+                                // We need to calculate what the old value was
+                                const oldLinesCount = skeletonLinesCount
+
             skeletonLinesCount = linesCount;
-            console.log("Updated skeletonLinesCount to", skeletonLinesCount);
+            const linesAdded = Math.max(linesCount - oldLinesCount, 0); // Ensure non-negative
+      
             
             // Update the Tweakpane UI for numberOfLines max value
             if (paneRef.current) {
                 try {
-                    // Find the "Number of Lines" input in the Anatomy folder
-                    const anatomyFolder = paneRef.current.children.find(child => 
-                        child.title === 'Anatomy'
-                    );
-                    
-                    if (!anatomyFolder) {
-                        console.log("Anatomy folder not found");
-                        return;
-                    }
-                    
-                    // First look for the input controller
-                    let linesInput = null;
-                    for (const child of anatomyFolder.children) {
-                        // Look at the bound parameter name
-                        if (child.label === 'Number of Lines') {
-                            linesInput = child;
-                            break;
-                        }
-                    }
-                    
-                    if (!linesInput) {
-                        console.log("Number of Lines input not found");
-                        return;
-                    }
-                    
-                    console.log("Found input controller:", linesInput);
                     
                     // Get the new max value (at least 1)
                     const newMax = Math.max(linesCount, 1);
-                    console.log("Setting new max:", newMax);
 
                     // Don't update the React state unless necessary
                     // Keep the current value unless it exceeds the new maximum
@@ -261,10 +239,8 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
                     const newValue = currentValue > newMax ? newMax : currentValue;
 
                     if (newValue !== currentValue) {
-                        console.log(`Current value ${currentValue} exceeds new max ${newMax}, reducing to ${newValue}`);
                         updateParam('numberOfLines', newValue);
                     } else {
-                        console.log(`Keeping current value at ${currentValue}`);
                     }
 
                     try {
@@ -281,7 +257,34 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
                                 
                                 // This is the key part - manually set the current value to maintain it
                                 if (valueController.value !== undefined) {
-                                    valueController.value = newValue;
+                                    // Get the latest values from the React state first (which should be kept in sync with UI interactions)
+                                    // This ensures we're using the most up-to-date values the user has set
+                                    let currentMinMax = params.numberOfLines;
+                                    
+                                    // Ensure we have proper min/max values
+                                    if (typeof currentMinMax !== 'object' || currentMinMax.min === undefined || currentMinMax.max === undefined) {
+                                        // Fallback to a default interval if needed
+                                        currentMinMax = { min: 1, max: Math.min(2, newMax) };
+                                    }
+                                    
+                                    // If it's an interval with min and max properties
+                                    const newMin = currentMinMax.min; // Keep min the same
+                                    const newMax2 = Math.min(currentMinMax.max + linesAdded, newMax); // Increment max by 1, but don't exceed the new maximum
+
+                                    
+                                    // Update the interval
+                                    valueController.value = {
+                                        min: newMin,
+                                        max: newMax2
+                                    };
+                                    
+                                    // Also update the React state to keep everything in sync
+                                    updateParam('numberOfLines', {
+                                        min: newMin,
+                                        max: newMax2
+                                    });
+                                    
+                                    console.log(`Updated interval to {min: ${newMin}, max: ${newMax2}}`);
                                 }
                                 
                                 console.log("Successfully updated slider min/max values");
