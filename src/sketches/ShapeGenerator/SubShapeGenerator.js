@@ -92,10 +92,22 @@ class SubShapeGenerator {
             return { base: null, direction: null };
         }
 
-        //const chosenLine = this.p.random(this.lines);
-        // Calculate an index using cNoise.noiseMap
-        const chosenLineIndex = Math.floor(this.cNoise.noiseMap(this.noisePos, 0, this.lines.length));
-        // Use the index to get the line object from the this.lines array
+        // Step 1: Calculate the weights based on line lengths
+        const lineLengths = this.lines.map(line => line.length || this.calculateLineLength(line));
+
+        // Step 2: Compute cumulative weights
+        const totalLength = lineLengths.reduce((sum, length) => sum + length, 0);
+        const cumulativeWeights = lineLengths.reduce((acc, length, i) => {
+            const previousSum = acc[i - 1] || 0;
+            acc.push(previousSum + length / totalLength);
+            return acc;
+        }, []);
+
+        // Step 3: Generate a weighted random index
+        const randomValue = this.cNoise.noiseMap(this.noisePos, 0, 1); // Generates a number between 0 and 1
+        const chosenLineIndex = cumulativeWeights.findIndex(weight => randomValue <= weight);
+
+        // Step 4: Use the index to select the line
         const chosenLine = this.lines[chosenLineIndex];
 
         const p1 = chosenLine.p1;
@@ -127,9 +139,22 @@ class SubShapeGenerator {
             return { base: null, direction: null };
         }
 
-        //const chosenCurve = this.p.random(this.curves);
-        const chosenCurveIndex = Math.floor(this.cNoise.noiseMap(this.noisePos, 0, this.curves.length));
-        // Use the index to get the curve object from the this.curves array
+        // Step 1: Calculate the weights based on curve lengths
+        const curveLengths = this.curves.map(curve => curve.length || this.calculateCurveLength(curve));
+
+        // Step 2: Compute cumulative weights
+        const totalLength = curveLengths.reduce((sum, length) => sum + length, 0);
+        const cumulativeWeights = curveLengths.reduce((acc, length, i) => {
+            const previousSum = acc[i - 1] || 0;
+            acc.push(previousSum + length / totalLength);
+            return acc;
+        }, []);
+
+        // Step 3: Generate a weighted random index
+        const randomValue = this.cNoise.noiseMap(this.noisePos, 0, 1); // Generates a number between 0 and 1
+        const chosenCurveIndex = cumulativeWeights.findIndex(weight => randomValue <= weight);
+
+        // Step 4: Use the index to select the curve
         const chosenCurve = this.curves[chosenCurveIndex];
 
         const p1 = chosenCurve.p1;
@@ -227,6 +252,13 @@ class SubShapeGenerator {
         const y = 2*(1-t)*(cp.y-p1.y) + 2*t*(p2.y-cp.y);
         return this.p.createVector(x, y);
     }
+
+    calculateLineLength(line) {
+        return Math.sqrt(
+            Math.pow(line.p2.x - line.p1.x, 2) + Math.pow(line.p2.y - line.p1.y, 2)
+        );
+    }
+
 
 }
 export default SubShapeGenerator;
