@@ -159,20 +159,59 @@ class SubShapeGenerator {
         const angleStep = this.p.TWO_PI / params.sides;
         const vertices = [];
 
+        // Create the polygon vertices without rotation first
         for (let i = 0; i < params.sides; i++) {
-            const angle = angleStep * i + params.rotation;
+            const angle = angleStep * i;
             const distortionOffset = this.cNoise.noiseMap(this.noisePos, -params.distortion, params.distortion);
             const distortedSize = params.size + distortionOffset;
 
             const vertex = this.p.createVector(
-                base.x + this.p.cos(angle) * distortedSize,
-                base.y + this.p.sin(angle) * distortedSize
+                this.p.cos(angle) * distortedSize,
+                this.p.sin(angle) * distortedSize
             );
 
             vertices.push(vertex);
         }
 
-        return vertices;
+        // Apply rotation around the bottom point and translate to final position
+        return this.rotateAroundBottom(vertices, base, params.rotation);
+    }
+
+    // New method to rotate polygon around its bottom point
+    rotateAroundBottom(vertices, base, rotation) {
+        if (vertices.length === 0) return vertices;
+        
+        // Find the bottom-most point in the ORIGINAL non-rotated shape
+        let bottomIndex = 0;
+        for (let i = 1; i < vertices.length; i++) {
+            if (vertices[i].y > vertices[bottomIndex].y) {
+                bottomIndex = i;
+            }
+        }
+        
+        const bottomPoint = vertices[bottomIndex].copy();
+        
+        // Create a new array for rotated vertices
+        const rotatedVertices = [];
+        
+        // Rotate each vertex around the bottom point
+        for (let i = 0; i < vertices.length; i++) {
+            // Translate to make bottom point the origin
+            let x = vertices[i].x - bottomPoint.x;
+            let y = vertices[i].y - bottomPoint.y;
+            
+            // Apply rotation
+            const rotatedX = x * this.p.cos(rotation) - y * this.p.sin(rotation);
+            const rotatedY = x * this.p.sin(rotation) + y * this.p.cos(rotation);
+            
+            // Position the rotated polygon so that the bottom point is at the base position
+            rotatedVertices.push(this.p.createVector(
+                rotatedX + base.x,
+                rotatedY + base.y
+            ));
+        }
+        
+        return rotatedVertices;
     }
 
     // Quadratic Bezier point calculation
