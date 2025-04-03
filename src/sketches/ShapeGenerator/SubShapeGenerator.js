@@ -1,7 +1,7 @@
 import {LINE_TYPE} from "./Constants.js";
 
 class SubShapeGenerator {
-    constructor(p, subShape, cNoise, noisePos, lines, curves, shapeSides) {
+    constructor(p, subShape, cNoise, noisePos, lines, curves) {
         this.p = p;
         this.subShape = subShape;
         this.cNoise = cNoise;
@@ -10,7 +10,7 @@ class SubShapeGenerator {
         this.lines = lines;
         this.curves = curves;
 
-        this.shapeSides = shapeSides;
+        this.shapeSides = subShape.sides;
 
         this.polygons = [];
 
@@ -25,6 +25,11 @@ class SubShapeGenerator {
     draw(xray = false){
         this.p.fill(0);
         this.p.strokeWeight(0);
+
+        if(this.shapeSides == 2) {
+            this.p.strokeWeight(5);
+            this.p.stroke(0);
+        }
 
         if(xray){
             this.p.strokeWeight(3);this.p.stroke(255,150,0); this.p.noFill();
@@ -70,7 +75,9 @@ class SubShapeGenerator {
                     ? this.p.atan2(direction.y, direction.x) +
                     this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180)
                     : this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180),
-                distortion: this.cNoise.noiseMap(this.noisePos, this.subShape.distort.min, this.subShape.distort.max)
+                distortion: this.cNoise.noiseMap(this.noisePos, this.subShape.distort.min, this.subShape.distort.max),
+                curve: this.cNoise.noiseMap(this.noisePos, this.subShape.curve.min, this.subShape.curve.max),
+                stretch: this.cNoise.noiseMap(this.noisePos, this.subShape.stretch.min, this.subShape.stretch.max),
             };
             const polygonVertices = this.createPolygon(base, polygonParams);
             this.polygons.push(polygonVertices);
@@ -195,6 +202,8 @@ class SubShapeGenerator {
     createPolygon(base, params) {
         const angleStep = this.p.TWO_PI / params.sides;
         const vertices = [];
+        const stretchPercent = params.stretch/params.size/100;
+        const curvePercent = params.curve/params.size/100;
 
         // Create the polygon vertices without rotation first
         for (let i = 0; i < params.sides; i++) {

@@ -163,7 +163,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             });
 
             pane.addInput(activeTabData.params, "sides", {
-                min: 1,
+                min: 2,
                 max: 10,
                 step: 1,
                 label: "Sides",

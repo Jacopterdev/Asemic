@@ -41,9 +41,8 @@ class ShapeGeneratorV2 {
 
         // Iterate through the subShapes
         for (const subShape of this.subShapes) {
-            const shapeSides = this.configParser.getShapeSides(subShape.config.subShape);
             console.log("SubShape:", subShape.config);
-            let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves, shapeSides);
+            let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves);
             this.subShapeGenerators.push(subShapeGenerator);
             subShapeGenerator.generate();
         }
