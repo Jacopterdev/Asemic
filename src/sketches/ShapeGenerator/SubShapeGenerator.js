@@ -17,8 +17,8 @@ class SubShapeGenerator {
         this.usedEndpoints = new Set();
     }
 
-    generate(placeAtPoints) {
-
+    generate() {
+        const placeAtPoints = this.subShape.connection;
         this.generatePolygonsForSubShape(placeAtPoints);
     }
 
@@ -113,7 +113,7 @@ class SubShapeGenerator {
         const p1 = chosenLine.p1;
         const p2 = chosenLine.p2;
 
-        if (placeAtPoints) {
+        if (placeAtPoints === "atEnd") {
             if (!this.usedEndpoints.has(p1.toString())) {
                 this.usedEndpoints.add(p1.toString());
                 return { base: p1, direction: this.p.createVector(p2.x - p1.x, p2.y - p1.y).normalize() };
@@ -122,7 +122,15 @@ class SubShapeGenerator {
                 return { base: p2, direction: this.p.createVector(p2.x - p1.x, p2.y - p1.y).normalize() };
             }
             return { base: null, direction: null };
-        } else {
+        } else if (placeAtPoints === "Along") {
+            const offset = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9); // Avoid extreme ends
+            const base = this.p.createVector(
+                this.p.lerp(p1.x, p2.x, offset),
+                this.p.lerp(p1.y, p2.y, offset)
+            );
+            const direction = this.p.createVector(p2.x - p1.x, p2.y - p1.y).normalize();
+            return { base, direction };
+        } else { //JOINTS PLACEHOLDER!
             const offset = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9); // Avoid extreme ends
             const base = this.p.createVector(
                 this.p.lerp(p1.x, p2.x, offset),
@@ -161,7 +169,7 @@ class SubShapeGenerator {
         const cp = chosenCurve.cp;
         const p2 = chosenCurve.p2;
 
-        if (placeAtPoints) {
+        if (placeAtPoints === "atEnd") {
             if (!this.usedEndpoints.has(p1.toString())) {
                 this.usedEndpoints.add(p1.toString());
                 return { base: p1, direction: this.getBezierTangent(p1, cp, p2, 0).normalize() };
@@ -170,8 +178,12 @@ class SubShapeGenerator {
                 return { base: p2, direction: this.getBezierTangent(p1, cp, p2, 1).normalize() };
             }
             return { base: null, direction: null };
-        } else {
-            //const t = this.p.random(0.1, 0.9);
+        } else if (placeAtPoints === "Along") {
+            const t = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9);
+            const base = this.getBezierPoint(p1, cp, p2, t);
+            const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
+            return { base, direction };
+        } else {//JOINTS PLACEHOLDER
             const t = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9);
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
