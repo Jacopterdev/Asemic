@@ -66,6 +66,9 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             id: newTabId,
             params: {
                 subShape: "Square",
+                sides: 4,
+                stretch: 0,
+                curve: 0,
                 connection: "Along", // Default value
                 rotationType: "relative", // Default value
                 angle: {min: 0, max: 360},
@@ -159,6 +162,16 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 updateParam('subShape', event.value);
             });
 
+            pane.addInput(activeTabData.params, "sides", {
+                min: 1,
+                max: 10,
+                step: 1,
+                label: "Sides",
+            }).on('change', (event) => {
+                updateParam('sides', event.value);
+            });
+
+
 
             pane.addInput(activeTabData.params, "amount", {
                 view: "interval",
@@ -180,6 +193,16 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 updateParam('size', event.value);
             });
 
+            pane.addInput(activeTabData.params, "stretch", {
+                view: "interval",
+                min: 0,
+                max: 100,
+                step: 1,
+                label: "Stretch",
+            }).on('change', (event) => {
+                updateParam('stretch', event.value);
+            });
+
             pane.addInput(activeTabData.params, "distort", {
                 view: "interval",
                 min: 0,
@@ -194,11 +217,22 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.addInput(activeTabData.params, "connection", {
                 label: "Connection", // Optional: Add a label
                 options: {
-                    "At End": "atEnd",  // Displayed: "At End", Value: "atEnd"
-                    "Along": "Along",   // Displayed: "Along", Value: "Along"
+                    "At Line End": "atEnd",  // Displayed: "At End", Value: "atEnd"
+                    "Along Line": "Along",   // Displayed: "Along", Value: "Along"
+                    "In Line Joints": "joints"
                 },
             }).on("change", (event) => {
                 updateParam("connection", event.value); // Update the state
+            });
+
+            pane.addInput(activeTabData.params, "curve", {
+                view: "interval",
+                min: -100,
+                max: 100,
+                step: 1,
+                label: "Blob/Spike",
+            }).on('change', (event) => {
+                updateParam('curve', event.value);
             });
 
 
