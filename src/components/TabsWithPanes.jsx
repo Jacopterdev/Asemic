@@ -1,13 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {useState, useEffect, useRef} from "react";
 import * as Tweakpane from "tweakpane";
 import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
-
-// Map subShapes to the corresponding SVG file paths in the `public` directory
-const svgMapping = {
-    Triangle: "/shapes/triangle.svg",
-    Circle: "/shapes/circle.svg",
-    Square: "/shapes/square.svg",
-};
 
 const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
     const [activeTabData, updateParams] = useState(subShapeParams);
@@ -22,7 +15,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         setTabs((prevTabs) =>
             prevTabs.map((tab) =>
                 tab.id === activeTab
-                    ? { ...tab, params: { ...tab.params, [key]: value } }
+                    ? {...tab, params: {...tab.params, [key]: value}}
                     : tab
             )
         );
@@ -38,11 +31,11 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         }));
 
         if (onParamChange) {
-            onParamChange(activeTab, { key, value }); // Provide the active tab ID and updated value
+            onParamChange(activeTab, {key, value}); // Provide the active tab ID and updated value
         }
 
     };
-   
+
     // Initialize with an empty array instead of a default tab
     const [tabs, setTabs] = useState([]); // No initial tabs
 
@@ -59,13 +52,60 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
         //setParams(initialParams);
     }, []);
 
+    // Function to generate a polygon SVG path with the given number of sides
+    const generatePolygonSvgPath = (sides) => {
+        // For circles (or high-sided polygons), use a circle
+        if (sides >= 20) {
+            return `<circle cx="50" cy="50" r="40" fill="none" stroke="#808080" stroke-width="3" />`;
+        }
+
+        // Calculate points for a regular polygon with the given number of sides
+        const points = [];
+        const angleStep = (2 * Math.PI) / sides;
+        const radius = 40; // Size of the polygon
+
+        // Apply a default rotation to align flat side to bottom for common shapes
+        let defaultRotation;
+        // Rotate by half of an angle step
+        if (sides === 3) {
+            // For triangles, rotate 30 degrees (π/6 radians) to get a flat bottom
+            defaultRotation = Math.PI / 6;
+        } else {
+            // For other polygons, rotate to align flat side to bottom
+            defaultRotation = -Math.PI / sides;
+        }
+
+        for (let i = 0; i < sides; i++) {
+            const angle = i * angleStep + defaultRotation;
+            const x = 50 + radius * Math.cos(angle);
+            const y = 50 + radius * Math.sin(angle);
+            points.push(`${x},${y}`);
+        }
+
+        return `<polygon points="${points.join(' ')}" fill="none" stroke="#808080" stroke-width="3" />`;
+    };
+
+    const PolygonPreview = ({sides}) => {
+        const svgContent = generatePolygonSvgPath(sides);
+
+        return (
+            <div className="polygon-preview-container" style={{ width: "24px", height: "24px" }}>
+                <svg
+                    viewBox="0 0 100 100"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ width: "100%", height: "100%" }}
+                    dangerouslySetInnerHTML={{ __html: svgContent }}
+                />
+            </div>
+        );
+    };
+
 
     const addTab = () => {
         const newTabId = nextTabId.current;
         const newTab = {
             id: newTabId,
             params: {
-                subShape: "Square",
                 sides: 4,
                 stretch: {min: 0, max: 0},
                 curve: {min: 0, max: 0},
@@ -116,7 +156,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
 
         // Remove the tab's parameters from the parent's state
         setParams((prevParentParams) => {
-            const { [tabId]: _, ...remainingParams } = prevParentParams;
+            const {[tabId]: _, ...remainingParams} = prevParentParams;
             return remainingParams;
         });
 
@@ -150,17 +190,6 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             const pane = new Tweakpane.Pane({container});
             pane.registerPlugin(EssentialsPlugin); // Register Essentials Plugin
 
-            pane.addInput(activeTabData.params, "subShape", {
-                label: "Sub-Shape",
-                options: {
-                    Square: "Square",
-                    Triangle: "Triangle",
-                    Circle: "Circle",
-                },
-            }).on('change', (event) => {
-                updateParam('subShape', event.value);
-            });
-
             pane.addInput(activeTabData.params, "sides", {
                 min: 2,
                 max: 10,
@@ -169,7 +198,6 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             }).on('change', (event) => {
                 updateParam('sides', event.value);
             });
-
 
 
             pane.addInput(activeTabData.params, "amount", {
@@ -282,13 +310,12 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
     useEffect(() => {
         const handleTweakpaneUpdate = (event) => {
             if (!event.detail) return;
-            
-            
-            
+
+
             // Check if we have any subshape data in the loaded parameters
             const subShapeData = {};
             let hasSubShapeData = false;
-            
+
             // Look for tab IDs in the event.detail
             Object.keys(event.detail).forEach(key => {
                 // Try to parse the key as a number to see if it's a tab ID
@@ -298,65 +325,65 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                     hasSubShapeData = true;
                 }
             });
-            
+
             // Detect if we need a full refresh (e.g., during undo/redo operations)
             const needsFullRefresh = event.detail.forceRebuild || event.detail.updateSubshapes;
-            
+
             if (hasSubShapeData || needsFullRefresh) {
-                
-                
+
+
                 // Get the current tab IDs from the event data or use an empty set
-                const currentTabIds = event.detail.subshapeKeys || 
-                                    Object.keys(subShapeData).map(id => parseInt(id));
-                
+                const currentTabIds = event.detail.subshapeKeys ||
+                    Object.keys(subShapeData).map(id => parseInt(id));
+
                 // IMPORTANT: Instead of updating existing tabs, replace them entirely
                 // This ensures tabs that no longer exist are removed
                 setTabs(prevTabs => {
                     // Create new tabs array based solely on the data in the event
                     const newTabs = [];
-                    
+
                     // Add tabs that exist in the event data
                     currentTabIds.forEach(tabId => {
                         // Try to find existing tab data to preserve references
                         const existingTab = prevTabs.find(tab => tab.id === parseInt(tabId));
                         const tabParams = subShapeData[tabId] || {};
-                        
+
                         newTabs.push({
                             id: parseInt(tabId),
                             params: {...(existingTab?.params || {}), ...tabParams},
                             pane: null // Force recreation of pane
                         });
                     });
-                    
+
                     // Update nextTabId to be higher than any existing tab ID
                     if (newTabs.length > 0) {
                         const maxId = Math.max(...newTabs.map(tab => tab.id));
                         nextTabId.current = maxId + 1;
                     }
-                    
+
                     return newTabs;
                 });
-                
+
                 // Update parent's state with all tabs' params
                 setParams(prev => {
                     // Start with a clean slate
                     const newParams = {};
-                    
+
                     // Add only the tabs from the event data
                     Object.entries(subShapeData).forEach(([tabId, params]) => {
                         newParams[tabId] = params;
                     });
-                    
+
                     // For non-subshape parameters, copy from the previous state or event data
                     Object.keys(prev).forEach(key => {
                         if (isNaN(parseInt(key))) {
                             newParams[key] = event.detail[key] || prev[key];
                         }
                     });
-                    
+
                     return newParams;
                 });
-                
+
                 // Force refresh the panes by destroying all of them
                 Object.keys(panes.current).forEach(tabId => {
                     if (panes.current[tabId]) {
@@ -364,22 +391,22 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                         delete panes.current[tabId];
                     }
                 });
-                
+
                 // Set active tab to first tab if none are currently active
                 if (currentTabIds.length > 0) {
-                    setActiveTab(parseInt(currentTabIds[currentTabIds.length-1]));
+                    setActiveTab(parseInt(currentTabIds[currentTabIds.length - 1]));
                 }
             }
         };
-        
+
         window.addEventListener('tweakpane-update', handleTweakpaneUpdate);
-        
+
         return () => {
             window.removeEventListener('tweakpane-update', handleTweakpaneUpdate);
         };
     }, [setParams]); // Only re-run if setParams changes
 
-   
+
     return (
         <div className="tabs-with-panes w-full !mt-2">
             {/* Tabs List */}
@@ -395,16 +422,10 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                             onClick={() => setActiveTab(tab.id)}
                             style={{flex: 1}} // To evenly stretch the tabs
                         >
-                            {/* Render the SVG for the subShape */}
-                            {svgMapping[tab.params.subShape] ? (
-                                <img
-                                    src={svgMapping[tab.params.subShape]}
-                                    alt={tab.params.subShape}
-                                    className="h-6 w-6"
-                                />
-                            ) : (
-                                "?"
-                            )}
+                            <div className="tab-preview">
+                                {/* Use our new PolygonPreview component */}
+                                <PolygonPreview sides={tab.params.sides} />
+                            </div>
 
                             {/* Delete Button */}
                             <button
@@ -416,7 +437,8 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                         </div>
                     ))
                 ) : (
-                    <div className="flex-grow flex justify-center items-center text-gray-500 text-xs flex-grow text-center font-mono select-none">
+                    <div
+                        className="flex-grow flex justify-center items-center text-gray-500 text-xs flex-grow text-center font-mono select-none">
                         Add Sub-Shapes
                     </div>
                 )}
