@@ -105,7 +105,6 @@ class SubShapeGenerator {
                     ? this.p.atan2(direction.y, direction.x) +
                     this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180)
                     : this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180),
-                distortion: this.cNoise.noiseMap(this.noisePos, this.subShape.distort.min, this.subShape.distort.max),
                 curve: this.cNoise.noiseMap(this.noisePos, this.subShape.curve.min, this.subShape.curve.max),
                 stretch: this.cNoise.noiseMap(this.noisePos, this.subShape.stretch.min, this.subShape.stretch.max),
             };
