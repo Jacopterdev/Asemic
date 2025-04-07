@@ -74,7 +74,6 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 angle: {min: 0, max: 360},
                 amount: {min: 1, max: 3}, // Default interval
                 size: {min: 20, max: 160}, // Default interval
-                distort: {min: 0, max: 0}, // Default interval
             },
             pane: null,
         };
@@ -201,16 +200,6 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 label: "Stretch",
             }).on('change', (event) => {
                 updateParam('stretch', event.value);
-            });
-
-            pane.addInput(activeTabData.params, "distort", {
-                view: "interval",
-                min: 0,
-                max: 200,
-                step: 1,
-                label: "Distort",
-            }).on('change', (event) => {
-                updateParam('distort', event.value);
             });
 
             // Add `connection`
