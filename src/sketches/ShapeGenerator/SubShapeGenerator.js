@@ -155,7 +155,7 @@ class SubShapeGenerator {
         }
 
         // Step 1: Calculate the weights based on curve lengths
-        const curveLengths = this.curves.map(curve => curve.length || this.calculateCurveLength(curve));
+        const curveLengths = this.curves.map(curve => this.calculateCurveLength(curve));
 
         // Step 2: Compute cumulative weights
         const totalLength = curveLengths.reduce((sum, length) => sum + length, 0);
@@ -279,6 +279,39 @@ class SubShapeGenerator {
             Math.pow(line.p2.x - line.p1.x, 2) + Math.pow(line.p2.y - line.p1.y, 2)
         );
     }
+
+    calculateCurveLength(curve) {
+        // Extract points from the curve
+        const { p1, cp, p2 } = curve;
+
+        // For Bézier curves, we need to approximate the length
+        // using numerical methods since there's no exact formula
+        const numSegments = 20; // Higher number = more accuracy
+        let length = 0;
+        let prevPoint = p1;
+
+        // Sample points along the curve
+        for (let i = 1; i <= numSegments; i++) {
+            const t = i / numSegments;
+
+            // Quadratic Bézier formula: B(t) = (1-t)²P₁ + 2(1-t)tCP + t²P₂
+            const x = Math.pow(1-t, 2) * p1.x + 2 * (1-t) * t * cp.x + Math.pow(t, 2) * p2.x;
+            const y = Math.pow(1-t, 2) * p1.y + 2 * (1-t) * t * cp.y + Math.pow(t, 2) * p2.y;
+
+            const currentPoint = { x, y };
+
+            // Calculate distance between current point and previous point
+            const dx = currentPoint.x - prevPoint.x;
+            const dy = currentPoint.y - prevPoint.y;
+            length += Math.sqrt(dx * dx + dy * dy);
+
+            prevPoint = currentPoint;
+        }
+
+        return length;
+    }
+
+
 
 
 }
