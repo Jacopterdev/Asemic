@@ -209,7 +209,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             p.rebuildSkeleton();
             effects.setSmoothAmount(mergedParams.smoothAmount);
             currentState.updateMergedParams(mergedParams);
-        
+    
         }
 
         if(currentState?.updateToolConfig){
@@ -505,9 +505,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                     uiParams[key] = loadedData[key];
                 }
             });
-            
-            
-            
+                   
             // Update mergedParams with loaded data
             Object.keys(loadedData).forEach(key => {
                 mergedParamsRef.current[key] = loadedData[key];
