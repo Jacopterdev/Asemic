@@ -97,6 +97,7 @@ const PresetButtons = ({ onPresetSelect }) => {
       },
       1: {
         subShape: "Circle",
+        sides: 32,  // Circle default
         amount: { min: 3, max: 7 },
         size: { min: 20, max: 40 },
         connection: "Along",
@@ -141,6 +142,7 @@ const PresetButtons = ({ onPresetSelect }) => {
       },
       1: {
         subShape: "Circle",
+        sides: 32,
         amount: { min: 1, max: 2 },
         size: { min: 25, max: 35 },
         connection: "atEnd",
@@ -174,6 +176,7 @@ const PresetButtons = ({ onPresetSelect }) => {
       },
       1: {
         subShape: "Circle",
+        sides: 32,
         amount: { min: 2, max: 4 },
         size: { min: 40, max: 70 },
         connection: "joints",
@@ -195,6 +198,7 @@ const PresetButtons = ({ onPresetSelect }) => {
       },
       1: {
         subShape: "Circle",
+        sides: 32,
         amount: { min: 6, max: 12 },
         size: { min: 30, max: 50 },
         connection: "Along",
@@ -217,6 +221,7 @@ const PresetButtons = ({ onPresetSelect }) => {
       },
       1: {
         subShape: "Triangle",
+        sides: 3,
         amount: { min: 5, max: 8 },
         size: { min: 15, max: 30 },
         connection: "joints",
@@ -248,56 +253,103 @@ const PresetButtons = ({ onPresetSelect }) => {
         curve: { min: 0, max: 0 },
         distort: { min: 0, max: 0 }
       }
+    },
+    // Add this preset to the presets array
+    {
+      id: 10,
+      name: "Texture",
+      thumbnail: "/presetThumbnails/texture.svg", // You'll need to add this image file
+      params: {
+        smoothAmount: 15
+      },
+      1: {
+        subShape: "Circle",
+        sides: 16,
+        amount: { min: 8, max: 18 },
+        size: { min: 10, max: 25 },
+        connection: "Along",
+        stretch: { min: 0, max: 20 },
+        curve: { min: 5, max: 15 },
+        rotationType: "absolute",
+        angle: { min: 0, max: 360 },
+        distort: { min: 10, max: 30 }
+      },
+      2: {
+        subShape: "Triangle",
+        sides: 3,
+        amount: { min: 3, max: 6 },
+        size: { min: 5, max: 12 },
+        connection: "joints",
+        stretch: { min: 20, max: 50 },
+        curve: { min: -10, max: 10 },
+        rotationType: "absolute",
+        angle: { min: 0, max: 120 },
+        distort: { min: 0, max: 15 }
+      }
+    },
+    // Add this as a new preset
+    {
+      id: 11,
+      name: "Stretched",
+      thumbnail: "/presetThumbnails/stretched.svg", // You'll need to add this image file
+      params: {
+        missArea: 49,
+        smoothAmount: 13,
+        lineWidth: { min: 32, max: 32 },
+        curviness: { min: 70, max: 100 },
+        curveOffset: { min: 0, max: 26 },
+        curveRatio: 50
+      },
+      1: {
+        subShape: "Square",
+        sides: 4,
+        amount: { min: 24, max: 24 },
+        size: { min: 20, max: 29 },
+        connection: "joints",
+        stretch: { min: 65, max: 100 },
+        curve: { min: 0, max: 0 },
+        rotationType: "relative",
+        angle: { min: 82, max: 93 },
+        distort: { min: 0, max: 0 }
+      }
     }
   ];
 
   const handlePresetClick = (preset) => {
     if (window.p5Instance) {
       try {
-        // Get current state from p5Instance (to preserve existing parameters and skeleton)
+        // Get current state from p5Instance (to preserve skeleton structure only)
         const currentState = window.p5Instance.getShapeLanguageAsJSON();
         
-        // Start with current state as the base
-        const presetData = JSON.parse(JSON.stringify(currentState));
+        // Start with a fresh preset-based state, only preserving points and lines
+        const presetData = {
+          // Copy the skeleton structure (points and lines)
+          points: currentState.points || [],
+          lines: currentState.lines || []
+        };
         
-        // Override only the parameters defined in the preset
+        // Add all params from the preset
         if (preset.params) {
           Object.entries(preset.params).forEach(([key, value]) => {
             presetData[key] = value;
           });
         }
         
-        // Process subshapes - only override properties that are defined in the preset
-        if (preset.subShapes) {
-          // Make sure the subshapeKeys are preserved and updated if needed
-          const existingSubshapeKeys = Array.isArray(presetData.subshapeKeys) 
-            ? presetData.subshapeKeys 
-            : Object.keys(presetData).filter(key => !isNaN(parseInt(key))).map(String);
-            
-          // Get all subshape keys from both current state and preset
-          const allSubshapeKeys = [...new Set([
-            ...Object.keys(preset.subShapes),
-            ...existingSubshapeKeys
-          ])];
-          
-          // Update subshapeKeys property
-          presetData.subshapeKeys = allSubshapeKeys;
-          
-          // Process each subshape
-          Object.entries(preset.subShapes).forEach(([key, presetSubshape]) => {
-            // If this subshape already exists in the current state, merge with it
-            // Otherwise create a new subshape based on preset
-            const currentSubshape = presetData[key] || {};
-            
-            // Start with current subshape as base, then override with preset values
-            presetData[key] = {
-              ...currentSubshape,
-              ...presetSubshape
-            };
-          });
-        }
+        // Get all numeric keys to identify subshapes
+        const subshapeKeys = Object.keys(preset)
+          .filter(key => !isNaN(parseInt(key)))
+          .map(String);
         
-        console.log("Applying preset with merged data:", presetData);
+        // Set subshapeKeys property explicitly
+        presetData.subshapeKeys = subshapeKeys;
+        
+        // Completely replace all subshapes with ones from the preset
+        // This ensures no existing subshapes remain in the configuration
+        subshapeKeys.forEach(key => {
+          presetData[key] = JSON.parse(JSON.stringify(preset[key]));
+        });
+        
+        console.log("Applying preset with completely replaced subshapes:", presetData);
         
         // Convert to JSON string
         const jsonString = JSON.stringify(presetData);
@@ -321,8 +373,12 @@ const PresetButtons = ({ onPresetSelect }) => {
               detail: {
                 ...preset.params,
                 updateSubshapes: true,
-                subshapeKeys: presetData.subshapeKeys,
-                ...preset.subShapes,
+                clearSubshapes: true, // Signal to clear existing subshapes
+                subshapeKeys: subshapeKeys,
+                // Add all subshapes directly
+                ...Object.fromEntries(
+                  subshapeKeys.map(key => [key, preset[key]])
+                ),
                 preserveSkeleton: true
               }
             });
@@ -337,8 +393,12 @@ const PresetButtons = ({ onPresetSelect }) => {
             detail: {
               ...preset.params,
               updateSubshapes: true,
-              subshapeKeys: presetData.subshapeKeys,
-              ...preset.subShapes,
+              clearSubshapes: true, // Signal to clear existing subshapes
+              subshapeKeys: subshapeKeys,
+              // Add all subshapes directly
+              ...Object.fromEntries(
+                subshapeKeys.map(key => [key, preset[key]])
+              ),
               preserveSkeleton: true
             }
           });
@@ -382,15 +442,20 @@ const PresetButtons = ({ onPresetSelect }) => {
           {presets.map((preset) => (
             <button
               key={preset.id}
-              className="preset-button bg-gray-200 hover:bg-gray-300 transition-colors duration-150 rounded aspect-square flex items-center justify-center"
+              className="preset-button bg-gray-200 hover:bg-gray-300 transition-colors duration-150 rounded flex flex-col items-center justify-center p-1"
               onClick={() => handlePresetClick(preset)}
               title={preset.name}
             >
-              <img 
-                src={preset.thumbnail} 
-                alt={preset.name}
-                className="w-4/5 h-4/5 object-contain"
-              />
+              <div className="flex-grow flex items-center justify-center w-full">
+                <img 
+                  src={preset.thumbnail} 
+                  alt={preset.name}
+                  className="w-4/5 h-4/5 object-contain"
+                />
+              </div>
+              <div className="text-[10px] text-gray-600 font-medium mt-1 truncate w-full text-center">
+                {preset.name}
+              </div>
             </button>
           ))}
         </div>
