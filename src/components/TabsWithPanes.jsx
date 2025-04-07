@@ -113,7 +113,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 rotationType: "relative", // Default value
                 angle: {min: 0, max: 360},
                 amount: {min: 1, max: 3}, // Default interval
-                size: {min: 20, max: 160}, // Default interval
+                size: {min: 20, max: 100}, // Default interval
             },
             pane: null,
         };
@@ -213,7 +213,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.addInput(activeTabData.params, "size", {
                 view: "interval",
                 min: 0,
-                max: 200,
+                max: 100,
                 step: 1,
                 label: "Size",
             }).on('change', (event) => {

@@ -31,6 +31,10 @@ class SubShapeGenerator {
         }
 
         for (const polygon of this.polygons) {
+            if(!xray && this.shapeSides === 2){
+                this.p.strokeWeight(8);
+                this.p.stroke(0);
+            }
             // Check if this is a curved polygon
             if (polygon.controlPoints && polygon.controlPoints.length > 0 && polygon.curveFactor !== 0) {
                 // Draw bezier curves
@@ -228,9 +232,27 @@ class SubShapeGenerator {
     }
 
 
+    adjustSizeForPolygon(sides, baseSize) {
+
+        if (sides <= 2) return baseSize/2; // Special case - default to baseSize for line/point
+        if (sides >= 20) return baseSize;
+
+        // For regular polygons, we adjust based on area formula
+        // Area ∝ n * r² * sin(2π/n), and we want this to be constant
+        // So r² ∝ 1/(n * sin(2π/n))
+        // Thus r ∝ 1/√(n * sin(2π/n))
+
+        const angleRatio = Math.sin(2 * Math.PI / sides);
+        const adjustmentFactor = Math.sqrt(4 / (sides * angleRatio));
+
+        // Apply a cap to prevent extreme sizes for very low sided polygons
+        return baseSize * Math.min(adjustmentFactor, 2);
+    };
+
     createPolygon(base, params) {
         const angleStep = (2 * this.p.PI) / params.sides;
-        const size = params.size;
+        const size = this.adjustSizeForPolygon(params.sides, params.size);
+
         const stretch = params.stretch / 100; // Convert 0-100 to 0-1
         const curveFactor = params.curve / 100; // Convert -100-100 to -1-1
 
