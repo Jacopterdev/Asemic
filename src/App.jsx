@@ -11,6 +11,8 @@ import SaveButton from "./components/SaveButton"; // Import SaveButton
 import LoadButton from "./components/LoadButton"; // Import LoadButton
 import ShareButton from "./components/ShareButton"; // Import the ShareButton
 import GalleryPage from "./components/GalleryPage"; // Import the GalleryPage
+import PresetButtons from "./components/PresetButtons";
+
 
 function MainApp() {
     // Your existing App code here
@@ -235,7 +237,13 @@ function MainApp() {
             {/* Main Content Section */}
             <main className="container mx-auto">
                 <div className="flex justify-between gap-4">
-                    <div className="basis-1/3 bg-gray-100 shadow p-4 rounded w-full">
+                    <div className="basis-1/3 bg-gray-100 shadow p-4 rounded w-full" style={{ 
+                      maxHeight: '830px', 
+                      overflowY: 'auto',
+                      scrollbarWidth: 'none', /* Firefox */
+                      msOverflowStyle: 'none', /* IE and Edge */
+                      '&::webkitScrollbar': { display: 'none' } /* Chrome, Safari, Opera */
+                    }}>
                         <div className="space-y-2">
                             <TweakpaneComponent
                                 defaultParams={params}
@@ -246,6 +254,7 @@ function MainApp() {
                                 setParams={setSubShapeParams}
                                 onParamChange={handleSetParams}
                             />
+                                <PresetButtons />
                         </div>
                     </div>
 
