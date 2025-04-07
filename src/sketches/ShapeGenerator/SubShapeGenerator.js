@@ -26,21 +26,51 @@ class SubShapeGenerator {
         this.p.fill(0);
         this.p.strokeWeight(0);
 
-        if(this.shapeSides == 2) {
-            this.p.strokeWeight(5);
-            this.p.stroke(0);
-        }
-
         if(xray){
             this.p.strokeWeight(3);this.p.stroke(255,150,0); this.p.noFill();
         }
 
         for (const polygon of this.polygons) {
-            this.p.beginShape();
-            for (const v of polygon) {
-                this.p.vertex(v.x, v.y);
+            // Check if this is a curved polygon
+            if (polygon.controlPoints && polygon.controlPoints.length > 0 && polygon.curveFactor !== 0) {
+                // Draw bezier curves
+                this.p.beginShape();
+                const vertices = polygon.baseVertices;
+
+                for (let i = 0; i < vertices.length; i++) {
+                    // First vertex of each segment
+                    if (i === 0) {
+                        this.p.vertex(vertices[i].x, vertices[i].y);
+                    }
+
+                    // Find control point for this segment
+                    const controlPoint = polygon.controlPoints.find(cp => cp.fromIndex === i);
+
+                    if (controlPoint) {
+                        const nextIdx = (i + 1) % vertices.length;
+
+                        // Draw quadratic bezier curve
+                        this.p.quadraticVertex(
+                            controlPoint.x,
+                            controlPoint.y,
+                            vertices[nextIdx].x,
+                            vertices[nextIdx].y
+                        );
+                    } else {
+                        // If no control point, draw straight line to next vertex
+                        const nextIdx = (i + 1) % vertices.length;
+                        this.p.vertex(vertices[nextIdx].x, vertices[nextIdx].y);
+                    }
+                }
+                this.p.endShape(this.p.CLOSE);
+            } else {
+                // Draw regular polygon for non-curved shapes
+                this.p.beginShape();
+                for (const v of polygon.baseVertices) {
+                    this.p.vertex(v.x, v.y);
+                }
+                this.p.endShape(this.p.CLOSE);
             }
-            this.p.endShape(this.p.CLOSE);
         }
     }
 
@@ -155,7 +185,7 @@ class SubShapeGenerator {
         }
 
         // Step 1: Calculate the weights based on curve lengths
-        const curveLengths = this.curves.map(curve => curve.length || this.calculateCurveLength(curve));
+        const curveLengths = this.curves.map(curve => this.calculateCurveLength(curve));
 
         // Step 2: Compute cumulative weights
         const totalLength = curveLengths.reduce((sum, length) => sum + length, 0);
@@ -200,28 +230,127 @@ class SubShapeGenerator {
 
 
     createPolygon(base, params) {
-        const angleStep = this.p.TWO_PI / params.sides;
-        const vertices = [];
-        const stretchPercent = params.stretch/params.size/100;
-        const curvePercent = params.curve/params.size/100;
+        const angleStep = (2 * this.p.PI) / params.sides;
+        const size = params.size;
+        const stretch = params.stretch / 100; // Convert 0-100 to 0-1
+        const curveFactor = params.curve / 100; // Convert -100-100 to -1-1
 
-        // Create the polygon vertices without rotation first
+        // Default rotation to align flat side to bottom
+        const defaultRotation = -Math.PI / params.sides;
+
+        // First create the regular polygon vertices (centered at origin)
+        const centeredVertices = [];
         for (let i = 0; i < params.sides; i++) {
-            const angle = angleStep * i;
-            const distortionOffset = this.cNoise.noiseMap(this.noisePos, -params.distortion, params.distortion);
-            const distortedSize = params.size + distortionOffset;
+            const angle = i * angleStep;
 
-            const vertex = this.p.createVector(
-                this.p.cos(angle) * distortedSize,
-                this.p.sin(angle) * distortedSize
-            );
+            // Step 1: Calculate basic polygon point
+            let x = Math.cos(angle) * size;
+            let y = Math.sin(angle) * size;
 
-            vertices.push(vertex);
+            // Step 2: Apply default rotation to get flat-bottomed polygon
+            const xWithDefaultRotation = x * Math.cos(defaultRotation) - y * Math.sin(defaultRotation);
+            const yWithDefaultRotation = x * Math.sin(defaultRotation) + y * Math.cos(defaultRotation);
+
+            // Step 3: Apply stretch horizontally (along screen x-axis)
+            const xStretched = xWithDefaultRotation * (1 + stretch);
+            const yStretched = yWithDefaultRotation;
+
+            // Add to temporary array (centered at origin, without user rotation yet)
+            centeredVertices.push({
+                x: xStretched,
+                y: yStretched,
+                angle: angle
+            });
         }
 
-        // Apply rotation around the bottom point and translate to final position
-        return this.rotateAroundBottom(vertices, base, params.rotation);
+        // Find the bottom-most point of the shape (highest y value)
+        let bottomY = -Infinity;
+        let bottomIndex = 0;
+
+        for (let i = 0; i < centeredVertices.length; i++) {
+            if (centeredVertices[i].y > bottomY) {
+                bottomY = centeredVertices[i].y;
+                bottomIndex = i;
+            }
+        }
+
+        // Store the bottom point coordinates to use as pivot
+        const pivotX = centeredVertices[bottomIndex].x;
+        const pivotY = centeredVertices[bottomIndex].y;
+
+        // Now we need to align the bottom point with the base position
+        const finalVertices = [];
+
+        // First, apply rotation around the pivot point
+        for (let i = 0; i < centeredVertices.length; i++) {
+            // Translate to pivot point as origin
+            const translatedX = centeredVertices[i].x - pivotX;
+            const translatedY = centeredVertices[i].y - pivotY;
+
+            // Apply rotation around this new origin
+            const rotatedX = translatedX * Math.cos(params.rotation) - translatedY * Math.sin(params.rotation);
+            const rotatedY = translatedX * Math.sin(params.rotation) + translatedY * Math.cos(params.rotation);
+
+            // The rotated pivot is now at (0,0) in the rotated coordinate system
+            // We need to position the shape so that this rotated pivot aligns with base position
+
+            finalVertices.push({
+                x: base.x + rotatedX, // Base position is where the pivot should be
+                y: base.y + rotatedY,
+                angle: centeredVertices[i].angle
+            });
+        }
+
+        // Calculate control points for bezier curves
+        const controlPoints = [];
+
+        if (curveFactor !== 0) {
+            for (let i = 0; i < params.sides; i++) {
+                const current = finalVertices[i];
+                const next = finalVertices[(i + 1) % params.sides];
+
+                // Calculate distance between points for scaling the curve
+                const dx = next.x - current.x;
+                const dy = next.y - current.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                // Calculate midpoint between the two vertices
+                const midX = (current.x + next.x) / 2;
+                const midY = (current.y + next.y) / 2;
+
+                // Calculate the perpendicular vector to the line
+                const perpX = -dy;
+                const perpY = dx;
+
+                // Normalize perpendicular vector
+                const perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
+                const normalizedPerpX = perpX / perpLength;
+                const normalizedPerpY = perpY / perpLength;
+
+                // Calculate control point (perpendicular to the midpoint)
+                // Curve inward if curveFactor < 0, outward if curveFactor > 0
+                const ctrlX = midX + normalizedPerpX * curveFactor * distance * 0.5;
+                const ctrlY = midY + normalizedPerpY * curveFactor * distance * 0.5;
+
+                controlPoints.push({
+                    x: ctrlX,
+                    y: ctrlY,
+                    fromIndex: i,
+                    toIndex: (i + 1) % params.sides,
+                    curveFactor: curveFactor
+                });
+            }
+        }
+
+        // Store both regular vertices and curve control points
+        return {
+            baseVertices: finalVertices,
+            controlPoints: controlPoints,
+            curveFactor: curveFactor
+        };
     }
+
+
 
     // New method to rotate polygon around its bottom point
     rotateAroundBottom(vertices, base, rotation) {
@@ -279,6 +408,39 @@ class SubShapeGenerator {
             Math.pow(line.p2.x - line.p1.x, 2) + Math.pow(line.p2.y - line.p1.y, 2)
         );
     }
+
+    calculateCurveLength(curve) {
+        // Extract points from the curve
+        const { p1, cp, p2 } = curve;
+
+        // For Bézier curves, we need to approximate the length
+        // using numerical methods since there's no exact formula
+        const numSegments = 20; // Higher number = more accuracy
+        let length = 0;
+        let prevPoint = p1;
+
+        // Sample points along the curve
+        for (let i = 1; i <= numSegments; i++) {
+            const t = i / numSegments;
+
+            // Quadratic Bézier formula: B(t) = (1-t)²P₁ + 2(1-t)tCP + t²P₂
+            const x = Math.pow(1-t, 2) * p1.x + 2 * (1-t) * t * cp.x + Math.pow(t, 2) * p2.x;
+            const y = Math.pow(1-t, 2) * p1.y + 2 * (1-t) * t * cp.y + Math.pow(t, 2) * p2.y;
+
+            const currentPoint = { x, y };
+
+            // Calculate distance between current point and previous point
+            const dx = currentPoint.x - prevPoint.x;
+            const dy = currentPoint.y - prevPoint.y;
+            length += Math.sqrt(dx * dx + dy * dy);
+
+            prevPoint = currentPoint;
+        }
+
+        return length;
+    }
+
+
 
 
 }
