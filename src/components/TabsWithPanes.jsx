@@ -67,8 +67,8 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             params: {
                 subShape: "Square",
                 sides: 4,
-                stretch: {min: 0, max: 200},
-                curve: {min: -5, max: 5},
+                stretch: {min: 0, max: 0},
+                curve: {min: 0, max: 0},
                 connection: "Along", // Default value
                 rotationType: "relative", // Default value
                 angle: {min: 0, max: 360},
@@ -195,7 +195,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
             pane.addInput(activeTabData.params, "stretch", {
                 view: "interval",
                 min: 0,
-                max: 100,
+                max: 150,
                 step: 1,
                 label: "Stretch",
             }).on('change', (event) => {
