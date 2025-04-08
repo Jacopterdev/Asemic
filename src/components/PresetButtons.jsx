@@ -30,286 +30,143 @@ const PresetButtons = ({ onPresetSelect }) => {
   // Define presets with their configurations
   const presets = [
     {
-      id: 1,
-      name: "Simple",
-      thumbnail: "/presetThumbnails/simpel.svg",
-      params: {
-        numberOfLines: { min: 3, max: 5 },
-        smoothAmount: 2,
-        lineType: "straight"
-      },
-      1: {
-        subShape: "Square",
-        sides: 4,
-        amount: { min: 2, max: 3 },
-        size: { min: 20, max: 40 },
-        connection: "Along",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
       id: 2,
-      name: "Box Style",
+      name: "Skyline",
       thumbnail: "/presetThumbnails/boxi.svg",
       params: {
-        numberOfLines: { min: 8, max: 12 },
         smoothAmount: 0,
-        lineType: "straight"
+        lineWidth: { min: 15, max: 16 },
       },
       1: {
         subShape: "Square",
         sides: 4,
-        amount: { min: 5, max: 10 },
-        size: { min: 30, max: 60 },
+        amount: { min: 5, max: 100 },
+        size: { min: 0, max: 35 },
         connection: "joints",
-        stretch: { min: 0, max: 0 },
+        stretch: { min: 0, max: 99 },
         curve: { min: 0, max: 0 },
         rotationType: "relative",
-        angle: { min: 0, max: 0 },
+        angle: { min: 92, max: 92 },
         distort: { min: 0, max: 0 }
+      }
+    },
+    {
+      id: 12,
+      name: "Fluid",
+      thumbnail: "/presetThumbnails/fluid.svg",
+      params: {
+        smoothAmount: 20,
+        lineWidth: { min: 25, max: 27 },
       },
-      2: {
+      1: {
         subShape: "Triangle",
         sides: 3,
-        amount: { min: 2, max: 4 },
-        size: { min: 10, max: 20 },
-        connection: "atEnd",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 3,
-      name: "Smooth",
-      thumbnail: "/presetThumbnails/smooth.svg",
-      params: {
-        numberOfLines: { min: 5, max: 8 },
-        smoothAmount: 7,
-        lineType: "curved",
-        curviness: { min: 50, max: 80 }
-      },
-      1: {
-        subShape: "Circle",
-        sides: 32,  // Circle default
-        amount: { min: 3, max: 7 },
-        size: { min: 20, max: 40 },
+        amount: { min: 100, max: 100 },
+        size: { min: 29, max: 48 },
         connection: "Along",
         stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
+        curve: { min: 1, max: 42 },
         rotationType: "relative",
-        angle: { min: 0, max: 0 },
+        angle: { min: 0, max: 203 },
         distort: { min: 0, max: 0 }
       }
     },
     {
-      id: 4,
-      name: "Blob Style",
-      thumbnail: "/presetThumbnails/blob.svg",
+      id: 13,
+      name: "Leaves",
+      thumbnail: "/presetThumbnails/leaves.svg",
       params: {
-        numberOfLines: { min: 6, max: 10 },
-        smoothAmount: 10,
-        lineType: "curved",
-        curviness: { min: 70, max: 100 }
-      },
-      1: {
-        subShape: "Circle",
-        sides: 8,
-        amount: { min: 4, max: 8 },
-        size: { min: 15, max: 45 },
-        distort: { min: 30, max: 60 },
-        connection: "Along",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 5,
-      name: "Duck",
-      thumbnail: "/presetThumbnails/duck.svg",
-      params: {
-        numberOfLines: { min: 5, max: 7 },
-        smoothAmount: 10,
-        lineType: "both"
-      },
-      1: {
-        subShape: "Circle",
-        sides: 32,
-        amount: { min: 1, max: 2 },
-        size: { min: 25, max: 35 },
-        connection: "atEnd",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      },
-      2: {
-        subShape: "Triangle",
-        sides: 3,
-        amount: { min: 1, max: 2 },
-        size: { min: 15, max: 25 },
-        connection: "atEnd",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 6,
-      name: "Baby",
-      thumbnail: "/presetThumbnails/baby.svg",
-      params: {
-        numberOfLines: { min: 4, max: 6 },
-        smoothAmount: 10,
-        lineWidth: { min: 5, max: 10 }
-      },
-      1: {
-        subShape: "Circle",
-        sides: 32,
-        amount: { min: 2, max: 4 },
-        size: { min: 40, max: 70 },
-        connection: "joints",
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 7,
-      name: "Cloud",
-      thumbnail: "/presetThumbnails/cloud.svg",
-      params: {
-        numberOfLines: { min: 3, max: 5 },
-        smoothAmount: 10,
-        lineType: "curved"
-      },
-      1: {
-        subShape: "Circle",
-        sides: 32,
-        amount: { min: 6, max: 12 },
-        size: { min: 30, max: 50 },
-        connection: "Along",
-        curve: { min: 20, max: 40 },
-        stretch: { min: 0, max: 0 },
-        rotationType: "relative",
-        angle: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 8,
-      name: "Geometric",
-      thumbnail: "/presetThumbnails/geo.svg",
-      params: {
-        numberOfLines: { min: 7, max: 9 },
         smoothAmount: 0,
-        lineType: "straight",
-        lineWidth: { min: 3, max: 6 }
+        lineWidth: { min: 5, max: 10 },
       },
       1: {
         subShape: "Triangle",
-        sides: 3,
-        amount: { min: 5, max: 8 },
-        size: { min: 15, max: 30 },
-        connection: "joints",
-        rotationType: "absolute",
-        angle: { min: 0, max: 120 },
-        stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
-        distort: { min: 0, max: 0 }
-      }
-    },
-    {
-      id: 9,
-      name: "Spiky",
-      thumbnail: "/presetThumbnails/spiky.svg",
-      params: {
-        numberOfLines: { min: 5, max: 7 },
-        smoothAmount: 3,
-        lineType: "straight"
-      },
-      1: {
-        subShape: "Triangle",
-        sides: 3,
-        amount: { min: 10, max: 15 },
-        size: { min: 8, max: 20 },
+        sides: 2,
+        amount: { min: 100, max: 100 },
+        size: { min: 29, max: 48 },
         connection: "Along",
-        rotationType: "absolute",
-        angle: { min: 0, max: 360 },
         stretch: { min: 0, max: 0 },
-        curve: { min: 0, max: 0 },
+        curve: { min: 1, max: 71 },
+        rotationType: "relative",
+        angle: { min: 0, max: 203 },
         distort: { min: 0, max: 0 }
       }
     },
-    // Add this preset to the presets array
     {
-      id: 10,
-      name: "Texture",
-      thumbnail: "/presetThumbnails/texture.svg", // You'll need to add this image file
+      id: 14,
+      name: "SmoothLine",
+      thumbnail: "/presetThumbnails/smoothLine.svg",
       params: {
-        smoothAmount: 15
+        smoothAmount: 40,
+        lineWidth: { min: 63, max: 81 }
+      }
+    },
+    {
+      id: 15,
+      name: "Cap",
+      thumbnail: "/presetThumbnails/cap.svg",
+      params: {
+        smoothAmount: 26,
+        lineWidth: { min: 0, max: 52 }
       },
       1: {
         subShape: "Circle",
-        sides: 16,
-        amount: { min: 8, max: 18 },
-        size: { min: 10, max: 25 },
-        connection: "Along",
-        stretch: { min: 0, max: 20 },
-        curve: { min: 5, max: 15 },
+        sides: 4,
+        amount: { min: 3, max: 100 },
+        size: { min: 41, max: 58 },
+        connection: "atEnd",
+        stretch: { min: 90, max: 150 },
+        curve: { min: 1, max: 1 },
         rotationType: "absolute",
-        angle: { min: 0, max: 360 },
-        distort: { min: 10, max: 30 }
-      },
-      2: {
-        subShape: "Triangle",
-        sides: 3,
-        amount: { min: 3, max: 6 },
-        size: { min: 5, max: 12 },
-        connection: "joints",
-        stretch: { min: 20, max: 50 },
-        curve: { min: -10, max: 10 },
-        rotationType: "absolute",
-        angle: { min: 0, max: 120 },
-        distort: { min: 0, max: 15 }
+        angle: { min: 181, max: 181 },
+        distort: { min: 0, max: 0 }
       }
     },
-    // Add this as a new preset
     {
-      id: 11,
-      name: "Stretched",
-      thumbnail: "/presetThumbnails/stretched.svg", // You'll need to add this image file
+      id: 16,
+      name: "Stars",
+      thumbnail: "/presetThumbnails/stars.svg",
       params: {
-        missArea: 49,
-        smoothAmount: 13,
-        lineWidth: { min: 32, max: 32 },
+        smoothAmount: 0,
+        lineWidth: { min: 0, max: 0 }
+      },
+      1: {
+        subShape: "Square",
+        sides: 4,
+        amount: { min: 0, max: 10 },
+        size: { min: 20, max: 160 },
+        connection: "Along",
+        stretch: { min: 0, max: 0 },
+        curve: { min: 71, max: 100 },
+        rotationType: "relative",
+        angle: { min: 0, max: 360 },
+        distort: { min: 0, max: 0 }
+      }
+    },
+    {
+      id: 17,
+      name: "Fluid2",
+      thumbnail: "/presetThumbnails/fluid2.svg", // You'll need to add this image file
+      params: {
+        numberOfLines: { min: 5, max: 120 },
+        smoothAmount: 16,
+        lineWidth: { min: 25, max: 25 },
+        lineType: "both",
         curviness: { min: 70, max: 100 },
-        curveOffset: { min: 0, max: 26 },
-        curveRatio: 50
+        curveOffset: { min: 0, max: 0 },
+        curveRatio: 50,
+        lineComposition: "Branched"
       },
       1: {
-        subShape: "Square",
-        sides: 4,
-        amount: { min: 24, max: 24 },
-        size: { min: 20, max: 29 },
-        connection: "joints",
-        stretch: { min: 65, max: 100 },
-        curve: { min: 0, max: 0 },
+        subShape: "Triangle",
+        sides: 3,
+        amount: { min: 100, max: 100 },
+        size: { min: 13, max: 32 },
+        connection: "Along",
+        stretch: { min: 0, max: 0 },
+        curve: { min: 1, max: 42 },
         rotationType: "relative",
-        angle: { min: 82, max: 93 },
+        angle: { min: 0, max: 203 },
         distort: { min: 0, max: 0 }
       }
     }
