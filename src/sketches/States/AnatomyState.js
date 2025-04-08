@@ -3,7 +3,6 @@ import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 import MutantShopping from "../MutantShopping.js";
-import mutantShopping from "../MutantShopping.js";
 
 class AnatomyState {
     constructor(p, points, mergedParams) {
@@ -30,22 +29,6 @@ class AnatomyState {
             () => {
                 this.p.changeState("Composition");
             })
-
-        // Initialize MutantShopping
-        const shoppingWidth = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
-        const shoppingHeight = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
-        const shoppingX = LAYOUT.MARGIN; // Center horizontally
-        const shoppingY = LAYOUT.MARGIN; // Center vertically
-
-        this.mutantShopping = new MutantShopping(
-            p,
-            shoppingX,
-            shoppingY,
-            shoppingWidth,
-            shoppingHeight,
-            this.mergedParams, // Assuming you have merged parameters
-            'A'
-        );
 
     }
 
@@ -79,7 +62,9 @@ class AnatomyState {
         //this.displayGrid.updateMergedParams(this.mergedParams);
 
         this.displayGrid.updateMergedParams(this.mergedParams);
-        this.mutantShopping.updateMergedParams(this.mergedParams);
+        if(this.mutantShopping){
+            this.mutantShopping.updateMergedParams(this.mergedParams);
+        }
 
         // Clear any existing timer
         if (this.resetXrayTimer) {
@@ -93,7 +78,50 @@ class AnatomyState {
 
     }
 
+    // Add a method to start mutant shopping
+    startMutantShopping(letter) {
+        const shoppingWidth = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingHeight = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingX = LAYOUT.MARGIN; // Center horizontally
+        const shoppingY = LAYOUT.MARGIN; // Center vertically
+
+        this.mutantShopping = new MutantShopping(
+            this.p,
+            shoppingX,
+            shoppingY,
+            shoppingWidth,
+            shoppingHeight,
+            this.mergedParams, // Assuming you have merged parameters
+            (event) => this.handleEvent(event),
+            letter
+        );
+
+        // Change view mode to shopping
+        this.viewMode = 'shopping';
+    }
+
+    handleEvent(event) {
+        if (!event) return;
+
+        switch (event.type) {
+            case 'startMutantShopping':
+                this.startMutantShopping(event.letter);
+                break;
+            case 'exitMutantShopping':
+                // Handle back button click from MutantShopping
+                this.displayGrid.updateMergedParams(this.mergedParams);
+                this.viewMode = 'grid';
+                this.mutantShopping = null;
+                break;
+
+            // ... handle other events ...
+        }
+    }
+
+
+
     // Update the mousePressed method to handle button clicks
+    /**
     mousePressed() {
         if (this.viewMode === 'grid') {
             // Delegate button handling to DisplayGrid
@@ -110,6 +138,31 @@ class AnatomyState {
             }
         } else {
             this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
+        }
+    }*/
+    mousePressed() {
+        if (this.viewMode === 'grid') {
+            // Delegate button handling to DisplayGrid
+            const event = this.displayGrid.handleMousePressed();
+            if(event){
+                this.handleEvent(event);
+                return;
+            }
+
+            this.xray = true;
+
+            if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.previousStateButton.click();
+            }
+
+            if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.nextStateButton.click();
+            }
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            const event = this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
+            if (event) {
+                this.handleEvent(event);
+            }
         }
     }
 
