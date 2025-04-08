@@ -19,6 +19,8 @@ class ShapeGeneratorV2 {
     }
 
     generate() {
+        this.cNoise.resetNoise();
+        this.subShapeGenerators = [];
 
         /** LINE GENERATION */
         //Retrieve information for line generation
@@ -60,8 +62,14 @@ class ShapeGeneratorV2 {
     }
 
     setNoisePosition(x, y) {
-        this.noisePos.x = x;
-        this.noisePos.y = y;
+        //this.noisePos.x = x;
+        //this.noisePos.y = y;
+
+        // Create a new object with numeric values instead of modifying existing object
+        this.noisePos = {
+            x: Number(x),
+            y: Number(y)
+        };
     }
 }
 export default ShapeGeneratorV2;

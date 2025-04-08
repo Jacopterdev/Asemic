@@ -2,6 +2,8 @@
 import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
+import MutantShopping from "../MutantShopping.js";
+import mutantShopping from "../MutantShopping.js";
 
 class AnatomyState {
     constructor(p, points, mergedParams) {
@@ -13,6 +15,8 @@ class AnatomyState {
         this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray
+        this.viewMode = 'grid';
+
         this.previousStateButton = new GoToNextStateButton(this.p,
             LAYOUT.PREVIOUS_STATE_BUTTON_X,
             LAYOUT.PREVIOUS_STATE_BUTTON_Y,
@@ -26,16 +30,46 @@ class AnatomyState {
             () => {
                 this.p.changeState("Composition");
             })
+
+        // Initialize MutantShopping
+        const shoppingWidth = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingHeight = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingX = LAYOUT.MARGIN; // Center horizontally
+        const shoppingY = LAYOUT.MARGIN; // Center vertically
+
+        this.mutantShopping = new MutantShopping(
+            p,
+            shoppingX,
+            shoppingY,
+            shoppingWidth,
+            shoppingHeight,
+            this.mergedParams, // Assuming you have merged parameters
+            'A'
+        );
+
     }
 
     draw() {
         this.p.cursor(this.p.ARROW);
-        this.displayGrid.drawShapes();
-        this.p.applyEffects(this.blurScale);
-        this.displayGrid.drawGrid();
-        if (this.xray) this.displayGrid.drawShapes(true);
-        this.previousStateButton.draw();
-        this.nextStateButton.draw();
+
+        // Draw based on current view mode
+        if (this.viewMode === 'grid') {
+            this.displayGrid.drawShapes();
+            this.p.applyEffects(this.blurScale);
+            this.displayGrid.drawGrid();
+            if (this.xray) this.displayGrid.drawShapes(true);
+            this.previousStateButton.draw();
+            this.nextStateButton.draw();
+        } else if (this.viewMode === 'shopping') {
+            this.p.clear();  // Clear the main canvas
+            this.p.background(255);  // Set the background to white
+
+            this.mutantShopping.drawShapes();
+            this.p.applyEffects(this.mutantShopping.scale);
+            this.mutantShopping.drawGrid();
+            //this.mutantShopping.draw();
+        }
+
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
@@ -45,6 +79,7 @@ class AnatomyState {
         //this.displayGrid.updateMergedParams(this.mergedParams);
 
         this.displayGrid.updateMergedParams(this.mergedParams);
+        this.mutantShopping.updateMergedParams(this.mergedParams);
 
         // Clear any existing timer
         if (this.resetXrayTimer) {
@@ -60,19 +95,22 @@ class AnatomyState {
 
     // Update the mousePressed method to handle button clicks
     mousePressed() {
-        // Delegate button handling to DisplayGrid
-        this.displayGrid.handleMousePressed();
+        if (this.viewMode === 'grid') {
+            // Delegate button handling to DisplayGrid
+            this.displayGrid.handleMousePressed();
 
-        this.xray = true;
+            this.xray = true;
 
-        if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-            this.previousStateButton.click();
+            if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.previousStateButton.click();
+            }
+
+            if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.nextStateButton.click();
+            }
+        } else {
+            this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
         }
-
-        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-            this.nextStateButton.click();
-        }
-
     }
 
     mouseDragged() {

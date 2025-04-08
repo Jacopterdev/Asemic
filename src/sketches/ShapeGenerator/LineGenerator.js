@@ -19,6 +19,8 @@ class LineGenerator {
         const lineCountMin = lineParams.lineCount.min; const lineCountMax = lineParams.lineCount.max;
         const numOfLines = this.cNoise.noiseMap(this.noisePos, lineCountMin, lineCountMax);
 
+        console.log("Configured lines: ", configuredLines);
+
         this.useConfiguredLines(numOfLines, lineParams, configuredLines, lineType, lineMode);
 
     }

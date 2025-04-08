@@ -42,8 +42,6 @@ class DisplayGrid {
         this.buffer = buffer;
 
         this.addRows(5);
-
-
     }
 
     // Initialize the grid and assign letters
