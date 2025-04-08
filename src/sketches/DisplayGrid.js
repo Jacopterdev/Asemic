@@ -310,6 +310,10 @@ class DisplayGrid {
     }
 
     handleScroll(md) {
+        const mouseInCanvas = (this.p.mouseX >= 0 && this.p.mouseX <= this.p.width &&
+            this.p.mouseY >= 0 && this.p.mouseY <= this.p.height)
+        if (!mouseInCanvas) {return;}
+
         const SCROLL_THRESHOLD = 400; // Pixels near the viewport bottom
         const ADD_ROW_COUNT = 3; // Pre-add this many rows
 
