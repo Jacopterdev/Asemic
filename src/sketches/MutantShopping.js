@@ -38,6 +38,7 @@ class MutantShopping {
             }
         );
 
+        this.hoveredCell = { row: -1, col: -1 };
 
         // Store the central letter
         this.centerLetter = letter;
@@ -129,6 +130,34 @@ class MutantShopping {
         }
     }
 
+    updateHoverState() {
+        // Default to no cell hovered
+        this.hoveredCell = { row: -1, col: -1 };
+
+        // Check if mouse is inside the grid
+        if (this.p.mouseX >= this.x && this.p.mouseX < this.x + this.width &&
+            this.p.mouseY >= this.y && this.p.mouseY < this.y + this.height) {
+
+            // Calculate which cell is hovered
+            const col = Math.floor((this.p.mouseX - this.x) / this.cellWidth);
+            const row = Math.floor((this.p.mouseY - this.y) / this.cellHeight);
+
+            // Only highlight cells that are not the center
+            if (!(row === 1 && col === 1)) {
+                this.hoveredCell = { row, col };
+                // Set cursor to hand when hovering over a non-center cell
+                this.p.cursor(this.p.HAND);
+            } else {
+                // Reset cursor when hovering center cell
+                this.p.cursor(this.p.ARROW);
+            }
+        } else {
+            // Reset cursor when not hovering any cell
+            this.p.cursor(this.p.ARROW);
+        }
+    }
+
+
     drawShapes(xray = false) {
         // If we're animating, we'll handle it separately
         if (this.isAnimating) {
@@ -162,7 +191,8 @@ class MutantShopping {
 
 
     drawGrid() {
-        this.p.stroke(64);
+        this.updateHoverState();
+        this.p.stroke(224);
         this.p.strokeWeight(1);
         this.p.noFill();
 
@@ -176,6 +206,24 @@ class MutantShopping {
             const x = i * this.cellWidth + this.x;
             this.p.line(x, this.y, x, this.y + this.height);
         }
+
+        // Draw the grid
+        for (let j = 0; j < this.rows; j++) {
+            for (let i = 0; i < this.cols; i++) {
+                const cell = this.grid[j][i];
+
+                // Draw orange outline for hovered cell
+                if (this.hoveredCell.row === j && this.hoveredCell.col === i) {
+                    this.p.push();
+                    this.p.noFill();
+                    this.p.stroke(255, 127, 0); // Orange color matching the MutantButton hover
+                    this.p.strokeWeight(2);
+                    this.p.rect(cell.x, cell.y, cell.w, cell.h);
+                    this.p.pop();
+                }
+            }
+        }
+
 
         // Highlight the center cell
         const centerCell = this.grid[1][1];
@@ -235,7 +283,7 @@ class MutantShopping {
 
                 const cell = this.grid[j][i];
                 const buffer = this.buffers[j][i];
-
+                buffer.background(255);
                 // Draw the buffer to the main canvas
                 this.p.image(buffer, cell.x, cell.y, cell.w, cell.h);
             }
