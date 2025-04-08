@@ -43,13 +43,10 @@ class ShapeGeneratorV2 {
 
         // Iterate through the subShapes
         for (const subShape of this.subShapes) {
-            console.log("SubShape:", subShape.config);
             let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves);
             this.subShapeGenerators.push(subShapeGenerator);
             subShapeGenerator.generate();
         }
-
-
     }
 
     draw(xray = false){

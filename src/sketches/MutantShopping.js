@@ -1,13 +1,17 @@
 ﻿import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary.js";
+import BackButton from "./SkeletonButtons/BackButton.js";
+import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 
 class MutantShopping {
-    constructor(p, x, y, width, height, mergedParams, letter = 'A') {
+    constructor(p, x, y, width, height, mergedParams, handleEvent, letter = 'A') {
         this.p = p;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+
+        this.handleEvent = handleEvent; // Store the event handler from AnatomyState
 
         this.noiseJump = 0.1;
 
@@ -21,6 +25,19 @@ class MutantShopping {
         this.grid = [];
         this.buffers = [];
         this.scale = 0.3;
+
+        // Create back button
+        this.backButton = new BackButton(
+            p,
+            width + 2* LAYOUT.MARGIN,
+            LAYOUT.MARGIN, // Position above the shopping grid
+            () => {
+                // Directly call the event handler with the exit event
+                this.handleEvent({ type: 'exitMutantShopping' });
+
+            }
+        );
+
 
         // Store the central letter
         this.centerLetter = letter;
@@ -164,17 +181,21 @@ class MutantShopping {
         const centerCell = this.grid[1][1];
 
         if (centerCell.letter) {
-            this.p.fill(0);
+            const cell = centerCell;
+            // Draw letter in corner
+            this.p.fill(64);
             this.p.noStroke();
-            this.p.textAlign(this.p.RIGHT, this.p.BOTTOM);
-            this.p.textSize(16);
-            this.p.text(centerCell.letter, centerCell.x + centerCell.w - 5, centerCell.y + centerCell.h - 5);
+            this.p.textSize(12);
+            this.p.textAlign(this.p.LEFT, this.p.CENTER);
+            this.p.text(cell.letter, cell.x + LAYOUT.PADDING, cell.y +LAYOUT.PADDING + 10);
         }
         this.p.noFill();
 
         this.p.stroke(255, 128, 0);
         this.p.strokeWeight(2);
         this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h);
+
+        this.backButton.draw();
     }
 
 
@@ -287,6 +308,11 @@ class MutantShopping {
     }
 
     mousePressed(mouseX, mouseY) {
+        if(this.backButton && this.backButton.checkHover(mouseX,mouseY)){
+            const event = this.backButton.click();
+            return event;
+        }
+
         // Don't handle clicks during animation
         if (this.isAnimating) return;
 
