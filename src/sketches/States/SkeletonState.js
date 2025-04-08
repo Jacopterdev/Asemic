@@ -30,6 +30,8 @@ import ConnectWithoutCrossingButton from "../SkeletonButtons/ConnectWithoutCross
 import ConnectToAllButton from "../SkeletonButtons/ConnectToAllButton.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 import History from "../History.js";  // Import the History singleton
+import ConnectToNearest from "../SkeletonButtons/ConnectToNearest.js";
+import RangeSlider from "../UI/RangeSlider.js";
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -239,12 +241,41 @@ class SkeletonState {
         )
         this.skeletonButtons.push(this.connectToAllButton);
 
+        this.connectToNearestButton = new ConnectToNearest(
+            this.p,
+            x,
+            calculateButtonY(11), // Adjust the position as needed - should be below the Connect to All button
+            () => {
+                this.mouseHandler.setToolMode("connectToNearest");
+                this.toolButtons.toggle(this.connectToNearestButton);
+            },
+            true
+        );
+        this.skeletonButtons.push(this.connectToNearestButton);
+
+        // Add the slider for the Connect to Nearest button
+        this.rangeSlider = new RangeSlider(
+            this.p, 
+            x+15, // Keep the same x position as the button (vertically aligned)
+            calculateButtonY(11) + LAYOUT.BUTTON_SIZE + 5, // Position below the button with a small gap
+            5, // Thinner width (was LAYOUT.BUTTON_SIZE)
+            100, // Height of slider
+            50, // Minimum value (minimum connection radius)
+            450, // Maximum value (maximum connection radius)
+            150, // Initial value (default connection radius)
+            (value) => {
+                // Update the connection radius in the mouse handler when slider changes
+                this.mouseHandler.connectionRadius = value;
+            }
+        );
+
         // Create the toggle button group
         this.toolButtons = new ToggleButtonGroup([
             this.eraserToolButton, 
             this.connectToOneButton, 
             this.connectWithoutCrossingButton,
-            this.connectToAllButton
+            this.connectToAllButton,
+            this.connectToNearestButton
         ]);
 
         // Set connectToOneButton as the default tool
@@ -655,6 +686,15 @@ class SkeletonState {
         this.connectToOneButton.draw();
         this.connectWithoutCrossingButton.draw();
         this.connectToAllButton.draw();
+        this.connectToNearestButton.draw();
+
+        // Draw the range slider if the connect to nearest tool is active
+        if (this.mouseHandler.toolMode === "connectToNearest") {
+            this.rangeSlider.show();
+            this.rangeSlider.draw();
+        } else {
+            this.rangeSlider.hide();
+        }
 
         this.drawBufferGrid();
         // Render the buffer on the right-hand side of the canvas
@@ -775,6 +815,12 @@ class SkeletonState {
 
 
     mousePressed() {
+        // Check if slider was clicked first
+        if (this.rangeSlider.visible && this.rangeSlider.mousePressed()) {
+            return true;
+        }
+        
+        // Rest of your mousePressed logic...
         if (!this.mouseHandler) return;
         
         // First check if the tutorial handled the click
@@ -848,6 +894,11 @@ class SkeletonState {
             return;
         }
 
+        if(this.connectToNearestButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToNearestButton.click();
+            return;
+        }
+
         if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)) {
             this.nextStateButton.click();
             return;
@@ -859,6 +910,13 @@ class SkeletonState {
     }
 
     mouseDragged() {
+        // Check if slider is being dragged
+        if (this.rangeSlider.isDragging) {
+            this.rangeSlider.mouseDragged();
+            return true;
+        }
+        
+        // Rest of your mouseDragged logic...
         if (!this.mouseHandler) return;
         // First check if the grid is being interacted with
         const knobDragged = this.gridContext.mouseDragged(this.p.mouseX, this.p.mouseY);
@@ -871,6 +929,12 @@ class SkeletonState {
     }
 
     mouseReleased() {
+        // Check if slider was released
+        if (this.rangeSlider.visible) {
+            this.rangeSlider.mouseReleased();
+        }
+        
+        // Rest of your mouseReleased logic...
         if (!this.mouseHandler) return;
         const knobDragged = this.gridContext.mouseReleased();
         if (knobDragged) return;

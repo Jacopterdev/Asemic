@@ -29,6 +29,8 @@
         // Add these new properties for line previewing
         this.previewLines = []; // Array to store preview lines
         this.previewPoint = null; // Virtual point for previews
+
+        this.connectionRadius = 150; // Default connection radius for connectToNearest tool
     }
     
     /**
@@ -390,6 +392,145 @@
                     
                     // Add line if it won't cause crossings
                     if (!wouldCross) {
+                        this.lineManager.addLine(newPoint, otherPoint, true);
+                    }
+                });
+                
+                this.didAddLine = true;
+            }
+            
+            // Update selected point
+            this.selectedPoint = newPoint;
+            
+            // Add pulse effect for the new point if available
+            if (this.ephemeralLineAnimator) {
+                this.ephemeralLineAnimator.addPoint(newPoint);
+            }
+            
+            return true;
+        }
+
+        // CONNECT-TO-NEAREST TOOL MODE
+        else if (this.toolMode === "connectToNearest") {
+            // Define the connection radius
+            const connectionRadius = this.connectionRadius; // Adjust this value as needed
+            
+            // If hovering over an existing point
+            if (hoveredPoint) {
+                // Get all points except the hovered one
+                const otherPoints = this.points.filter(p => p.id !== hoveredPoint.id);
+                
+                // Find points within the radius
+                if (otherPoints.length > 0) {
+                    let addedAtLeastOneLine = false;
+                    
+                    otherPoints.forEach(otherPoint => {
+                        // Calculate distance
+                        const distance = this.p.dist(
+                            hoveredPoint.x, hoveredPoint.y,
+                            otherPoint.x, otherPoint.y
+                        );
+                        
+                        // Connect if within radius and not already connected
+                        if (distance <= connectionRadius && !this.lineManager.lineExists(hoveredPoint, otherPoint)) {
+                            this.lineManager.addLine(hoveredPoint, otherPoint, true);
+                            addedAtLeastOneLine = true;
+                        }
+                    });
+                    
+                    this.didAddLine = addedAtLeastOneLine;
+                }
+                
+                // Set up for dragging
+                this.selectedPoint = hoveredPoint;
+                this.draggingPoint = hoveredPoint;
+                this.mouseDragStart = { x: this.p.mouseX, y: this.p.mouseY };
+                this.isDragging = false;
+                
+                return true;
+            }
+            
+            // If clicking on a line, split it and connect new point to nearby points
+            const hoveredLine = this.getHoveredLine(this.p.mouseX, this.p.mouseY);
+            if (hoveredLine) {
+                // Create a new point where the line was clicked
+                const projectedPoint = this.getProjectedPointOnLine(
+                    this.p.mouseX, this.p.mouseY, hoveredLine
+                );
+                
+                // Get the snapped position if grid snapping is active
+                const snapPosition = this.gridContext.getSnapPosition(projectedPoint.x, projectedPoint.y);
+                
+                // Use the snapped position or the projected point
+                const newPointPosition = snapPosition || projectedPoint;
+                
+                // Create the new point
+                const newPoint = this.createPoint(newPointPosition.x, newPointPosition.y);
+                this.points.push(newPoint);
+                this.didAddPoint = true;
+                
+                // Remove the original line
+                this.lineManager.removeLine(hoveredLine);
+                
+                // Add two new lines connecting the original endpoints to the new point
+                this.lineManager.addLine(hoveredLine.start, newPoint, true);
+                this.lineManager.addLine(newPoint, hoveredLine.end, true);
+                
+                // Connect the new point to all points within radius
+                const nearbyPoints = this.points.filter(p => 
+                    p.id !== newPoint.id && 
+                    p.id !== hoveredLine.start.id && 
+                    p.id !== hoveredLine.end.id
+                );
+                
+                nearbyPoints.forEach(otherPoint => {
+                    // Calculate distance
+                    const distance = this.p.dist(
+                        newPoint.x, newPoint.y,
+                        otherPoint.x, otherPoint.y
+                    );
+                    
+                    // Connect if within radius
+                    if (distance <= connectionRadius) {
+                        this.lineManager.addLine(newPoint, otherPoint, true);
+                    }
+                });
+                
+                this.didAddLine = true;
+                this.selectedPoint = newPoint;
+                
+                // Add pulse effect for the new point if available
+                if (this.ephemeralLineAnimator) {
+                    this.ephemeralLineAnimator.addPoint(newPoint);
+                }
+                
+                return true;
+            }
+            
+            // If not hovering over anything, create a new point and connect to nearby points
+            const snapPosition = this.gridContext.getSnapPosition(this.p.mouseX, this.p.mouseY);
+            const newPoint = this.createPoint(
+                snapPosition ? snapPosition.x : this.p.mouseX,
+                snapPosition ? snapPosition.y : this.p.mouseY
+            );
+            
+            // Add the new point
+            this.points.push(newPoint);
+            this.didAddPoint = true;
+            
+            // Connect to points within radius
+            if (this.points.length > 1) {
+                const nearbyPoints = this.points.filter(p => p.id !== newPoint.id);
+                
+                nearbyPoints.forEach(otherPoint => {
+                    // Calculate distance
+                    const distance = this.p.dist(
+                        newPoint.x, newPoint.y,
+                        otherPoint.x, otherPoint.y
+                    );
+                    
+                    // Connect if within radius
+                    if (distance <= connectionRadius) {
                         this.lineManager.addLine(newPoint, otherPoint, true);
                     }
                 });
@@ -1038,16 +1179,100 @@
             case "eraser":
                 // No preview lines for eraser tool
                 break;
+
+            // Add this case in the switch statement in updatePreviewLines() method in MouseEventHandler.js
+            case "connectToNearest":
+                // Show the preview point
+                this.previewPoint = { x: previewX, y: previewY, id: 'preview' };
+                
+                // Define the connection radius - same as in handleMousePressed for connectToNearest
+                const connectionRadius = this.connectionRadius; // Adjust as needed to match your handleMousePressed
+                
+                // If hovering over a line, show how it would split
+                if (hoveredLine) {
+                    // Get the projected point on the line for more accurate preview
+                    const projectedPoint = this.getProjectedPointOnLine(
+                        this.p.mouseX, this.p.mouseY, hoveredLine
+                    );
+                    
+                    // Use the snapped position if available, otherwise use the projected point
+                    const splitX = snapPosition ? snapPosition.x : projectedPoint.x;
+                    const splitY = snapPosition ? snapPosition.y : projectedPoint.y;
+                    
+                    // Update the preview point position to be exactly on the line (or snapped)
+                    this.previewPoint.x = splitX;
+                    this.previewPoint.y = splitY;
+                    
+                    // Add the preview for both segments of the split line
+                    this.previewLines.push({
+                        start: hoveredLine.start,
+                        end: this.previewPoint,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    this.previewLines.push({
+                        start: this.previewPoint,
+                        end: hoveredLine.end,
+                        preview: true,
+                        originalLine: hoveredLine
+                    });
+                    
+                    // Also show connections to nearby points within radius
+                    for (const point of this.points) {
+                        // Skip the endpoints of the hovered line
+                        if (point.id === hoveredLine.start.id || point.id === hoveredLine.end.id) {
+                            continue;
+                        }
+                        
+                        // Calculate distance to each point
+                        const distance = this.p.dist(
+                            this.previewPoint.x, this.previewPoint.y,
+                            point.x, point.y
+                        );
+                        
+                        // Only add preview lines for points within the connection radius
+                        if (distance <= connectionRadius) {
+                            this.previewLines.push({
+                                start: point,
+                                end: this.previewPoint,
+                                preview: true
+                            });
+                        }
+                    }
+                }
+                // When not hovering over a line but still within canvas
+                else {
+                    // Find all points within the connection radius
+                    for (const point of this.points) {
+                        // Calculate distance to each point
+                        const distance = this.p.dist(
+                            this.previewPoint.x, this.previewPoint.y,
+                            point.x, point.y
+                        );
+                        
+                        // Only add preview lines for points within the connection radius
+                        if (distance <= connectionRadius) {
+                            this.previewLines.push({
+                                start: point,
+                                end: this.previewPoint,
+                                preview: true
+                            });
+                        }
+                    }
+                }
+                
+                // Add a flag to indicate this tool should show the connection radius circle
+                this.showConnectionRadius = true;
+                this.connectionRadius = connectionRadius;
+                break;
         }
     }
 
     // Add a method to draw the preview lines
     drawPreviewLines() {
-        if (this.previewLines.length === 0) return null;
-        
-        // Return the line to hide (if any) for the parent component to avoid rendering it twice
+        // Get the line to hide (if any) for the parent component to avoid rendering it twice
         let lineToHide = null;
-        for (const line of this.previewLines) {
+        for (const line of this.previewLines || []) {
             if (line.originalLine) {
                 lineToHide = line.originalLine;
                 break;
@@ -1055,6 +1280,28 @@
         }
         
         this.p.push();
+        
+        // Draw the connection radius circle for connectToNearest tool
+        // Now we always draw it when the tool is active, not just during preview
+        if (this.toolMode === "connectToNearest" && this.isInCanvas()) {
+            // Use the dynamic connection radius from the class property
+            const connectionRadius = this.connectionRadius;
+            
+            // Get current mouse position or preview point
+            const centerX = this.previewPoint ? this.previewPoint.x : this.p.mouseX;
+            const centerY = this.previewPoint ? this.previewPoint.y : this.p.mouseY;
+            
+            // Draw a filled circle with light orange color - no outline
+            this.p.noStroke(); // Remove the stroke completely
+            this.p.fill(250, 140, 0, 20); // Light orange with low opacity (20%)
+            this.p.ellipse(centerX, centerY, connectionRadius * 2);
+        }
+        
+        // If there are no preview lines to draw, we can return now
+        if (!this.previewLines || this.previewLines.length === 0) {
+            this.p.pop();
+            return lineToHide;
+        }
         
         // Use dashed line for preview
         this.p.strokeWeight(1);
