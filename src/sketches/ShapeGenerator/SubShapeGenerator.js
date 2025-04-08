@@ -173,9 +173,15 @@ class SubShapeGenerator {
             let offset;
             if (numPolygons <= 1) {
                 offset = 0.5; // Place single shape in the middle
+            } else if (shapeIndex >= numPolygons) {
+                // Safety check to prevent going beyond the line
+                return { base: null, direction: null };
             } else {
                 offset = shapeIndex / (numPolygons - 1); // Distribute evenly, including endpoints
             }
+            
+            // Ensure offset is clamped between 0 and 1
+            offset = Math.max(0, Math.min(1, offset));
             
             const base = this.p.createVector(
                 this.p.lerp(p1.x, p2.x, offset),
@@ -234,6 +240,7 @@ class SubShapeGenerator {
         } else if (placeAtPoints === "Along") {
             // For equidistant distribution, use the index of the shape and total count
             // to place it evenly along the curve
+            // FIX: corrected 'roud' to 'round'
             const numPolygons = this.p.round(this.cNoise.noiseMap(this.noisePos, this.subShape.amount.min, this.subShape.amount.max));
             const shapeIndex = this.polygons.length; // Current shape index
             
@@ -242,14 +249,20 @@ class SubShapeGenerator {
             let t;
             if (numPolygons <= 1) {
                 t = 0.5; // Place single shape in the middle
+            } else if (shapeIndex >= numPolygons) {
+                // Safety check to prevent going beyond 1.0
+                return { base: null, direction: null };
             } else {
                 t = shapeIndex / (numPolygons - 1); // Distribute evenly, including endpoints
             }
             
+            // Ensure t is clamped between 0 and 1
+            t = Math.max(0, Math.min(1, t));
+            
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
             return { base, direction };
-        } else {//JOINTS PLACEHOLDER
+        } else { //JOINTS PLACEHOLDER
             const t = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9);
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
