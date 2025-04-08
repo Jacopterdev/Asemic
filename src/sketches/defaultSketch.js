@@ -196,6 +196,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         }
     };
 
+    // Expose restoreState through the p5 instance
+    p.restoreState = restoreState;
+
     p.draw = () => {
         /**Update variables*/
         mergedParams = mergedParamsRef.current;

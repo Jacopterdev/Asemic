@@ -15,6 +15,7 @@ import * as buffer from "node:buffer";
 import Effects from "../Effects.js";
 import DeleteButton from "../SkeletonButtons/DeleteButton.js";
 import FillGridButton from "../SkeletonButtons/FillGridButton.js";
+import UndoButton from "../SkeletonButtons/UndoButton.js"; // Add this import
 import HelpButton from "../SkeletonButtons/HelpButton.js";
 import RadialGridButton from "../SkeletonButtons/RadialGridButton.js";
 import RectGridButton from "../SkeletonButtons/RectGridButton.js";
@@ -28,6 +29,7 @@ import ConnectToOneButton from "../SkeletonButtons/ConnectToOneButton.js";
 import ConnectWithoutCrossingButton from "../SkeletonButtons/ConnectWithoutCrossingButton.js";
 import ConnectToAllButton from "../SkeletonButtons/ConnectToAllButton.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
+import History from "../History.js";  // Import the History singleton
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -107,6 +109,26 @@ class SkeletonState {
             () => this.deleteAllPoints() // Define delete callback
         );
         this.skeletonButtons.push(this.deleteButton);
+
+        // Add the Undo button above the Fill Grid button
+        this.undoButton = new UndoButton(
+            this.p,
+            x,
+            calculateButtonY(buttonsCanFit-2),
+            () => {
+                // Use the history instance
+                const history = new History();
+                if (history.canUndo()) {
+                    const state = history.undo();
+                    if (this.p.restoreState(state)) {
+                        // Success - state was restored
+                        return;
+                    }
+                }
+                console.warn('No more undo history available');
+            }
+        );
+        this.skeletonButtons.push(this.undoButton);
 
         this.fillGridButton = new FillGridButton(
             this.p,
@@ -609,7 +631,8 @@ class SkeletonState {
         // Draw the delete button
         //this.drawDeleteButton();
         this.deleteButton.draw();
-        
+        this.undoButton.draw(); // Add this line
+
         // Draw the fill grid button
         //this.drawFillGridButton();
         this.fillGridButton.draw();
@@ -771,7 +794,13 @@ class SkeletonState {
             this.deleteButton.click();
             return;
         }
-        
+
+        // Check if the undo button was clicked
+        if(this.undoButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.undoButton.click();
+            return;
+        }
+
         // Check if the fill grid button was clicked
         if (this.fillGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
             this.fillGridButton.click();
