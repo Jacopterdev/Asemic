@@ -163,7 +163,20 @@ class SubShapeGenerator {
             }
             return { base: null, direction: null };
         } else if (placeAtPoints === "Along") {
-            const offset = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9); // Avoid extreme ends
+            // For equidistant distribution, use the index of the shape and total count
+            // to place it evenly along the line
+            const numPolygons = this.p.round(this.cNoise.noiseMap(this.noisePos, this.subShape.amount.min, this.subShape.amount.max));
+            const shapeIndex = this.polygons.length; // Current shape index
+            
+            // Calculate position along the line (0 to 1)
+            // This ensures we place even at the endpoints if needed
+            let offset;
+            if (numPolygons <= 1) {
+                offset = 0.5; // Place single shape in the middle
+            } else {
+                offset = shapeIndex / (numPolygons - 1); // Distribute evenly, including endpoints
+            }
+            
             const base = this.p.createVector(
                 this.p.lerp(p1.x, p2.x, offset),
                 this.p.lerp(p1.y, p2.y, offset)
@@ -219,7 +232,20 @@ class SubShapeGenerator {
             }
             return { base: null, direction: null };
         } else if (placeAtPoints === "Along") {
-            const t = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9);
+            // For equidistant distribution, use the index of the shape and total count
+            // to place it evenly along the curve
+            const numPolygons = this.p.round(this.cNoise.noiseMap(this.noisePos, this.subShape.amount.min, this.subShape.amount.max));
+            const shapeIndex = this.polygons.length; // Current shape index
+            
+            // Calculate position along the curve (0 to 1)
+            // This ensures we place even at the endpoints if needed
+            let t;
+            if (numPolygons <= 1) {
+                t = 0.5; // Place single shape in the middle
+            } else {
+                t = shapeIndex / (numPolygons - 1); // Distribute evenly, including endpoints
+            }
+            
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
             return { base, direction };
