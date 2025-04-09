@@ -6,25 +6,28 @@ class EraserToolButton extends SkeletonButton{
     }
 
     draw() {
-        //super.draw draws the button without icon
-        // Superclass draw method draws the button without the icon
         super.draw();
 
-// Define margin and rect dimensions
         const margin = 10;
-        const rectX = this.x + margin; // Starting x-position
-        const rectY = this.y + margin; // Starting y-position
-        const rectWidth = this.size - 2 * margin; // Rectangle width
-        const rectHeight = this.size - 2 * margin; // Rectangle height
-        const skewOffset = rectHeight * 0.3; // Skew offset to distort the rectangle
+        const rectX = this.x + margin;
+        const rectY = this.y + margin;
+        const rectWidth = this.size - 2 * margin;
+        const rectHeight = this.size - 2 * margin;
+        const skewOffset = rectWidth * 0.3; // Changed to rectWidth for horizontal skew
 
-// Draw a skewed rectangle
-        this.p.stroke(75, 85, 99); // text-gray-600
+        // Draw horizontally skewed rectangle
+        this.p.stroke(75, 85, 99);
         this.p.quad(
-            rectX, rectY,                           // Top-left corner
-            rectX + rectWidth, rectY + skewOffset,  // Top-right corner (skewed down)
-            rectX + rectWidth, rectY + rectHeight,  // Bottom-right corner
-            rectX, rectY + rectHeight - skewOffset  // Bottom-left corner (skewed up)
+            rectX + skewOffset, rectY,                // Top-left corner (skewed right)
+            rectX + rectWidth, rectY,                 // Top-right corner
+            rectX + rectWidth - skewOffset, rectY + rectHeight, // Bottom-right corner (skewed left)
+            rectX, rectY + rectHeight                 // Bottom-left corner
+        );
+
+        // Add line across the middle
+        this.p.line(
+            rectX+2, rectY + 1 + rectHeight/2,             // Start of line
+            rectX-2 + rectWidth, rectY + 1 + rectHeight/2  // End of line
         );
     }
 } export default EraserToolButton;
