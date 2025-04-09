@@ -38,7 +38,7 @@ class MutantButton {
         const parentLeft = this.x - (this.parentSize) + this.size;
         const parentTop = this.y;
         const parentRight = this.x + this.size;
-        const parentBottom = this.y + this.parentSize;
+        const parentBottom = this.y + this.parentSize  - (2*LAYOUT.BUTTON_SIZE);
 
         // Update hover state - check if mouse is within parent
         this.isHovered = p.mouseX >= parentLeft && p.mouseX <= parentRight &&
@@ -145,7 +145,7 @@ class MutantButton {
         const parentLeft = this.x - this.parentSize + this.size;
         const parentTop = this.y;
         const parentRight = this.x + this.size;
-        const parentBottom = this.y + this.parentSize;
+        const parentBottom = this.y + this.parentSize - (2*LAYOUT.BUTTON_SIZE);
 
         // Check if mouse is within parent
         this.isHovered = this.p.mouseX >= parentLeft && this.p.mouseX <= parentRight &&
