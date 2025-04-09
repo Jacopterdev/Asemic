@@ -7,7 +7,6 @@ import PossibleLinesRenderer from "../PossibleLinesRenderer.js";
 import EphemeralLineAnimator from "../EphemeralLineAnimator.js";
 import GridContext from "../GridContext.js";
 import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
-import Tutorial from "../Tutorial.js";
 import {p5 as p} from "p5/lib/p5.js";
 import RandomPointGenerator from '../RandomPointGenerator.js';
 import DisplayGrid from "../DisplayGrid.js";
@@ -16,7 +15,6 @@ import Effects from "../Effects.js";
 import DeleteButton from "../SkeletonButtons/DeleteButton.js";
 import FillGridButton from "../SkeletonButtons/FillGridButton.js";
 import UndoButton from "../SkeletonButtons/UndoButton.js"; // Add this import
-import HelpButton from "../SkeletonButtons/HelpButton.js";
 import RadialGridButton from "../SkeletonButtons/RadialGridButton.js";
 import RectGridButton from "../SkeletonButtons/RectGridButton.js";
 import NoGridButton from "../SkeletonButtons/NoGridButton.js";
@@ -65,15 +63,7 @@ class SkeletonState {
             }
         );
 
-        // Initialize tutorial system
-        const tutorialSeen = typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true';
-        this.tutorial = new Tutorial(p);
-        this.tutorial.active = false; // Only show if not seen before
-        
-        // Help button properties
-        this.helpButtonSize = LAYOUT.BUTTON_SIZE;
-        this.helpButtonX = LAYOUT.GRID_SIZE - 60;
-        this.helpButtonY = LAYOUT.MARGIN;
+
         
         this.init();
 
@@ -140,13 +130,7 @@ class SkeletonState {
         );
         this.skeletonButtons.push(this.fillGridButton);
 
-        this.helpButton = new HelpButton(
-            this.p,
-            x,
-            calculateButtonY(0),
-            () => this.tutorial.toggleTutorial()
-        )
-        this.skeletonButtons.push(this.helpButton);
+ 
 
         /** GRID BUTTONS */
         this.radialGridButton = new RadialGridButton(
@@ -667,16 +651,8 @@ class SkeletonState {
         // Draw the fill grid button
         //this.drawFillGridButton();
         this.fillGridButton.draw();
+  
         
-        // Draw help button if tutorial is inactive
-        if (this.tutorial && !this.tutorial.active) {
-            this.helpButton.draw();
-        }
-        
-        // Draw tutorial overlay last so it appears on top
-        if (this.tutorial && this.tutorial.active) {
-            this.tutorial.draw();
-        }
 
         this.radialGridButton.draw();
         this.rectGridButton.draw();
@@ -705,92 +681,6 @@ class SkeletonState {
         this.nextStateButton.draw();
     }
 
-    /** DUPLICATE DRAW METHOD???
-    // Modify the draw method to handle the null selectedPoint
-    draw() {
-        this.p.cursor(this.p.ARROW);
-        this.updateGridContext();
-        const missRadius = this.mergedParams.missArea;
-        this.pointRenderer.setMissRadius(missRadius);
-
-        this.p.noStroke();
-        this.p.fill(0); // Color: black
-
-        this.ephemeralLineAnimator.updateAndDraw();
-
-        this.gridContext.draw();
-
-        // Get the currently hovered line for the hover effect
-        const hoveredLine = this.mouseHandler.getHoveredLineForRendering();
-        
-        // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
-        this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
-
-        // Get the line to hide from preview (if any)
-        const lineToHide = this.mouseHandler.drawPreviewLines();
-
-        // Draw all lines (except the one being split in preview)
-        this.lineManager.getLines().forEach(line => {
-            // Skip drawing the original line if it's being split in the preview
-            if (lineToHide && line === lineToHide) {
-                return;
-            }
-            
-            this.possibleLinesRenderer.drawLines([line], null, this.hoveredLine);
-        });
-
-        //For changing the cursor
-        let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
-
-        // Update the points drawing part of the draw method
-        this.points.forEach((point) => {
-            const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
-            const isSelected = this.mouseHandler.selectedPoint && this.mouseHandler.selectedPoint.id === point.id;
-            
-            if (isHovered) {
-                anyHovered = true; // At least one point is hovered
-            }
-            
-            // Render the point with hover and selected states
-            this.pointRenderer.draw(point, isHovered, isSelected);
-        });
-
-        // Update cursor based on whether any point is hovered
-        if (anyHovered) this.p.cursor(this.p.HAND);
-
-        // Draw the delete button
-        //this.drawDeleteButton();
-        this.deleteButton.draw();
-        
-        // Draw the fill grid button
-        //this.drawFillGridButton();
-        this.fillGridButton.draw();
-        
-        // Draw help button if tutorial is inactive
-        if (this.tutorial && !this.tutorial.active) {
-            this.helpButton.draw();
-        }
-        
-        // Draw tutorial overlay last so it appears on top
-        if (this.tutorial && this.tutorial.active) {
-            this.tutorial.draw();
-        }
-
-        this.radialGridButton.draw();
-        this.rectGridButton.draw();
-        this.noGridButton.draw();
-
-        this.eraserToolButton.draw();
-        this.connectToOneButton.draw();
-        this.connectWithoutCrossingButton.draw();
-        this.connectToAllButton.draw();
-
-        this.drawBufferGrid();
-        // Render the buffer on the right-hand side of the canvas
-        const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
-        const bufferY = 0; // Position 0px from the top
-        this.p.image(this.buffer, bufferX, bufferY);
-    }*/
 
 
     updateMergedParams(newMergedParams) {
@@ -823,12 +713,6 @@ class SkeletonState {
         // Rest of your mousePressed logic...
         if (!this.mouseHandler) return;
         
-        // First check if the tutorial handled the click
-        if (this.tutorial && this.tutorial.active) {
-            if (this.tutorial.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
-                return true; // Tutorial handled the click
-            }
-        }
 
 
         if(!this.isMouseWithinGrid()){
@@ -853,12 +737,6 @@ class SkeletonState {
             return;
         }
         
-        // Check for help button clicks when tutorial is inactive
-        if (this.helpButton.checkHover(this.p.mouseX, this.p.mouseY) && !this.tutorial.active) {
-            this.helpButton.click();
-            return;
-        }
-
         if(this.radialGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
             this.radialGridButton.click();
             return;

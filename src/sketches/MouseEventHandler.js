@@ -1293,7 +1293,7 @@
             
             // Draw a filled circle with light orange color - no outline
             this.p.noStroke(); // Remove the stroke completely
-            this.p.fill(250, 140, 0, 20); // Light orange with low opacity (20%)
+            this.p.fill(250, 200, 150, 20); // Very light orange with low opacity (20%)
             this.p.ellipse(centerX, centerY, connectionRadius * 2);
         }
         
