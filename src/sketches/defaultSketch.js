@@ -323,14 +323,14 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 const state = history.undo();
                 if (restoreState(state)) {
                     
-                    return false; // Prevent default behavior
+                    return;
                 }
             }
-            return false; // Even if we can't undo, prevent default browser behavior
+            return;
         }
         
         // Forward key event to current state
-        return currentState?.keyPressed?.(evt);
+        currentState?.keyPressed?.(evt);
     };
     p.keyReleased = (evt) => currentState?.keyReleased?.(evt);
     p.mouseWheel = (event) => {
