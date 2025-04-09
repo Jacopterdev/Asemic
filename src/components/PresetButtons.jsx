@@ -5,7 +5,7 @@ import { SPACING } from "../sketches/States/LayoutConstants";
 const PresetButtons = ({ onPresetSelect }) => {
   const scrollContainerRef = useRef(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
-  
+
   // Check if scrolling is needed
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -177,54 +177,54 @@ const PresetButtons = ({ onPresetSelect }) => {
       try {
         // Get current state from p5Instance (to preserve skeleton structure only)
         const currentState = window.p5Instance.getShapeLanguageAsJSON();
-        
+
         // Start with a fresh preset-based state, only preserving points and lines
         const presetData = {
           // Copy the skeleton structure (points and lines)
           points: currentState.points || [],
           lines: currentState.lines || []
         };
-        
+
         // Add all params from the preset
         if (preset.params) {
           Object.entries(preset.params).forEach(([key, value]) => {
             presetData[key] = value;
           });
         }
-        
+
         // Get all numeric keys to identify subshapes
         const subshapeKeys = Object.keys(preset)
           .filter(key => !isNaN(parseInt(key)))
           .map(String);
-        
+
         // Set subshapeKeys property explicitly
         presetData.subshapeKeys = subshapeKeys;
-        
+
         // Completely replace all subshapes with ones from the preset
         // This ensures no existing subshapes remain in the configuration
         subshapeKeys.forEach(key => {
           presetData[key] = JSON.parse(JSON.stringify(preset[key]));
         });
-        
+
         console.log("Applying preset with completely replaced subshapes:", presetData);
-        
+
         // Convert to JSON string
         const jsonString = JSON.stringify(presetData);
-        
+
         // Use the method from p5 sketch to load the preset
         if (window.p5Instance.loadShapeLanguageFromJSON) {
           const success = window.p5Instance.loadShapeLanguageFromJSON(jsonString);
-          
+
           if (success) {
             console.log(`Preset "${preset.name}" applied successfully`);
-            
+
             // If there's an onPresetSelect callback, call it
             if (onPresetSelect) {
               onPresetSelect(preset);
             }
           } else {
             console.error(`Failed to apply preset "${preset.name}"`);
-            
+
             // Fallback to the event-based approach if loading failed
             const updateEvent = new CustomEvent('tweakpane-update', {
               detail: {
@@ -239,12 +239,12 @@ const PresetButtons = ({ onPresetSelect }) => {
                 preserveSkeleton: true
               }
             });
-            
+
             window.dispatchEvent(updateEvent);
           }
         } else {
           console.error("p5Instance doesn't have loadShapeLanguageFromJSON method");
-          
+
           // Fallback to the event-based approach
           const updateEvent = new CustomEvent('tweakpane-update', {
             detail: {
@@ -259,12 +259,12 @@ const PresetButtons = ({ onPresetSelect }) => {
               preserveSkeleton: true
             }
           });
-          
+
           window.dispatchEvent(updateEvent);
         }
       } catch (error) {
         console.error("Error applying preset:", error);
-        
+
         // Fallback on error
         if (onPresetSelect) {
           const updateEvent = new CustomEvent('tweakpane-update', {
@@ -276,7 +276,7 @@ const PresetButtons = ({ onPresetSelect }) => {
               preserveSkeleton: true
             }
           });
-          
+
           window.dispatchEvent(updateEvent);
         }
       }
@@ -286,31 +286,32 @@ const PresetButtons = ({ onPresetSelect }) => {
   };
 
   return (
-    <div className="preset-buttons w-full mt-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-xs text-gray-600 font-mono pl-1">Presets</div>
+  <div className="preset-buttons w-full mt-4 bg-gray-200 rounded-md shadow-md">
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-xs text-gray-500 font-mono pl-1">
+          <h5 className="mx-3 my-0 select-none">Presets</h5></div>
       </div>
 
       <div className="relative">
         <div
           ref={scrollContainerRef}
-          className="grid grid-cols-3 gap-2 p-1"
+          className="grid grid-cols-4 gap-0.5 p-1 mx-3"
         >
           {presets.map((preset) => (
             <button
               key={preset.id}
-              className="preset-button bg-gray-200 hover:bg-gray-300 transition-colors duration-150 rounded flex flex-col items-center justify-center p-1"
+              className="preset-button bg-gray-200 hover:bg-gray-300 transition-colors duration-150 rounded-lg flex flex-col items-center justify-center p-1 "
               onClick={() => handlePresetClick(preset)}
               title={preset.name}
             >
               <div className="flex-grow flex items-center justify-center w-full">
-                <img 
-                  src={preset.thumbnail} 
+                <img
+                  src={preset.thumbnail}
                   alt={preset.name}
                   className="w-4/5 h-4/5 object-contain"
                 />
               </div>
-              <div className="text-[10px] text-gray-600 font-medium mt-1 truncate w-full text-center">
+              <div className="text-xs text-gray-500 my-0 truncate w-full text-center">
                 {preset.name}
               </div>
             </button>

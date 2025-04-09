@@ -57,13 +57,14 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         if (!paneContainerRef.current || paneRef.current) return;
 
         // Initialize Tweakpane
-        const pane = new Tweakpane.Pane({ container: paneContainerRef.current }); // Attach to the DOM container
+        const pane = new Tweakpane.Pane({ container: paneContainerRef.current,
+        title: "Style"}); // Attach to the DOM container
         pane.registerPlugin(EssentialsPlugin);
         paneRef.current = pane;
 
         // Add folders and inputs to Tweakpane
-        const skeletonFolder = pane.addFolder({ title: 'Skeleton' });
-        skeletonFolder.addInput(params, 'missArea', {
+        //const skeletonFolder = pane.addFolder({ title: 'Skeleton' });
+        pane.addInput(params, 'missArea', {
             label: 'Miss Area',
             min: 0,
             max: 100,
@@ -72,9 +73,9 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('missArea', event.value); // Update React state and parent state
         });
 
-        const anatomyFolder = pane.addFolder({ title: 'Anatomy' });
+
         //const linesCount = window.skeletonLinesCount || 10; // Default to 10 if not available
-        NofLinesFolder = anatomyFolder.addInput(params, 'numberOfLines', {
+        NofLinesFolder = pane.addInput(params, 'numberOfLines', {
             label: 'Number of Lines',
             view: "interval",
             min: 1,
@@ -84,7 +85,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('numberOfLines', event.value);
         });
 
-        anatomyFolder.addInput(params, 'lineWidth', {
+        pane.addInput(params, 'lineWidth', {
             label: 'Line Width',
             view: "interval",
             min: 0,
@@ -94,7 +95,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('lineWidth', event.value);
         });
 
-        anatomyFolder.addInput(params, 'lineType', {
+        pane.addInput(params, 'lineType', {
             label: 'Line Type',
             options: {
                 Straight: 'straight',
@@ -122,7 +123,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
 
         });
 
-        const curvinessInput = anatomyFolder.addInput(params, 'curviness', {
+        const curvinessInput = pane.addInput(params, 'curviness', {
             label: 'Curviness',
             view: "interval",
             min: 0,
@@ -132,7 +133,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('curviness', event.value);
         })
 
-        const curveOffsetInput = anatomyFolder.addInput(params, 'curveOffset', {
+        const curveOffsetInput = pane.addInput(params, 'curveOffset', {
             label: 'Curve Offset',
             view: "interval",
             min: 0,
@@ -142,7 +143,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
             updateParam('curveOffset', event.value);
         })
 
-        const curveRatio = anatomyFolder.addInput(params, 'curveRatio', {
+        const curveRatio = pane.addInput(params, 'curveRatio', {
             label: 'Curve Ratio',
             step: 1,
             min: 0,
@@ -169,7 +170,7 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         pane.refresh();
 
 
-        anatomyFolder.addInput(params, 'lineComposition', {
+        pane.addInput(params, 'lineComposition', {
             label: 'Line Composition',
             options: {
                 Branched: 'Branched',
@@ -181,8 +182,8 @@ const TweakpaneComponent = ({ defaultParams, onParamChange }) => {
         });
 
         // Add `smoothAmount` input
-        anatomyFolder.addSeparator();
-        anatomyFolder.addInput(params, 'smoothAmount', {
+        pane.addSeparator();
+        pane.addInput(params, 'smoothAmount', {
             label: 'Smooth Amount',
             step: 1,
             min: 0,

@@ -410,13 +410,13 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
     return (
         <div className="tabs-with-panes w-full !mt-2">
             {/* Tabs List */}
-            <div className="tabs-list flex space-x-2 h-10">
+            <div className="tabs-list flex space-x-4 h-10">
                 {tabs.length > 0 ? (
                     tabs.map((tab) => (
                         <div
                             key={tab.id}
                             ref={(ref) => (paneContainerRefs.current[tab.id] = ref)}
-                            className={`tab group flex-grow text-center flex items-center justify-center px-4 py-2 relative ${
+                            className={`tab group flex-grow text-center flex items-center justify-center px-4 py-2 mx-2 relative ${
                                 activeTab === tab.id ? "button-active" : "button"
                             }`}
                             onClick={() => setActiveTab(tab.id)}
