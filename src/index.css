@@ -52,6 +52,10 @@ button, .button{
     @apply rounded-t-lg rounded-b-none;
 }
 
+.tabs-list{
+    @apply mx-1;
+}
+
 .statetab{
     @apply border-b-2 border-b-orange-500 box-border;
 }
@@ -60,7 +64,8 @@ button, .button{
 /*<!-- Example theme: Translucent -->*/
 .theme-translucent {
     /* Base */
-    --tp-base-background-color: rgb(243 244 246); /* gray-100 */
+    --tp-base-background-color: rgb(229 231 235);
+    /*rgb(243 244 246); /* gray-100 */
     --tp-base-shadow-color: rgb(0 0 0 / 0.1); /* unchanged, already similar to Tailwind's shadow */
 
     /* Buttons */
