@@ -2,7 +2,8 @@
 import shapeDictionary from "./ShapeDictionary.js";
 import BackButton from "./SkeletonButtons/BackButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
-import MutantButton from "./MutantButton.js";
+import MutateIcon from "./MutateIcon.js";
+
 
 class MutantShopping {
     constructor(p, x, y, width, height, mergedParams, handleEvent, letter = 'A') {
@@ -39,6 +40,10 @@ class MutantShopping {
             }
         );
 
+        // Add new property for the connection indicator
+        this.showConnectionIndicator = false;
+        this.connectionIndicatorPosition = { x: 0, y: 0 };
+        this.connectionIndicatorSize = LAYOUT.MARGIN; // Size of the circular icon
 
 
         this.hoveredCell = { row: -1, col: -1 };
@@ -58,16 +63,9 @@ class MutantShopping {
         // Initialize grid with the center shape based on the letter
         this.initGridWithLetter(letter);
 
-        const centerCell = this.grid[1][1];
-        const xM = centerCell.x + this.cellWidth - LAYOUT.MARGIN - LAYOUT.BUTTON_PADDING; //Find the X of the centerCell's top right corner
-        const yM = centerCell.y + LAYOUT.BUTTON_PADDING; //find y of centerCell's top right corner.
-        this.mutateButton = new MutantButton(
-            this.p,
-            xM,
-            yM,
-            null,
-            this.cellWidth
-        );
+        this.mutateIcon = new MutateIcon(this.p,
+            0,
+            0);
     }
 
     initGridWithLetter(letter) {
@@ -163,12 +161,13 @@ class MutantShopping {
                 this.p.cursor(this.p.HAND);
             } else {
                 // Reset cursor when hovering center cell
-                this.p.cursor(this.p.ARROW);
+                this.p.cursor(this.p.HAND);
             }
         } else {
             // Reset cursor when not hovering any cell
             this.p.cursor(this.p.ARROW);
         }
+
     }
 
 
@@ -206,6 +205,10 @@ class MutantShopping {
 
     drawGrid() {
         this.updateHoverState();
+        // Update connection indicator position
+        this.updateConnectionIndicator();
+
+
         this.p.stroke(224);
         this.p.strokeWeight(1);
         this.p.noFill();
@@ -259,7 +262,8 @@ class MutantShopping {
         this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h, 8);
 
         this.backButton.draw();
-        this.mutateButton.draw();
+
+        this.drawConnectionIndicator();
     }
 
 
@@ -377,6 +381,16 @@ class MutantShopping {
             return event;
         }
 
+        const centerCell = this.grid[1][1];
+        if (mouseX >= centerCell.x && mouseX < centerCell.x + this.cellWidth &&
+            mouseY >= centerCell.y && mouseY < centerCell.y + this.cellHeight) {
+            this.p.cursor(this.p.HAND);
+            // Exit the mutant shopping view when center cell is clicked
+            this.handleEvent({ type: 'exitMutantShopping' });
+            return true; // Indicate that the event was handled
+        }
+
+
         // Don't handle clicks during animation
         if (this.isAnimating) return;
 
@@ -417,6 +431,60 @@ class MutantShopping {
         this.isAnimating = true;
         this.animationStartTime = this.p.millis();
     }
+
+    // Add this method to update the connection indicator
+    updateConnectionIndicator() {
+        if (this.hoveredCell.row !== -1 && this.hoveredCell.col !== -1 &&
+            !(this.hoveredCell.row === 1 && this.hoveredCell.col === 1)) { // Not the center cell
+
+            // Get the center cell and the hovered cell
+            const centerCell = this.grid[1][1];
+            const hoveredCell = this.grid[this.hoveredCell.row][this.hoveredCell.col];
+
+            // Calculate the center points of both cells
+            const centerCellX = centerCell.x + this.cellWidth / 2;
+            const centerCellY = centerCell.y + this.cellHeight / 2;
+            const hoveredCellX = hoveredCell.x + this.cellWidth / 2;
+            const hoveredCellY = hoveredCell.y + this.cellHeight / 2;
+
+            // Position the indicator at the midpoint between center and hovered cells
+            this.connectionIndicatorPosition = {
+                x: (centerCellX + hoveredCellX) / 2,
+                y: (centerCellY + hoveredCellY) / 2
+            };
+
+            this.showConnectionIndicator = true;
+        } else {
+            this.showConnectionIndicator = false;
+        }
+    }
+
+    // Add this to your draw method
+    drawConnectionIndicator() {
+        if (this.showConnectionIndicator) {
+            const p = this.p;
+
+            this.mutateIcon.x = this.connectionIndicatorPosition.x - this.mutateIcon.size/2;
+            this.mutateIcon.y = this.connectionIndicatorPosition.y - this.mutateIcon.size/2;
+
+            p.push();
+            p.fill(255); // White fill
+            p.stroke(180); // Light gray border
+
+            // Draw the circular indicator
+            p.ellipse(
+                this.connectionIndicatorPosition.x,
+                this.connectionIndicatorPosition.y,
+                this.connectionIndicatorSize,
+                this.connectionIndicatorSize
+            );
+            p.pop();
+            p.stroke(0);
+            this.mutateIcon.draw();
+        }
+    }
+
+
 
 }
 

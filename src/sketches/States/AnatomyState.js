@@ -41,8 +41,7 @@ class AnatomyState {
             this.p.applyEffects(this.blurScale);
             this.displayGrid.drawGrid();
             if (this.xray) this.displayGrid.drawShapes(true);
-            this.previousStateButton.draw();
-            this.nextStateButton.draw();
+
         } else if (this.viewMode === 'shopping') {
             this.p.clear();  // Clear the main canvas
             this.p.background(255);  // Set the background to white
@@ -52,6 +51,8 @@ class AnatomyState {
             this.mutantShopping.drawGrid();
             //this.mutantShopping.draw();
         }
+        this.previousStateButton.draw();
+        this.nextStateButton.draw();
 
     }
     updateMergedParams(newMergedParams) {
@@ -147,18 +148,19 @@ class AnatomyState {
 
             this.xray = true;
 
-            if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-                this.previousStateButton.click();
-            }
 
-            if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-                this.nextStateButton.click();
-            }
         } else if (this.viewMode === 'shopping' && this.mutantShopping) {
             const event = this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
             if (event) {
                 this.handleEvent(event);
             }
+        }
+        if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.previousStateButton.click();
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.nextStateButton.click();
         }
     }
 
