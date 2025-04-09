@@ -395,8 +395,12 @@ class SubShapeGenerator {
         const stretch = params.stretch / 100; // Convert 0-100 to 0-1
         const curveFactor = params.curve / 100; // Convert -100-100 to -1-1
 
-        // Default rotation to align flat side to bottom
-        const defaultRotation = -Math.PI / params.sides;
+        // Default rotation to align flat side to bottom (if even sides)
+        // For odd sides, point at bottom
+        const isEvenSides = params.sides % 2 === 0;
+        const defaultRotation = isEvenSides
+            ? -Math.PI / params.sides  // Flat side at bottom for even sides
+            : Math.PI * (0.5 - 1/params.sides);  // Point at bottom for odd sides
 
         // First create the regular polygon vertices (centered at origin)
         const centeredVertices = [];
@@ -423,20 +427,21 @@ class SubShapeGenerator {
             });
         }
 
-        // Find the bottom-most point of the shape (highest y value)
-        let bottomY = -Infinity;
-        let bottomIndex = 0;
+        let pivotX, pivotY;
 
-        for (let i = 0; i < centeredVertices.length; i++) {
-            if (centeredVertices[i].y > bottomY) {
-                bottomY = centeredVertices[i].y;
-                bottomIndex = i;
-            }
+        if (isEvenSides) {
+            // For even-sided shapes, use the bottom-left vertex
+            // The bottom-left vertex is at index 0 after our default rotation
+            pivotX = centeredVertices[0].x;
+            pivotY = centeredVertices[0].y;
+
+        } else {
+            // For odd-sided shapes, the bottom vertex is always at index 0
+            // after our defaultRotation
+            pivotX = centeredVertices[0].x;
+            pivotY = centeredVertices[0].y;
         }
 
-        // Store the bottom point coordinates to use as pivot
-        const pivotX = centeredVertices[bottomIndex].x;
-        const pivotY = centeredVertices[bottomIndex].y;
 
         // Now we need to align the bottom point with the base position
         const finalVertices = [];
@@ -447,6 +452,7 @@ class SubShapeGenerator {
             const translatedX = centeredVertices[i].x - pivotX;
             const translatedY = centeredVertices[i].y - pivotY;
 
+            // Apply rotation around this new origin
             // Apply rotation around this new origin
             const rotatedX = translatedX * Math.cos(params.rotation) - translatedY * Math.sin(params.rotation);
             const rotatedY = translatedX * Math.sin(params.rotation) + translatedY * Math.cos(params.rotation);
