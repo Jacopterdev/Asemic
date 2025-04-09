@@ -122,7 +122,8 @@ class DisplayGrid {
                     this.p,
                     pos.x,
                     pos.y,
-                    cell.letter
+                    cell.letter,
+                    this.cellWidth
                 );
             }
         }
@@ -251,6 +252,7 @@ class DisplayGrid {
                         pos.x,
                         pos.y,
                         cell.letter,
+                        this.cellWidth,
                     )
                 }
 
@@ -492,6 +494,7 @@ class DisplayGrid {
                     mutPos.x,
                     mutPos.y,
                     cell.letter,
+                    this.cellWidth,
                 );
             }
 
