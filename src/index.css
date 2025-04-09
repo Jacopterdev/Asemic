@@ -52,6 +52,17 @@ button, .button{
     @apply rounded-t-lg rounded-b-none;
 }
 
+.grid{
+    @apply grid gap-3;
+}
+
+.preset-buttons{
+    @apply py-3;
+}
+.preset-button{
+    @apply rounded-md mx-0 bg-gray-200 hover:bg-gray-100 px-1;
+}
+
 .tabs-list{
     @apply mx-1;
 }
