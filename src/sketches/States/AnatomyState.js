@@ -56,10 +56,7 @@ class AnatomyState {
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
-
         this.blurScale = this.displayGrid.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE;
-
-        //this.displayGrid.updateMergedParams(this.mergedParams);
 
         this.displayGrid.updateMergedParams(this.mergedParams);
         if(this.mutantShopping){
@@ -76,6 +73,7 @@ class AnatomyState {
             this.xray = false;
         }, 1000);
 
+        this.p.animateSmoothAmount();
     }
 
     // Add a method to start mutant shopping
@@ -175,7 +173,7 @@ class AnatomyState {
     mouseReleased() {
         this.displayGrid.handleMouseReleased();
         this.xray = false;
-        this.p.animateSmoothAmount();
+        //this.p.animateSmoothAmount();
     }
 
     mouseWheel(event) {
