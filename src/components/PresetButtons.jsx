@@ -51,6 +51,27 @@ const PresetButtons = ({ onPresetSelect }) => {
       }
     },
     {
+      id: 18,
+      name: "Harry",
+      thumbnail: "/presetThumbnails/harry.svg",
+      params: {
+        smoothAmount: 0,
+        lineWidth: { min: 15, max: 16 },
+      },
+      1: {
+        subShape: "Square",
+        sides: 2,
+        amount: { min: 10, max: 77 },
+        size: { min: 100, max: 100 },
+        connection: "Along",
+        stretch: { min: 78, max: 78 },
+        curve: { min: 0, max: 0 },
+        rotationType: "absolute",
+        angle: { min: 0, max: 0 },
+        distort: { min: 0, max: 0 }
+      }
+    },
+    {
       id: 12,
       name: "Fluid",
       thumbnail: "/presetThumbnails/fluid.svg",
@@ -94,7 +115,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     },
     {
       id: 14,
-      name: "SmoothLine",
+      name: "Swup",
       thumbnail: "/presetThumbnails/smoothLine.svg",
       params: {
         smoothAmount: 40,

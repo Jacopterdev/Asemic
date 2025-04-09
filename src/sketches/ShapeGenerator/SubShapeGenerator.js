@@ -210,7 +210,32 @@ class SubShapeGenerator {
                 };
             }
             return { base: null, direction: null };
-        } else if (placeAtPoints === "Along") {
+        } 
+        else if (placeAtPoints === "joints") {
+            // Use the original points for looking up in our endpoint cache
+            const origP1Key = `${chosenLine.origP1.x.toFixed(1)},${chosenLine.origP1.y.toFixed(1)}`;
+            const origP2Key = `${chosenLine.origP2.x.toFixed(1)},${chosenLine.origP2.y.toFixed(1)}`;
+            
+            // Check if p1 is NOT an endpoint (has more than 1 connection) and hasn't been used
+            // This means it's a join point
+            if (this._endpointCache.get(origP1Key) === false && !this.usedEndpoints.has(origP1Key)) {
+                this.usedEndpoints.add(origP1Key);
+                return { 
+                    base: chosenLine.p1, // Use the distorted point for drawing
+                    direction: this.p.createVector(chosenLine.p2.x - chosenLine.p1.x, chosenLine.p2.y - chosenLine.p1.y).normalize() 
+                };
+            } 
+            // Check if p2 is NOT an endpoint and hasn't been used
+            else if (this._endpointCache.get(origP2Key) === false && !this.usedEndpoints.has(origP2Key)) {
+                this.usedEndpoints.add(origP2Key);
+                return { 
+                    base: chosenLine.p2, // Use the distorted point for drawing
+                    direction: this.p.createVector(chosenLine.p1.x - chosenLine.p2.x, chosenLine.p1.y - chosenLine.p2.y).normalize() 
+                };
+            }
+            return { base: null, direction: null };
+        }
+        else if (placeAtPoints === "Along") {
             // For equidistant distribution, use the index of the shape and total count
             // to place it evenly along the line
             const numPolygons = this.p.round(this.cNoise.noiseMap(this.noisePos, this.subShape.amount.min, this.subShape.amount.max));
@@ -290,6 +315,29 @@ class SubShapeGenerator {
                 return { 
                     base: chosenCurve.p2, // Use the distorted point for drawing
                     direction: this.getBezierTangent(p1, cp, p2, 1).normalize() 
+                };
+            }
+            return { base: null, direction: null };
+        } 
+        else if (placeAtPoints === "joints") {
+            // Use the original points for looking up in our endpoint cache
+            const origP1Key = `${chosenCurve.origP1.x.toFixed(1)},${chosenCurve.origP1.y.toFixed(1)}`;
+            const origP2Key = `${chosenCurve.origP2.x.toFixed(1)},${chosenCurve.origP2.y.toFixed(1)}`;
+            
+            // Check if p1 is NOT an endpoint (has more than 1 connection) and hasn't been used
+            if (this._endpointCache.get(origP1Key) === false && !this.usedEndpoints.has(origP1Key)) {
+                this.usedEndpoints.add(origP1Key);
+                return { 
+                    base: chosenCurve.p1, // Use the distorted point for drawing
+                    direction: this.getBezierTangent(p1, cp, p2, 0).normalize()
+                };
+            } 
+            // Check if p2 is NOT an endpoint and hasn't been used
+            else if (this._endpointCache.get(origP2Key) === false && !this.usedEndpoints.has(origP2Key)) {
+                this.usedEndpoints.add(origP2Key);
+                return { 
+                    base: chosenCurve.p2, // Use the distorted point for drawing
+                    direction: this.getBezierTangent(p1, cp, p2, 1).normalize()
                 };
             }
             return { base: null, direction: null };
