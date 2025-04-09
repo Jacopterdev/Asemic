@@ -72,8 +72,6 @@ class AnatomyState {
         this.resetXrayTimer = setTimeout(() => {
             this.xray = false;
         }, 1000);
-
-        this.p.animateSmoothAmount();
     }
 
     // Add a method to start mutant shopping
