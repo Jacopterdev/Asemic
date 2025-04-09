@@ -390,13 +390,67 @@ class SubShapeGenerator {
 
     createPolygon(base, params) {
         const angleStep = (2 * this.p.PI) / params.sides;
-        const size = this.adjustSizeForPolygon(params.sides, params.size);
+        let size = 1.5 * this.adjustSizeForPolygon(params.sides, params.size);
 
         const stretch = params.stretch / 100; // Convert 0-100 to 0-1
-        const curveFactor = params.curve / 100; // Convert -100-100 to -1-1
+        let curveFactor = params.curve / 100; // Convert -100-100 to -1-1
 
-        // Default rotation to align flat side to bottom
-        const defaultRotation = -Math.PI / params.sides;
+        // Make curveFactor slightly stronger with more sides
+        // This creates a progressive scaling effect as sides increase
+        // The multiplier function grows logarithmically with sides
+        // First, calculate the base size scaling factor
+
+// Create a separate curvature scaling factor
+        let curveScalingFactor;
+
+        if (params.sides <= 3) {
+            // For 3 sides and below:
+            if (curveFactor > 0) {
+                curveScalingFactor = 0.7; // Dampen positive effect (outward)
+            } else {
+                curveScalingFactor = 1.3; // Enhance negative effect (inward)
+            }
+        } else if (params.sides === 4) {
+            // For 4 sides: keep as is
+            curveScalingFactor = 1.0;
+        } else {
+            // For 5+ sides: different scaling based on curveFactor sign
+            if (curveFactor < 0) {
+                // Much stronger scaling for negative values (inward curves)
+                const baseMultiplier = 1.5; // Strong fixed multiplier for each side above 4
+                curveScalingFactor = 1.0 + baseMultiplier * (params.sides - 4);
+
+            } else {
+                // Regular scaling for positive values (outward curves)
+                const baseIncrease = params.sides - 4;
+                curveScalingFactor = 1.0 + baseIncrease/3;
+                //const baseIncrease = (params.sides - 4) / 10;
+                //curveScalingFactor = 1.0 + baseIncrease * Math.pow(params.sides - 4, 0.9);
+            }
+        }
+
+// Create stretch scaling factors - separate for size and curve
+        const sizeStretchScalingFactor = 1.0 - (stretch * 0.2); // Reduces size by up to 20% at max stretch
+        const curveStretchImpact = 1.0 - (stretch * 0.3); // Reduces curve effect by up to 30% at max stretch
+
+// Apply stretch scaling to size (this doesn't include curve effects)
+        size *= sizeStretchScalingFactor;
+
+        const sizeScalingFactor = 1.0 + (curveFactor * 0.4); // 0.2 is the sensitivity factor
+
+// Apply both curve-specific scaling factors to curveFactor
+        curveFactor *= curveScalingFactor * curveStretchImpact;
+
+        size *= sizeScalingFactor;
+
+
+
+        // Default rotation to align flat side to bottom (if even sides)
+        // For odd sides, point at bottom
+        const isEvenSides = params.sides % 2 === 0;
+        const defaultRotation = isEvenSides
+            ? -Math.PI / params.sides  // Flat side at bottom for even sides
+            : Math.PI * (0.5 - 1/params.sides);  // Point at bottom for odd sides
 
         // First create the regular polygon vertices (centered at origin)
         const centeredVertices = [];
@@ -423,20 +477,21 @@ class SubShapeGenerator {
             });
         }
 
-        // Find the bottom-most point of the shape (highest y value)
-        let bottomY = -Infinity;
-        let bottomIndex = 0;
+        let pivotX, pivotY;
 
-        for (let i = 0; i < centeredVertices.length; i++) {
-            if (centeredVertices[i].y > bottomY) {
-                bottomY = centeredVertices[i].y;
-                bottomIndex = i;
-            }
+        if (isEvenSides) {
+            // For even-sided shapes, use the bottom-left vertex
+            // The bottom-left vertex is at index 0 after our default rotation
+            pivotX = centeredVertices[0].x;
+            pivotY = centeredVertices[0].y;
+
+        } else {
+            // For odd-sided shapes, the bottom vertex is always at index 0
+            // after our defaultRotation
+            pivotX = centeredVertices[0].x;
+            pivotY = centeredVertices[0].y;
         }
 
-        // Store the bottom point coordinates to use as pivot
-        const pivotX = centeredVertices[bottomIndex].x;
-        const pivotY = centeredVertices[bottomIndex].y;
 
         // Now we need to align the bottom point with the base position
         const finalVertices = [];
@@ -447,6 +502,7 @@ class SubShapeGenerator {
             const translatedX = centeredVertices[i].x - pivotX;
             const translatedY = centeredVertices[i].y - pivotY;
 
+            // Apply rotation around this new origin
             // Apply rotation around this new origin
             const rotatedX = translatedX * Math.cos(params.rotation) - translatedY * Math.sin(params.rotation);
             const rotatedY = translatedX * Math.sin(params.rotation) + translatedY * Math.cos(params.rotation);
