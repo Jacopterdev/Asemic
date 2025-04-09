@@ -11,10 +11,45 @@ class SubShapeGenerator {
         this.curves = curves;
 
         this.shapeSides = subShape.sides;
-
         this.polygons = [];
-
         this.usedEndpoints = new Set();
+        
+        // Pre-calculate which original points are endpoints
+        this._endpointCache = this.precomputeEndpoints();
+    }
+
+    // Modify the precomputeEndpoints method to create a usable cache of endpoint information
+    precomputeEndpoints() {
+        // Create a map of point keys to their connection counts
+        const pointConnectionCount = new Map();
+        
+        // Process lines
+        for (const line of this.lines) {
+            // Use the original undistorted points
+            const p1Key = `${line.origP1.x.toFixed(1)},${line.origP1.y.toFixed(1)}`;
+            const p2Key = `${line.origP2.x.toFixed(1)},${line.origP2.y.toFixed(1)}`;
+            
+            pointConnectionCount.set(p1Key, (pointConnectionCount.get(p1Key) || 0) + 1);
+            pointConnectionCount.set(p2Key, (pointConnectionCount.get(p2Key) || 0) + 1);
+        }
+        
+        // Process curves
+        for (const curve of this.curves) {
+            const p1Key = `${curve.origP1.x.toFixed(1)},${curve.origP1.y.toFixed(1)}`;
+            const p2Key = `${curve.origP2.x.toFixed(1)},${curve.origP2.y.toFixed(1)}`;
+            
+            pointConnectionCount.set(p1Key, (pointConnectionCount.get(p1Key) || 0) + 1);
+            pointConnectionCount.set(p2Key, (pointConnectionCount.get(p2Key) || 0) + 1);
+        }
+        
+        // Create a set of points that have exactly one connection (endpoints)
+        const endpoints = new Map();
+        
+        for (const [pointKey, count] of pointConnectionCount.entries()) {
+            endpoints.set(pointKey, count === 1);
+        }
+        
+        return endpoints;
     }
 
     generate() {
@@ -126,7 +161,7 @@ class SubShapeGenerator {
         }
     }
 
-    // Get position on a straight line
+    // Then modify the getPositionOnStraightLine method to use the precomputed endpoints
     getPositionOnStraightLine(placeAtPoints) {
         if (this.lines.length === 0) {
             return { base: null, direction: null };
@@ -154,12 +189,25 @@ class SubShapeGenerator {
         const p2 = chosenLine.p2;
 
         if (placeAtPoints === "atEnd") {
-            if (!this.usedEndpoints.has(p1.toString())) {
-                this.usedEndpoints.add(p1.toString());
-                return { base: p1, direction: this.p.createVector(p2.x - p1.x, p2.y - p1.y).normalize() };
-            } else if (!this.usedEndpoints.has(p2.toString())) {
-                this.usedEndpoints.add(p2.toString());
-                return { base: p2, direction: this.p.createVector(p2.x - p1.x, p2.y - p1.y).normalize() };
+            // Use the original points for looking up in our endpoint cache
+            const origP1Key = `${chosenLine.origP1.x.toFixed(1)},${chosenLine.origP1.y.toFixed(1)}`;
+            const origP2Key = `${chosenLine.origP2.x.toFixed(1)},${chosenLine.origP2.y.toFixed(1)}`;
+            
+            // Check if p1 is an endpoint and hasn't been used
+            if (this._endpointCache.get(origP1Key) === true && !this.usedEndpoints.has(origP1Key)) {
+                this.usedEndpoints.add(origP1Key);
+                return { 
+                    base: chosenLine.p1, // Use the distorted point for drawing
+                    direction: this.p.createVector(chosenLine.p2.x - chosenLine.p1.x, chosenLine.p2.y - chosenLine.p1.y).normalize() 
+                };
+            } 
+            // Check if p2 is an endpoint and hasn't been used
+            else if (this._endpointCache.get(origP2Key) === true && !this.usedEndpoints.has(origP2Key)) {
+                this.usedEndpoints.add(origP2Key);
+                return { 
+                    base: chosenLine.p2, // Use the distorted point for drawing
+                    direction: this.p.createVector(chosenLine.p1.x - chosenLine.p2.x, chosenLine.p1.y - chosenLine.p2.y).normalize() 
+                };
             }
             return { base: null, direction: null };
         } else if (placeAtPoints === "Along") {
@@ -206,10 +254,8 @@ class SubShapeGenerator {
             return { base: null, direction: null };
         }
 
-        // Step 1: Calculate the weights based on curve lengths
+        // Step 1-4: Calculate weights and select a curve (keep existing code)
         const curveLengths = this.curves.map(curve => this.calculateCurveLength(curve));
-
-        // Step 2: Compute cumulative weights
         const totalLength = curveLengths.reduce((sum, length) => sum + length, 0);
         const cumulativeWeights = curveLengths.reduce((acc, length, i) => {
             const previousSum = acc[i - 1] || 0;
@@ -217,11 +263,8 @@ class SubShapeGenerator {
             return acc;
         }, []);
 
-        // Step 3: Generate a weighted random index
-        const randomValue = this.cNoise.noiseMap(this.noisePos, 0, 1); // Generates a number between 0 and 1
+        const randomValue = this.cNoise.noiseMap(this.noisePos, 0, 1);
         const chosenCurveIndex = cumulativeWeights.findIndex(weight => randomValue <= weight);
-
-        // Step 4: Use the index to select the curve
         const chosenCurve = this.curves[chosenCurveIndex];
 
         const p1 = chosenCurve.p1;
@@ -229,40 +272,49 @@ class SubShapeGenerator {
         const p2 = chosenCurve.p2;
 
         if (placeAtPoints === "atEnd") {
-            if (!this.usedEndpoints.has(p1.toString())) {
-                this.usedEndpoints.add(p1.toString());
-                return { base: p1, direction: this.getBezierTangent(p1, cp, p2, 0).normalize() };
-            } else if (!this.usedEndpoints.has(p2.toString())) {
-                this.usedEndpoints.add(p2.toString());
-                return { base: p2, direction: this.getBezierTangent(p1, cp, p2, 1).normalize() };
+            // Use the original points for looking up in our endpoint cache
+            const origP1Key = `${chosenCurve.origP1.x.toFixed(1)},${chosenCurve.origP1.y.toFixed(1)}`;
+            const origP2Key = `${chosenCurve.origP2.x.toFixed(1)},${chosenCurve.origP2.y.toFixed(1)}`;
+            
+            // Check if p1 is an endpoint and hasn't been used
+            if (this._endpointCache.get(origP1Key) === true && !this.usedEndpoints.has(origP1Key)) {
+                this.usedEndpoints.add(origP1Key);
+                return { 
+                    base: chosenCurve.p1, // Use the distorted point for drawing
+                    direction: this.getBezierTangent(p1, cp, p2, 0).normalize() 
+                };
+            } 
+            // Check if p2 is an endpoint and hasn't been used
+            else if (this._endpointCache.get(origP2Key) === true && !this.usedEndpoints.has(origP2Key)) {
+                this.usedEndpoints.add(origP2Key);
+                return { 
+                    base: chosenCurve.p2, // Use the distorted point for drawing
+                    direction: this.getBezierTangent(p1, cp, p2, 1).normalize() 
+                };
             }
             return { base: null, direction: null };
-        } else if (placeAtPoints === "Along") {
-            // For equidistant distribution, use the index of the shape and total count
-            // to place it evenly along the curve
-            // FIX: corrected 'roud' to 'round'
+        } 
+        else if (placeAtPoints === "Along") {
+            // For equidistant distribution (keep existing code)
             const numPolygons = this.p.round(this.cNoise.noiseMap(this.noisePos, this.subShape.amount.min, this.subShape.amount.max));
-            const shapeIndex = this.polygons.length; // Current shape index
+            const shapeIndex = this.polygons.length;
             
-            // Calculate position along the curve (0 to 1)
-            // This ensures we place even at the endpoints if needed
             let t;
             if (numPolygons <= 1) {
-                t = 0.5; // Place single shape in the middle
+                t = 0.5;
             } else if (shapeIndex >= numPolygons) {
-                // Safety check to prevent going beyond 1.0
                 return { base: null, direction: null };
             } else {
-                t = shapeIndex / (numPolygons - 1); // Distribute evenly, including endpoints
+                t = shapeIndex / (numPolygons - 1);
             }
             
-            // Ensure t is clamped between 0 and 1
             t = Math.max(0, Math.min(1, t));
             
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
             return { base, direction };
-        } else { //JOINTS PLACEHOLDER
+        } 
+        else { // JOINTS PLACEHOLDER
             const t = this.cNoise.noiseMap(this.noisePos, 0.1, 0.9);
             const base = this.getBezierPoint(p1, cp, p2, t);
             const direction = this.getBezierTangent(p1, cp, p2, t).normalize();
@@ -500,8 +552,98 @@ class SubShapeGenerator {
         return length;
     }
 
+    // Add a helper method to count connections for a point
+    countPointConnections(point) {
+        // Use more precise comparison with a small epsilon
+        const epsilon = 0.01;
+        
+        // We need to determine if this is a true endpoint in the skeleton structure
+        // First, identify which original point this is closest to
+        let closestOrigPoint = null;
+        let minDistance = Infinity;
+        
+        // Find the original point from the skeleton that this endpoint corresponds to
+        for (const line of this.lines) {
+            // Check if point is close to either endpoint of this line
+            const distToP1 = Math.sqrt(
+                Math.pow(line.origP1.x - point.x, 2) + 
+                Math.pow(line.origP1.y - point.y, 2)
+            );
+            if (distToP1 < minDistance) {
+                minDistance = distToP1;
+                closestOrigPoint = line.origP1;
+            }
+            
+            const distToP2 = Math.sqrt(
+                Math.pow(line.origP2.x - point.x, 2) + 
+                Math.pow(line.origP2.y - point.y, 2)
+            );
+            if (distToP2 < minDistance) {
+                minDistance = distToP2;
+                closestOrigPoint = line.origP2;
+            }
+        }
+        
+        for (const curve of this.curves) {
+            const distToP1 = Math.sqrt(
+                Math.pow(curve.origP1.x - point.x, 2) + 
+                Math.pow(curve.origP1.y - point.y, 2)
+            );
+            if (distToP1 < minDistance) {
+                minDistance = distToP1;
+                closestOrigPoint = curve.origP1;
+            }
+            
+            const distToP2 = Math.sqrt(
+                Math.pow(curve.origP2.x - point.x, 2) + 
+                Math.pow(curve.origP2.y - point.y, 2)
+            );
+            if (distToP2 < minDistance) {
+                minDistance = distToP2;
+                closestOrigPoint = curve.origP2;
+            }
+        }
+        
+        // If we couldn't find a close enough original point
+        if (!closestOrigPoint || minDistance > 30) {
+            return 0; // Not a valid endpoint
+        }
+        
+        // Now count connections to this original skeleton point
+        const connectionCount = this.countOrigPointConnections(closestOrigPoint);
+        
+        console.log(`Point near (${closestOrigPoint.x}, ${closestOrigPoint.y}) has ${connectionCount} connections`);
+        
+        return connectionCount;
+    }
 
-
+    // Count connections for an original skeleton point
+    countOrigPointConnections(origPoint) {
+        const epsilon = 0.1;
+        let count = 0;
+        
+        // Count original lines connected to this point
+        for (const line of this.lines) {
+            if ((Math.abs(line.origP1.x - origPoint.x) < epsilon && 
+                 Math.abs(line.origP1.y - origPoint.y) < epsilon) ||
+                (Math.abs(line.origP2.x - origPoint.x) < epsilon && 
+                 Math.abs(line.origP2.y - origPoint.y) < epsilon)) {
+                count++;
+            }
+        }
+        
+        // Count original curves connected to this point
+        for (const curve of this.curves) {
+            if ((Math.abs(curve.origP1.x - origPoint.x) < epsilon && 
+                 Math.abs(curve.origP1.y - origPoint.y) < epsilon) ||
+                (Math.abs(curve.origP2.x - origPoint.x) < epsilon && 
+                 Math.abs(curve.origP2.y - origPoint.y) < epsilon)) {
+                count++;
+            }
+        }
+        
+        return count;
+    }
 
 }
 export default SubShapeGenerator;
