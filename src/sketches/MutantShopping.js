@@ -2,6 +2,7 @@
 import shapeDictionary from "./ShapeDictionary.js";
 import BackButton from "./SkeletonButtons/BackButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import MutantButton from "./MutantButton.js";
 
 class MutantShopping {
     constructor(p, x, y, width, height, mergedParams, handleEvent, letter = 'A') {
@@ -38,6 +39,8 @@ class MutantShopping {
             }
         );
 
+
+
         this.hoveredCell = { row: -1, col: -1 };
 
         // Store the central letter
@@ -54,6 +57,17 @@ class MutantShopping {
 
         // Initialize grid with the center shape based on the letter
         this.initGridWithLetter(letter);
+
+        const centerCell = this.grid[1][1];
+        const xM = centerCell.x + this.cellWidth - LAYOUT.MARGIN - LAYOUT.BUTTON_PADDING; //Find the X of the centerCell's top right corner
+        const yM = centerCell.y + LAYOUT.BUTTON_PADDING; //find y of centerCell's top right corner.
+        this.mutateButton = new MutantButton(
+            this.p,
+            xM,
+            yM,
+            null,
+            this.cellWidth
+        );
     }
 
     initGridWithLetter(letter) {
@@ -217,9 +231,10 @@ class MutantShopping {
                     this.p.push();
                     this.p.noFill();
                     this.p.stroke(255, 127, 0); // Orange color matching the MutantButton hover
-                    this.p.strokeWeight(2);
-                    this.p.rect(cell.x, cell.y, cell.w, cell.h);
+                    this.p.strokeWeight(1);
+                    this.p.rect(cell.x, cell.y, cell.w, cell.h, 8);
                     this.p.pop();
+                    this.p.cursor(this.p.HAND);
                 }
             }
         }
@@ -240,10 +255,11 @@ class MutantShopping {
         this.p.noFill();
 
         this.p.stroke(255, 128, 0);
-        this.p.strokeWeight(2);
-        this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h);
+        this.p.strokeWeight(1);
+        this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h, 8);
 
         this.backButton.draw();
+        this.mutateButton.draw();
     }
 
 

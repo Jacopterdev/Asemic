@@ -64,7 +64,6 @@ class MutantButton {
 
         } else {
             p.stroke(64, 64, 64, 64); // Matching DownloadButton normal color with transparency
-            p.cursor(p.ARROW);
             p.strokeWeight(2); // Regular strokeWeight
             // Reset animation when not hovered
 
