@@ -24,6 +24,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     let previousLines;
 
     let effects;
+    
+    // Add the questionnaireButton declaration here
 
     // Instances of various states
     let states = {};
@@ -75,6 +77,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             p.checkURLForShapeLanguage();
             recordCurrentState("initial");
         }, 500); // Short delay to ensure all components are initialized
+
+        
     };
 
     const updateState = (stateName) => {
@@ -239,6 +243,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         }
 
         currentState?.draw();
+        
+
     };
 
     p.rebuildSkeleton = () => {
@@ -299,7 +305,14 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     };
 
 
-    p.mousePressed = () => currentState?.mousePressed();
+    // Update mousePressed to handle button clicks
+    const originalMousePressed = p.mousePressed;
+    p.mousePressed = () => {
+        
+        // If not, pass to the current state
+        currentState?.mousePressed();
+    };
+
     p.mouseDragged = () => currentState?.mouseDragged();
     p.mouseReleased = () => {
         const result = currentState?.mouseReleased();

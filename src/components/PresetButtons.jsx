@@ -42,7 +42,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         sides: 4,
         amount: { min: 5, max: 100 },
         size: { min: 0, max: 35 },
-        connection: "joints",
+        connection: "Along",
         stretch: { min: 0, max: 99 },
         curve: { min: 0, max: 0 },
         rotationType: "relative",
@@ -127,8 +127,8 @@ const PresetButtons = ({ onPresetSelect }) => {
       name: "Cap",
       thumbnail: "/presetThumbnails/cap.svg",
       params: {
-        smoothAmount: 26,
-        lineWidth: { min: 0, max: 52 }
+        smoothAmount: 16,
+        lineWidth: { min: 28, max: 52 }
       },
       1: {
         subShape: "Circle",
