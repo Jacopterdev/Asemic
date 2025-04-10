@@ -2,6 +2,9 @@
 import shapeDictionary from "./ShapeDictionary.js";
 import BackButton from "./SkeletonButtons/BackButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import MutateIcon from "./MutateIcon.js";
+import RangeSlider from "./UI/RangeSlider.js";
+
 
 class MutantShopping {
     constructor(p, x, y, width, height, mergedParams, handleEvent, letter = 'A') {
@@ -13,7 +16,25 @@ class MutantShopping {
 
         this.handleEvent = handleEvent; // Store the event handler from AnatomyState
 
-        this.noiseJump = 0.1;
+        this.noiseJump = 0.05;
+        // Initialize the slider to control noiseJump
+        // Position it on the right side of the component
+        this.slider = new RangeSlider(
+            p,                          // p5 instance
+            this.x + this.width + LAYOUT.MARGIN + LAYOUT.BUTTON_SIZE/2,   // x position (20px to the right of component)
+            this.y + 3*LAYOUT.MARGIN,                     // y position (aligned with top)
+            5,                         // width (slider width)
+            100,                        // height (slider height)
+            0.01,                       // minimum noiseJump value
+            0.1,                        // maximum noiseJump value
+            this.noiseJump,             // initial value
+            this.handleNoiseJumpChange.bind(this), // callback when value changes
+            true
+        );
+        // Show the slider
+        this.slider.show();
+
+
 
         this.rows = 3;
         this.cols = 3;
@@ -32,11 +53,20 @@ class MutantShopping {
             width + 2* LAYOUT.MARGIN,
             LAYOUT.MARGIN, // Position above the shopping grid
             () => {
+                // Clean up WebGL resources before exiting
+                //this.cleanup();
+
                 // Directly call the event handler with the exit event
                 this.handleEvent({ type: 'exitMutantShopping' });
 
             }
         );
+
+        // Add new property for the connection indicator
+        this.showConnectionIndicator = false;
+        this.connectionIndicatorPosition = { x: 0, y: 0 };
+        this.connectionIndicatorSize = LAYOUT.MARGIN; // Size of the circular icon
+
 
         this.hoveredCell = { row: -1, col: -1 };
 
@@ -52,9 +82,49 @@ class MutantShopping {
         this.targetNoiseX = 0;
         this.targetNoiseY = 0;
 
+        this.createBuffers();
+
         // Initialize grid with the center shape based on the letter
         this.initGridWithLetter(letter);
+
+        this.mutateIcon = new MutateIcon(this.p,
+            0,
+            0);
     }
+
+    setLetter(letter){
+        this.letter = letter;
+    }
+
+    // Callback for when slider value changes
+    handleNoiseJumpChange(value) {
+        // Update the noiseJump value
+        this.noiseJump = value;
+
+        // Reinitialize the grid with the current letter to apply the new noiseJump
+        // Get the current center letter (if it exists)
+        let currentLetter = 'A'; // Default
+        if (this.grid && this.grid[1] && this.grid[1][1] && this.grid[1][1].letter) {
+            currentLetter = this.grid[1][1].letter;
+        }
+
+        // Reinitialize with new noiseJump value
+        this.initGridWithLetter(currentLetter);
+    }
+
+
+    // New method to create buffers once
+    createBuffers() {
+        for (let j = 0; j < this.rows; j++) {
+            this.buffers[j] = [];
+            for (let i = 0; i < this.cols; i++) {
+                // Create buffer for this cell - only done once
+                const buffer = this.p.createGraphics(this.cellWidth, this.cellHeight);
+                this.buffers[j][i] = buffer;
+            }
+        }
+    }
+
 
     initGridWithLetter(letter) {
         // Get noise position for the letter from the ShapeDictionary
@@ -71,17 +141,16 @@ class MutantShopping {
 
         // Create a 3x3 grid of cells with buffers
         for (let j = 0; j < this.rows; j++) {
-            this.grid[j] = [];
-            this.buffers[j] = [];
+            if (!this.grid[j]) this.grid[j] = [];
+
 
             for (let i = 0; i < this.cols; i++) {
                 // Create cell coordinates
                 const x = i * this.cellWidth + this.x;
                 const y = j * this.cellHeight + this.y;
 
-                // Create buffer for this cell
-                const buffer = this.p.createGraphics(this.cellWidth, this.cellHeight);
-                buffer.background(255);
+                const buffer = this.buffers[j][i];
+                //buffer.background(255);
 
                 // Calculate noise position based on grid position relative to center
                 let noiseX, noiseY;
@@ -130,6 +199,23 @@ class MutantShopping {
         }
     }
 
+    cleanup() {
+        // Remove all buffer graphics contexts to free WebGL resources
+        for (let j = 0; j < this.rows; j++) {
+            for (let i = 0; i < this.cols; i++) {
+                if (this.buffers[j] && this.buffers[j][i]) {
+                    this.buffers[j][i].remove();
+                    this.buffers[j][i] = null;
+                }
+            }
+        }
+
+        // Clear arrays
+        this.buffers = [];
+        this.grid = [];
+    }
+
+
     updateHoverState() {
         // Default to no cell hovered
         this.hoveredCell = { row: -1, col: -1 };
@@ -149,12 +235,13 @@ class MutantShopping {
                 this.p.cursor(this.p.HAND);
             } else {
                 // Reset cursor when hovering center cell
-                this.p.cursor(this.p.ARROW);
+                this.p.cursor(this.p.HAND);
             }
         } else {
             // Reset cursor when not hovering any cell
             this.p.cursor(this.p.ARROW);
         }
+
     }
 
 
@@ -192,6 +279,10 @@ class MutantShopping {
 
     drawGrid() {
         this.updateHoverState();
+        // Update connection indicator position
+        this.updateConnectionIndicator();
+
+
         this.p.stroke(224);
         this.p.strokeWeight(1);
         this.p.noFill();
@@ -217,9 +308,10 @@ class MutantShopping {
                     this.p.push();
                     this.p.noFill();
                     this.p.stroke(255, 127, 0); // Orange color matching the MutantButton hover
-                    this.p.strokeWeight(2);
-                    this.p.rect(cell.x, cell.y, cell.w, cell.h);
+                    this.p.strokeWeight(1);
+                    this.p.rect(cell.x, cell.y, cell.w, cell.h, 8);
                     this.p.pop();
+                    this.p.cursor(this.p.HAND);
                 }
             }
         }
@@ -240,11 +332,61 @@ class MutantShopping {
         this.p.noFill();
 
         this.p.stroke(255, 128, 0);
-        this.p.strokeWeight(2);
-        this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h);
+        this.p.strokeWeight(1);
+        this.p.rect(centerCell.x, centerCell.y, centerCell.w, centerCell.h, 8);
 
         this.backButton.draw();
+
+        // Draw the slider
+        this.slider.draw();
+        this.drawDeviationIcon();
+
+
+
+        this.drawConnectionIndicator();
     }
+
+    drawDeviationIcon() {
+        const p = this.p;
+        const x = this.slider.x;
+        const y = this.slider.y - LAYOUT.PADDING-LAYOUT.BUTTON_PADDING; // Position above the slider
+
+        p.push();
+
+        // Set color to medium gray (127)
+        p.fill(127);
+        p.stroke(127);
+        p.strokeWeight(1);
+
+        // Parameters for the icon
+        const lineLength = 14; // Length of the horizontal line
+        const arrowSize = 3; // Size of arrowheads
+
+        // Draw the horizontal line
+        p.stroke(127);
+        p.line(x - lineLength/2, y, x + lineLength/2, y);
+
+        // Draw left-pointing arrowhead
+        p.fill(127);
+        p.noStroke();
+        p.triangle(
+            x - lineLength/2, y,
+            x - lineLength/2 + arrowSize, y - arrowSize,
+            x - lineLength/2 + arrowSize, y + arrowSize
+        );
+
+        // Draw right-pointing arrowhead
+        p.triangle(
+            x + lineLength/2, y,
+            x + lineLength/2 - arrowSize, y - arrowSize,
+            x + lineLength/2 - arrowSize, y + arrowSize
+        );
+
+        p.pop();
+    }
+
+
+
 
 
 
@@ -283,6 +425,22 @@ class MutantShopping {
 
                 const cell = this.grid[j][i];
                 const buffer = this.buffers[j][i];
+
+                if (j === this.selectedCell.row && i === this.selectedCell.col) {
+                    // For the selected cell, clear and redraw with the circle
+                    //buffer.clear();
+                    //buffer.background(255);
+
+                    buffer.filter(this.p.BLUR, progress*8);
+                    buffer.filter(this.p.THRESHOLD, 0.5-(2*progress));
+
+                    // Draw the buffer to the main canvas
+                    this.p.image(buffer, cell.x, cell.y, cell.w, cell.h);
+                    continue;
+                }
+
+
+
                 buffer.background(255);
                 // Draw the buffer to the main canvas
                 this.p.image(buffer, cell.x, cell.y, cell.w, cell.h);
@@ -329,6 +487,7 @@ class MutantShopping {
 
         // Reinitialize the grid with the updated noise position
         this.initGridWithLetter(this.centerLetter);
+        this.selectedCell = null;
     }
 
 
@@ -355,11 +514,37 @@ class MutantShopping {
         this.initGridWithLetter(letter);
     }
 
+
+    mouseDragged() {
+        this.slider.mouseDragged();
+    }
+
+    mouseReleased() {
+        this.slider.mouseReleased();
+    }
+
+
     mousePressed(mouseX, mouseY) {
+        this.slider.mousePressed();
+
         if(this.backButton && this.backButton.checkHover(mouseX,mouseY)){
             const event = this.backButton.click();
             return event;
         }
+
+        const centerCell = this.grid[1][1];
+        if (mouseX >= centerCell.x && mouseX < centerCell.x + this.cellWidth &&
+            mouseY >= centerCell.y && mouseY < centerCell.y + this.cellHeight) {
+            this.p.cursor(this.p.HAND);
+
+            // Clean up WebGL resources before exiting
+            //this.cleanup();
+
+            // Exit the mutant shopping view when center cell is clicked
+            this.handleEvent({ type: 'exitMutantShopping' });
+            return true; // Indicate that the event was handled
+        }
+
 
         // Don't handle clicks during animation
         if (this.isAnimating) return;
@@ -369,6 +554,8 @@ class MutantShopping {
             for (let i = 0; i < this.cols; i++) {
                 // Skip the center cell - we can't click on our own position
                 if (i === 1 && j === 1) continue;
+
+                this.selectedCell = { row: j, col: i };
 
                 const cell = this.grid[j][i];
 
@@ -388,7 +575,7 @@ class MutantShopping {
     startAnimation(targetNoiseX, targetNoiseY) {
         const centerCell = this.grid[1][1];
         const centerBuffer = this.buffers[1][1];
-        centerBuffer.clear();
+        //centerBuffer.clear();
 
         // Store starting position with proper numeric conversion
         this.startNoiseX = Number(centerCell.noiseX);
@@ -401,6 +588,60 @@ class MutantShopping {
         this.isAnimating = true;
         this.animationStartTime = this.p.millis();
     }
+
+    // Add this method to update the connection indicator
+    updateConnectionIndicator() {
+        if (this.hoveredCell.row !== -1 && this.hoveredCell.col !== -1 &&
+            !(this.hoveredCell.row === 1 && this.hoveredCell.col === 1)) { // Not the center cell
+
+            // Get the center cell and the hovered cell
+            const centerCell = this.grid[1][1];
+            const hoveredCell = this.grid[this.hoveredCell.row][this.hoveredCell.col];
+
+            // Calculate the center points of both cells
+            const centerCellX = centerCell.x + this.cellWidth / 2;
+            const centerCellY = centerCell.y + this.cellHeight / 2;
+            const hoveredCellX = hoveredCell.x + this.cellWidth / 2;
+            const hoveredCellY = hoveredCell.y + this.cellHeight / 2;
+
+            // Position the indicator at the midpoint between center and hovered cells
+            this.connectionIndicatorPosition = {
+                x: (centerCellX + hoveredCellX) / 2,
+                y: (centerCellY + hoveredCellY) / 2
+            };
+
+            this.showConnectionIndicator = true;
+        } else {
+            this.showConnectionIndicator = false;
+        }
+    }
+
+    // Add this to your draw method
+    drawConnectionIndicator() {
+        if (this.showConnectionIndicator) {
+            const p = this.p;
+
+            this.mutateIcon.x = this.connectionIndicatorPosition.x - this.mutateIcon.size/2;
+            this.mutateIcon.y = this.connectionIndicatorPosition.y - this.mutateIcon.size/2;
+
+            p.push();
+            p.fill(255); // White fill
+            p.stroke(180); // Light gray border
+
+            // Draw the circular indicator
+            p.ellipse(
+                this.connectionIndicatorPosition.x,
+                this.connectionIndicatorPosition.y,
+                this.connectionIndicatorSize,
+                this.connectionIndicatorSize
+            );
+            p.pop();
+            p.stroke(0);
+            this.mutateIcon.draw();
+        }
+    }
+
+
 
 }
 

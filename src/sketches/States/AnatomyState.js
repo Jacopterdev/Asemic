@@ -3,6 +3,7 @@ import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 import MutantShopping from "../MutantShopping.js";
+import mutantShopping from "../MutantShopping.js";
 
 class AnatomyState {
     constructor(p, points, mergedParams) {
@@ -41,17 +42,18 @@ class AnatomyState {
             this.p.applyEffects(this.blurScale);
             this.displayGrid.drawGrid();
             if (this.xray) this.displayGrid.drawShapes(true);
-            this.previousStateButton.draw();
-            this.nextStateButton.draw();
+
         } else if (this.viewMode === 'shopping') {
-            this.p.clear();  // Clear the main canvas
-            this.p.background(255);  // Set the background to white
+            //this.p.clear();  // Clear the main canvas
+            //this.p.background(255);  // Set the background to white
 
             this.mutantShopping.drawShapes();
             this.p.applyEffects(this.mutantShopping.scale);
             this.mutantShopping.drawGrid();
             //this.mutantShopping.draw();
         }
+        this.previousStateButton.draw();
+        this.nextStateButton.draw();
 
     }
     updateMergedParams(newMergedParams) {
@@ -81,16 +83,20 @@ class AnatomyState {
         const shoppingX = LAYOUT.MARGIN; // Center horizontally
         const shoppingY = LAYOUT.MARGIN; // Center vertically
 
-        this.mutantShopping = new MutantShopping(
-            this.p,
-            shoppingX,
-            shoppingY,
-            shoppingWidth,
-            shoppingHeight,
-            this.mergedParams, // Assuming you have merged parameters
-            (event) => this.handleEvent(event),
-            letter
-        );
+        if(!this.mutantShopping){
+            this.mutantShopping = new MutantShopping(
+                this.p,
+                shoppingX,
+                shoppingY,
+                shoppingWidth,
+                shoppingHeight,
+                this.mergedParams, // Assuming you have merged parameters
+                (event) => this.handleEvent(event),
+                letter
+            );
+        } else {
+            this.mutantShopping.setLetter(letter);
+        }
 
         // Change view mode to shopping
         this.viewMode = 'shopping';
@@ -107,7 +113,7 @@ class AnatomyState {
                 // Handle back button click from MutantShopping
                 this.displayGrid.updateMergedParams(this.mergedParams);
                 this.viewMode = 'grid';
-                this.mutantShopping = null;
+                //this.mutantShopping = null;
                 break;
 
             // ... handle other events ...
@@ -147,31 +153,40 @@ class AnatomyState {
 
             this.xray = true;
 
-            if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-                this.previousStateButton.click();
-            }
 
-            if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
-                this.nextStateButton.click();
-            }
         } else if (this.viewMode === 'shopping' && this.mutantShopping) {
             const event = this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
             if (event) {
                 this.handleEvent(event);
             }
         }
+        if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.previousStateButton.click();
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.nextStateButton.click();
+        }
     }
 
     mouseDragged() {
-        this.displayGrid.handleMouseDragged();
-        this.xray = true;
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseDragged();
+            this.xray = true;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseDragged();
+        }
+
         // No mouse drag interaction in this state
     }
 
     mouseReleased() {
-        this.displayGrid.handleMouseReleased();
-        this.xray = false;
-        //this.p.animateSmoothAmount();
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseReleased();
+            this.xray = false;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseReleased();
+        }
     }
 
     mouseWheel(event) {

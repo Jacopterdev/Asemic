@@ -2,7 +2,7 @@
 import {SPACING as LAYOUT} from "./States/LayoutConstants";
 
 class MutantButton {
-    constructor(p, x, y, letter) {
+    constructor(p, x, y, letter, parentSize) {
         this.p = p;
         this.x = x;
         this.y = y;
@@ -11,6 +11,9 @@ class MutantButton {
         this.letter = letter;
         this.isHovered = false;
         this.isVisible = true;
+        this.parentSize = parentSize;
+        this.animationOffset = 0;
+
     }
 
     // Helper method to calculate button position within a cell
@@ -30,63 +33,84 @@ class MutantButton {
         // Update hover state
         const centerX = this.x + this.size/2;
         const centerY = this.y + this.size/2;
-        const distance = Math.sqrt(Math.pow(p.mouseX - centerX, 2) + Math.pow(p.mouseY - centerY, 2));
-        this.isHovered = distance <= this.size/2;
+
+        // Update hover state - check if mouse is within parent
+        const parentLeft = this.x - (this.parentSize) + this.size;
+        const parentTop = this.y;
+        const parentRight = this.x + this.size;
+        const parentBottom = this.y + this.parentSize  - (2*LAYOUT.BUTTON_SIZE);
+
+        // Update hover state - check if mouse is within parent
+        this.isHovered = p.mouseX >= parentLeft && p.mouseX <= parentRight &&
+            p.mouseY >= parentTop && p.mouseY <= parentBottom;
 
         // Draw circular button background
         p.noStroke();
         if (this.isHovered) {
-            p.fill(255, 127, 0); // Matching DownloadButton hover color
+            // Animate the stroke color when hovered
+            this.animationOffset += 0.05; // Control animation speed
+
+            // Create a pulsing effect between two orange shades
+            const pulseValue = p.sin(this.animationOffset) * 40; // -40 to 40 range
+            const r = 255;
+            const g = 127 + pulseValue; // Pulsing between 87-167
+            const b = 0 + pulseValue/2; // Slight blue variation for depth
+
+            p.stroke(r, g, b);
             p.cursor(p.HAND);
+
+            const strokePulse = 1.5 + p.sin(this.animationOffset) * 0.5; // Oscillates between 1-2
+            p.strokeWeight(strokePulse);
+
         } else {
-            p.fill(64, 64, 64, 64); // Matching DownloadButton normal color with transparency
-            p.cursor(p.ARROW);
+            p.stroke(64, 64, 64, 64); // Matching DownloadButton normal color with transparency
+            p.strokeWeight(2); // Regular strokeWeight
+            // Reset animation when not hovered
+
+            // Reset animation when not hovered
+            this.animationOffset = 0;
         }
 
-        p.ellipse(centerX, centerY, this.size, this.size);
-
-        // Draw DNA-like icon
-        p.stroke(255); // White icon color like DownloadButton
-        p.strokeWeight(2);
         p.noFill();
 
-        // Draw a more simplified DNA helix - properly centered
-        const iconSize = this.size * 0.4;
+        const iconSize = this.size * 0.6;
+        const halfSize = iconSize / 2;
 
+// Define the diagonal corners
+        const topLeft = {x: centerX - halfSize+3, y: centerY - halfSize};
+        const bottomRight = {x: centerX + halfSize-3, y: centerY + halfSize};
+        const topRight = {x: centerX + halfSize-3, y: centerY - halfSize};
+        const bottomLeft = {x: centerX - halfSize+3, y: centerY + halfSize};
 
+// Control points slightly offset vertically
+        const controlOffset = iconSize / 2.3;
+
+// First strand (top-left to bottom-right)
+        p.noFill();
         p.beginShape();
-        p.vertex(centerX - iconSize/2, centerY - iconSize/2);
+        p.vertex(topLeft.x, topLeft.y);
         p.bezierVertex(
-            centerX + iconSize/4, centerY - iconSize/4,
-            centerX - iconSize/4, centerY + iconSize/4,
-            centerX + iconSize/2, centerY + iconSize/2
+            topLeft.x, topLeft.y + controlOffset, // slightly below top-left
+            bottomRight.x, bottomRight.y - controlOffset, // slightly above bottom-right
+            bottomRight.x, bottomRight.y
         );
         p.endShape();
 
-        // Second strand
+// Second strand (top-right to bottom-left), symmetrical around vertical axis
         p.beginShape();
-        p.vertex(centerX + iconSize/2, centerY - iconSize/2);
+        p.vertex(topRight.x, topRight.y);
         p.bezierVertex(
-            centerX - iconSize/4, centerY - iconSize/4,
-            centerX + iconSize/4, centerY + iconSize/4,
-            centerX - iconSize/2, centerY + iconSize/2
+            topRight.x, topRight.y + controlOffset, // slightly below top-right
+            bottomLeft.x, bottomLeft.y - controlOffset, // slightly above bottom-left
+            bottomLeft.x, bottomLeft.y
         );
         p.endShape();
 
-
-        p.strokeWeight(2);
-        // Draw connecting rungs - centered and properly spaced
-        p.line(
-            centerX-iconSize/3, centerY - iconSize/3,
-            centerX-iconSize/3, centerY + iconSize/3
-        );
-
-        p.line(
-            centerX+iconSize/3, centerY - iconSize/3,
-            centerX+iconSize/3, centerY + iconSize/3
-        );
-
-
+        p.strokeWeight(1);
+// Rungs connecting horizontally at 1/3 and 2/3 positions along diagonal
+        const rungOffset = iconSize / 3;
+        p.line(centerX - rungOffset+2, centerY - rungOffset, centerX-2 + rungOffset, centerY - rungOffset);
+        p.line(centerX - rungOffset+2, centerY + rungOffset, centerX-2 + rungOffset, centerY + rungOffset);
     }
 
     // Check if a point is inside the button
@@ -116,17 +140,15 @@ class MutantButton {
         this.x = x;
         this.y = y;
 
-        // Check if mouse is over this button
-        const centerX = this.x + this.size/2;
-        const centerY = this.y + this.size/2;
-        const distance = Math.sqrt(Math.pow(this.p.mouseX - centerX, 2) + Math.pow(this.p.mouseY - centerY, 2));
-        this.isHovered = distance <= this.size/2;
+        // Calculate parent bounds
+        const parentLeft = this.x - this.parentSize + this.size;
+        const parentTop = this.y;
+        const parentRight = this.x + this.size;
+        const parentBottom = this.y + this.parentSize - (2*LAYOUT.BUTTON_SIZE);
 
-        //check for if the mouse is near the menu.
-        // Close the menu if it's open but the mouse is not over the menu or button
-        if (this.menu && this.menu.isVisible && !this.isHovered && !this.menu.isHovered()) {
-            this.menu.close();
-        }
+        // Check if mouse is within parent
+        this.isHovered = this.p.mouseX >= parentLeft && this.p.mouseX <= parentRight &&
+            this.p.mouseY >= parentTop && this.p.mouseY <= parentBottom;
 
     }
 }

@@ -1,5 +1,5 @@
 class RangeSlider {
-    constructor(p, x, y, width, height, minValue, maxValue, initialValue, onChange) {
+    constructor(p, x, y, width, height, minValue, maxValue, initialValue, onChange, showDecimals = false) {
         this.p = p;
         this.x = x;
         this.y = y;
@@ -9,6 +9,7 @@ class RangeSlider {
         this.maxValue = maxValue;
         this.value = initialValue || minValue;
         this.onChange = onChange;
+        this.showDecimals = showDecimals;
         
         this.visible = false;
         this.isDragging = false;
@@ -83,8 +84,9 @@ class RangeSlider {
         p.noStroke();
         p.textAlign(p.CENTER, p.TOP);
         p.textSize(12);
+        const textValue = this.showDecimals ? this.value.toFixed(2) : Math.round(this.value);
         p.text(
-            Math.round(this.value), 
+            textValue,
             this.x, 
             this.y + this.height + 5
         );
