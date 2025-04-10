@@ -32,7 +32,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     {
       id: 2,
       name: "Skyline",
-      thumbnail: "/presetThumbnails/boxi.svg",
+      thumbnail: "/presetThumbnails/skylineicon.svg",
       params: {
         smoothAmount: 0,
         lineWidth: { min: 15, max: 16 },
@@ -52,8 +52,8 @@ const PresetButtons = ({ onPresetSelect }) => {
     },
     {
       id: 18,
-      name: "Harry",
-      thumbnail: "/presetThumbnails/harry.svg",
+      name: "Hairy",
+      thumbnail: "/presetThumbnails/hairyicon.svg",
       params: {
         smoothAmount: 0,
         lineWidth: { min: 15, max: 16 },
@@ -74,7 +74,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     {
       id: 12,
       name: "Fluid",
-      thumbnail: "/presetThumbnails/fluid.svg",
+      thumbnail: "/presetThumbnails/fluidicon.svg",
       params: {
         smoothAmount: 20,
         lineWidth: { min: 25, max: 27 },
@@ -95,7 +95,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     {
       id: 13,
       name: "Leaves",
-      thumbnail: "/presetThumbnails/leaves.svg",
+      thumbnail: "/presetThumbnails/leavesicon.svg",
       params: {
         smoothAmount: 0,
         lineWidth: { min: 5, max: 10 },
@@ -115,8 +115,8 @@ const PresetButtons = ({ onPresetSelect }) => {
     },
     {
       id: 14,
-      name: "Swup",
-      thumbnail: "/presetThumbnails/smoothLine.svg",
+      name: "Blob",
+      thumbnail: "/presetThumbnails/blobicon.svg",
       params: {
         smoothAmount: 40,
         lineWidth: { min: 63, max: 81 }
@@ -125,7 +125,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     {
       id: 15,
       name: "Cap",
-      thumbnail: "/presetThumbnails/cap.svg",
+      thumbnail: "/presetThumbnails/capicon.svg",
       params: {
         smoothAmount: 16,
         lineWidth: { min: 28, max: 52 }
@@ -146,7 +146,7 @@ const PresetButtons = ({ onPresetSelect }) => {
     {
       id: 16,
       name: "Stars",
-      thumbnail: "/presetThumbnails/stars.svg",
+      thumbnail: "/presetThumbnails/starsicon.svg",
       params: {
         smoothAmount: 0,
         lineWidth: { min: 0, max: 0 }
@@ -166,8 +166,8 @@ const PresetButtons = ({ onPresetSelect }) => {
     },
     {
       id: 17,
-      name: "Fluid2",
-      thumbnail: "/presetThumbnails/fluid2.svg", // You'll need to add this image file
+      name: "Seaweed",
+      thumbnail: "/presetThumbnails/seaweedicon.svg", // You'll need to add this image file
       params: {
         numberOfLines: { min: 5, max: 120 },
         smoothAmount: 16,
