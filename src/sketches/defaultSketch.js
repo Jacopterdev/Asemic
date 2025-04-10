@@ -479,7 +479,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         
         // Create a deep copy to avoid any reference issues
         const exportData = JSON.parse(JSON.stringify(mergedParams));
-        
+        exportData.shapeDictionary = JSON.parse(JSON.stringify(shapeDictionary.getDictionary()));
+
+
         return exportData;
     };
 
@@ -522,11 +524,14 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 }
             });
                    
-            // Update mergedParams with loaded data
+            // Update mergedParams with loaded data except shapeDict
             Object.keys(loadedData).forEach(key => {
-                mergedParamsRef.current[key] = loadedData[key];
+                if (key !== 'shapeDictionary') {
+                    mergedParamsRef.current[key] = loadedData[key];
+                }
             });
-            
+
+
             // Update local mergedParams
             mergedParams = mergedParamsRef.current;
             
@@ -558,7 +563,13 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
                 
 
             }
-            
+
+            // Load shape dictionary if present
+            if (loadedData.shapeDictionary) {
+                shapeDictionary.setDictionary(loadedData.shapeDictionary);
+            }
+
+
             // Rebuild the skeleton with loaded data
             p.rebuildSkeleton();
             
