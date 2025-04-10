@@ -596,8 +596,37 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
     // Add these methods to handle URL-based saving and loading
 
-    // Method to save current state to URL
+    // Method to save current state to URL (refactored to use getShapeLanguageURL)
     p.saveShapeLanguageToURL = () => {
+        try {
+            // Get the URL with shape data using the existing method
+            const url = p.getShapeLanguageURL();
+            
+            if (!url) {
+                throw new Error("Failed to generate shape URL");
+            }
+            
+            // Update browser history without reloading
+            window.history.pushState({}, '', url);
+            
+            // Copy URL to clipboard
+            navigator.clipboard.writeText(url).then(() => {
+                console.log("URL copied to clipboard");
+                alert("Shareable URL copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy URL:", err);
+            });
+            
+            return url;
+        } catch (error) {
+            console.error("Error creating shape URL:", error);
+            alert("Failed to create shareable URL - data may be too large");
+            return null;
+        }
+    };
+
+    // Method to get current state as URL without side effects
+    p.getShapeLanguageURL = () => {
         try {
             // Get the current shape language JSON
             const shapeData = p.getShapeLanguageAsJSON();
@@ -605,29 +634,17 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             // Convert to JSON string
             const jsonString = JSON.stringify(shapeData);
             
-            // Compress the data using LZString (which we've now imported)
+            // Compress the data using LZString
             const compressedData = LZString.compressToEncodedURIComponent(jsonString);
             
             // Create new URL with the compressed data
             const url = new URL(window.location.href);
             url.searchParams.set('shape', compressedData);
             
-            // Update browser history without reloading
-            window.history.pushState({}, '', url);
-            
-            // Copy URL to clipboard
-            navigator.clipboard.writeText(url.toString()).then(() => {
-                console.log("URL copied to clipboard");
-                alert("Shareable URL copied to clipboard!");
-            }).catch(err => {
-                console.error("Failed to copy URL:", err);
-            });
-            
             return url.toString();
         } catch (error) {
             console.error("Error creating shape URL:", error);
-            alert("Failed to create shareable URL - data may be too large");
-            return null;
+            return window.location.href; // Return current URL if there's an error
         }
     };
 
