@@ -43,8 +43,8 @@ class AnatomyState {
             if (this.xray) this.displayGrid.drawShapes(true);
 
         } else if (this.viewMode === 'shopping') {
-            this.p.clear();  // Clear the main canvas
-            this.p.background(255);  // Set the background to white
+            //this.p.clear();  // Clear the main canvas
+            //this.p.background(255);  // Set the background to white
 
             this.mutantShopping.drawShapes();
             this.p.applyEffects(this.mutantShopping.scale);

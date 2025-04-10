@@ -34,6 +34,9 @@ class MutantShopping {
             width + 2* LAYOUT.MARGIN,
             LAYOUT.MARGIN, // Position above the shopping grid
             () => {
+                // Clean up WebGL resources before exiting
+                this.cleanup();
+
                 // Directly call the event handler with the exit event
                 this.handleEvent({ type: 'exitMutantShopping' });
 
@@ -60,6 +63,8 @@ class MutantShopping {
         this.targetNoiseX = 0;
         this.targetNoiseY = 0;
 
+        this.createBuffers();
+
         // Initialize grid with the center shape based on the letter
         this.initGridWithLetter(letter);
 
@@ -67,6 +72,19 @@ class MutantShopping {
             0,
             0);
     }
+
+    // New method to create buffers once
+    createBuffers() {
+        for (let j = 0; j < this.rows; j++) {
+            this.buffers[j] = [];
+            for (let i = 0; i < this.cols; i++) {
+                // Create buffer for this cell - only done once
+                const buffer = this.p.createGraphics(this.cellWidth, this.cellHeight);
+                this.buffers[j][i] = buffer;
+            }
+        }
+    }
+
 
     initGridWithLetter(letter) {
         // Get noise position for the letter from the ShapeDictionary
@@ -83,17 +101,16 @@ class MutantShopping {
 
         // Create a 3x3 grid of cells with buffers
         for (let j = 0; j < this.rows; j++) {
-            this.grid[j] = [];
-            this.buffers[j] = [];
+            if (!this.grid[j]) this.grid[j] = [];
+
 
             for (let i = 0; i < this.cols; i++) {
                 // Create cell coordinates
                 const x = i * this.cellWidth + this.x;
                 const y = j * this.cellHeight + this.y;
 
-                // Create buffer for this cell
-                const buffer = this.p.createGraphics(this.cellWidth, this.cellHeight);
-                buffer.background(255);
+                const buffer = this.buffers[j][i];
+                //buffer.background(255);
 
                 // Calculate noise position based on grid position relative to center
                 let noiseX, noiseY;
@@ -141,6 +158,23 @@ class MutantShopping {
             }
         }
     }
+
+    cleanup() {
+        // Remove all buffer graphics contexts to free WebGL resources
+        for (let j = 0; j < this.rows; j++) {
+            for (let i = 0; i < this.cols; i++) {
+                if (this.buffers[j] && this.buffers[j][i]) {
+                    this.buffers[j][i].remove();
+                    this.buffers[j][i] = null;
+                }
+            }
+        }
+
+        // Clear arrays
+        this.buffers = [];
+        this.grid = [];
+    }
+
 
     updateHoverState() {
         // Default to no cell hovered
@@ -303,6 +337,22 @@ class MutantShopping {
 
                 const cell = this.grid[j][i];
                 const buffer = this.buffers[j][i];
+
+                if (j === this.selectedCell.row && i === this.selectedCell.col) {
+                    // For the selected cell, clear and redraw with the circle
+                    //buffer.clear();
+                    //buffer.background(255);
+
+                    buffer.filter(this.p.BLUR, progress*8);
+                    buffer.filter(this.p.THRESHOLD, 0.5-(2*progress));
+
+                    // Draw the buffer to the main canvas
+                    this.p.image(buffer, cell.x, cell.y, cell.w, cell.h);
+                    continue;
+                }
+
+
+
                 buffer.background(255);
                 // Draw the buffer to the main canvas
                 this.p.image(buffer, cell.x, cell.y, cell.w, cell.h);
@@ -349,6 +399,7 @@ class MutantShopping {
 
         // Reinitialize the grid with the updated noise position
         this.initGridWithLetter(this.centerLetter);
+        this.selectedCell = null;
     }
 
 
@@ -385,6 +436,10 @@ class MutantShopping {
         if (mouseX >= centerCell.x && mouseX < centerCell.x + this.cellWidth &&
             mouseY >= centerCell.y && mouseY < centerCell.y + this.cellHeight) {
             this.p.cursor(this.p.HAND);
+
+            // Clean up WebGL resources before exiting
+            this.cleanup();
+
             // Exit the mutant shopping view when center cell is clicked
             this.handleEvent({ type: 'exitMutantShopping' });
             return true; // Indicate that the event was handled
@@ -399,6 +454,8 @@ class MutantShopping {
             for (let i = 0; i < this.cols; i++) {
                 // Skip the center cell - we can't click on our own position
                 if (i === 1 && j === 1) continue;
+
+                this.selectedCell = { row: j, col: i };
 
                 const cell = this.grid[j][i];
 
@@ -418,7 +475,7 @@ class MutantShopping {
     startAnimation(targetNoiseX, targetNoiseY) {
         const centerCell = this.grid[1][1];
         const centerBuffer = this.buffers[1][1];
-        centerBuffer.clear();
+        //centerBuffer.clear();
 
         // Store starting position with proper numeric conversion
         this.startNoiseX = Number(centerCell.noiseX);
