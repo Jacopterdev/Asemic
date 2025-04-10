@@ -427,9 +427,20 @@ class MutantShopping {
                 const buffer = this.buffers[j][i];
 
                 if (j === this.selectedCell.row && i === this.selectedCell.col) {
+
+                    const shiftX = (centerCell.x + centerCell.w/2 - (cell.x + cell.w/2)) * progress * 0.3;
+                    const shiftY = (centerCell.y + centerCell.h/2 - (cell.y + cell.h/2)) * progress * 0.3;
+
+
                     // For the selected cell, clear and redraw with the circle
                     //buffer.clear();
-                    //buffer.background(255);
+                    buffer.background(255);
+                    buffer.push();
+                    buffer.translate(shiftX, shiftY);
+
+                    buffer.scale(this.scale);
+                    cell.shape.draw();
+                    buffer.pop();
 
                     buffer.filter(this.p.BLUR, progress*8);
                     buffer.filter(this.p.THRESHOLD, 0.5-(2*progress));
