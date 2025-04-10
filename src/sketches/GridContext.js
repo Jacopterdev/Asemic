@@ -1,12 +1,34 @@
 ﻿class GridContext {
     constructor(gridType, ...args) {
+        this.gridInstances = new Map(); // Store grid instances by their constructor name
         this.setGridType(gridType, ...args);
     }
 
     // Dynamically update the strategy (grid type) at runtime
+    // Dynamically update the strategy (grid type) at runtime
     setGridType(gridType, ...args) {
-        this.grid = new gridType(...args); // Instantiate the grid with provided arguments
+        // Check if we already have an instance of this grid type
+        if (!this.gridInstances.has(gridType)) {
+            // If not, create a new instance and store it
+            this.gridInstances.set(gridType, new gridType(...args));
+        } else {
+            // If we have an existing instance, we can update it if needed
+            const existingGrid = this.gridInstances.get(gridType);
+
+            // Optionally, update the existing grid with new parameters
+            // This depends on how your grid classes are structured
+            // If your grid classes have an update method, you could call it here
+            // Call the updateParams method if it exists
+            if (typeof existingGrid.updateParams === 'function') {
+                //existingGrid.updateParams(...args);
+            }
+        }
+
+        // Set the current grid to the existing or newly created instance
+        this.grid = this.gridInstances.get(gridType);
     }
+
+
 
     // Get the current grid instance
     getGrid() {

@@ -272,9 +272,12 @@ class SkeletonState {
     init(){
         // Other initialization code...
 
+        let xStart = LAYOUT.MARGIN;
+        let yStart = LAYOUT.MARGIN;
+        let gridSize = LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2;
         // Initialize the gridContext based on the default `currentGridType` ("none")
-        //this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, LAYOUT.GRID_SIZE - SPACING.MARGIN * 2);
-        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, 800); //Is updated somewhere else!
+        this.gridContext = new GridContext(RectGrid, this.p, xStart, yStart, gridSize);
+        //this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, 800); //Is updated somewhere else!
 
         this.pointRenderer = new PointRenderer(this.p, this.mergedParams.missRadius); // Initialize the PointRenderer
 
@@ -860,7 +863,7 @@ class SkeletonState {
                 ); // Adjust parameters
             } else if (gridType === "rect") {
 
-                this.gridContext.setGridType(RectGrid, this.p, 3, 3, xStart, yStart, gridSize);
+                this.gridContext.setGridType(RectGrid, this.p, xStart, yStart, gridSize);
             } else if (gridType === "none") {
                 this.gridContext.setGridType(NoGrid, this.p, xStart, yStart, gridSize);
             }
