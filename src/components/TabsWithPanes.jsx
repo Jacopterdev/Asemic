@@ -429,10 +429,11 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
 
                             {/* Delete Button */}
                             <button
-                                className="mini-delete absolute top-1 right-0 hidden group-hover:inline"
+                                className="mini-delete absolute top-1 right-0 group-hover:inline"
                                 onClick={() => deleteTab(tab.id)}
                             >
-                                -
+                                &#10005;
+
                             </button>
                         </div>
                     ))
