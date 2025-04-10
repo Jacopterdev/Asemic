@@ -54,7 +54,7 @@ class MutantShopping {
             LAYOUT.MARGIN, // Position above the shopping grid
             () => {
                 // Clean up WebGL resources before exiting
-                this.cleanup();
+                //this.cleanup();
 
                 // Directly call the event handler with the exit event
                 this.handleEvent({ type: 'exitMutantShopping' });
@@ -90,6 +90,10 @@ class MutantShopping {
         this.mutateIcon = new MutateIcon(this.p,
             0,
             0);
+    }
+
+    setLetter(letter){
+        this.letter = letter;
     }
 
     // Callback for when slider value changes
@@ -534,7 +538,7 @@ class MutantShopping {
             this.p.cursor(this.p.HAND);
 
             // Clean up WebGL resources before exiting
-            this.cleanup();
+            //this.cleanup();
 
             // Exit the mutant shopping view when center cell is clicked
             this.handleEvent({ type: 'exitMutantShopping' });

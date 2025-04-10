@@ -3,6 +3,7 @@ import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
 import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
 import MutantShopping from "../MutantShopping.js";
+import mutantShopping from "../MutantShopping.js";
 
 class AnatomyState {
     constructor(p, points, mergedParams) {
@@ -82,16 +83,20 @@ class AnatomyState {
         const shoppingX = LAYOUT.MARGIN; // Center horizontally
         const shoppingY = LAYOUT.MARGIN; // Center vertically
 
-        this.mutantShopping = new MutantShopping(
-            this.p,
-            shoppingX,
-            shoppingY,
-            shoppingWidth,
-            shoppingHeight,
-            this.mergedParams, // Assuming you have merged parameters
-            (event) => this.handleEvent(event),
-            letter
-        );
+        if(!this.mutantShopping){
+            this.mutantShopping = new MutantShopping(
+                this.p,
+                shoppingX,
+                shoppingY,
+                shoppingWidth,
+                shoppingHeight,
+                this.mergedParams, // Assuming you have merged parameters
+                (event) => this.handleEvent(event),
+                letter
+            );
+        } else {
+            this.mutantShopping.setLetter(letter);
+        }
 
         // Change view mode to shopping
         this.viewMode = 'shopping';
@@ -108,7 +113,7 @@ class AnatomyState {
                 // Handle back button click from MutantShopping
                 this.displayGrid.updateMergedParams(this.mergedParams);
                 this.viewMode = 'grid';
-                this.mutantShopping = null;
+                //this.mutantShopping = null;
                 break;
 
             // ... handle other events ...
