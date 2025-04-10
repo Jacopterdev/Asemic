@@ -3,6 +3,7 @@ import shapeDictionary from "./ShapeDictionary.js";
 import BackButton from "./SkeletonButtons/BackButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
 import MutateIcon from "./MutateIcon.js";
+import RangeSlider from "./UI/RangeSlider.js";
 
 
 class MutantShopping {
@@ -15,7 +16,25 @@ class MutantShopping {
 
         this.handleEvent = handleEvent; // Store the event handler from AnatomyState
 
-        this.noiseJump = 0.1;
+        this.noiseJump = 0.05;
+        // Initialize the slider to control noiseJump
+        // Position it on the right side of the component
+        this.slider = new RangeSlider(
+            p,                          // p5 instance
+            this.x + this.width + LAYOUT.MARGIN + LAYOUT.BUTTON_SIZE/2,   // x position (20px to the right of component)
+            this.y + 3*LAYOUT.MARGIN,                     // y position (aligned with top)
+            5,                         // width (slider width)
+            100,                        // height (slider height)
+            0.01,                       // minimum noiseJump value
+            0.1,                        // maximum noiseJump value
+            this.noiseJump,             // initial value
+            this.handleNoiseJumpChange.bind(this), // callback when value changes
+            true
+        );
+        // Show the slider
+        this.slider.show();
+
+
 
         this.rows = 3;
         this.cols = 3;
@@ -72,6 +91,23 @@ class MutantShopping {
             0,
             0);
     }
+
+    // Callback for when slider value changes
+    handleNoiseJumpChange(value) {
+        // Update the noiseJump value
+        this.noiseJump = value;
+
+        // Reinitialize the grid with the current letter to apply the new noiseJump
+        // Get the current center letter (if it exists)
+        let currentLetter = 'A'; // Default
+        if (this.grid && this.grid[1] && this.grid[1][1] && this.grid[1][1].letter) {
+            currentLetter = this.grid[1][1].letter;
+        }
+
+        // Reinitialize with new noiseJump value
+        this.initGridWithLetter(currentLetter);
+    }
+
 
     // New method to create buffers once
     createBuffers() {
@@ -297,8 +333,56 @@ class MutantShopping {
 
         this.backButton.draw();
 
+        // Draw the slider
+        this.slider.draw();
+        this.drawDeviationIcon();
+
+
+
         this.drawConnectionIndicator();
     }
+
+    drawDeviationIcon() {
+        const p = this.p;
+        const x = this.slider.x;
+        const y = this.slider.y - LAYOUT.PADDING-LAYOUT.BUTTON_PADDING; // Position above the slider
+
+        p.push();
+
+        // Set color to medium gray (127)
+        p.fill(127);
+        p.stroke(127);
+        p.strokeWeight(1);
+
+        // Parameters for the icon
+        const lineLength = 14; // Length of the horizontal line
+        const arrowSize = 3; // Size of arrowheads
+
+        // Draw the horizontal line
+        p.stroke(127);
+        p.line(x - lineLength/2, y, x + lineLength/2, y);
+
+        // Draw left-pointing arrowhead
+        p.fill(127);
+        p.noStroke();
+        p.triangle(
+            x - lineLength/2, y,
+            x - lineLength/2 + arrowSize, y - arrowSize,
+            x - lineLength/2 + arrowSize, y + arrowSize
+        );
+
+        // Draw right-pointing arrowhead
+        p.triangle(
+            x + lineLength/2, y,
+            x + lineLength/2 - arrowSize, y - arrowSize,
+            x + lineLength/2 - arrowSize, y + arrowSize
+        );
+
+        p.pop();
+    }
+
+
+
 
 
 
@@ -426,7 +510,19 @@ class MutantShopping {
         this.initGridWithLetter(letter);
     }
 
+
+    mouseDragged() {
+        this.slider.mouseDragged();
+    }
+
+    mouseReleased() {
+        this.slider.mouseReleased();
+    }
+
+
     mousePressed(mouseX, mouseY) {
+        this.slider.mousePressed();
+
         if(this.backButton && this.backButton.checkHover(mouseX,mouseY)){
             const event = this.backButton.click();
             return event;

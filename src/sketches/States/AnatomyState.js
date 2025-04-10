@@ -165,15 +165,23 @@ class AnatomyState {
     }
 
     mouseDragged() {
-        this.displayGrid.handleMouseDragged();
-        this.xray = true;
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseDragged();
+            this.xray = true;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseDragged();
+        }
+
         // No mouse drag interaction in this state
     }
 
     mouseReleased() {
-        this.displayGrid.handleMouseReleased();
-        this.xray = false;
-        //this.p.animateSmoothAmount();
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseReleased();
+            this.xray = false;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseReleased();
+        }
     }
 
     mouseWheel(event) {
