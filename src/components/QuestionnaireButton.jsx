@@ -8,48 +8,62 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
   
   const animationTimerRef = useRef(null);
   const expandTimerRef = useRef(null);
-  
+
+  const [hasColorChanged, setHasColorChanged] = useState(false);
+  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
+
+  const colorChangeTimerRef = useRef(null);
+
+
   // Animation settings
   const animationInterval = 120000; // 2 minutes
-  const autoExpandTime = 600000; // 10 minutes
-  
+  const autoExpandTime = 120000; // 2 minutes
+
   useEffect(() => {
     // Set up animation timer - animate every 2 minutes
     const animationTimer = setTimeout(() => {
       if (!hasAnimated && !isExpanded) {
         setIsAnimating(true);
         setHasAnimated(true);
-        
+
         // Reset animation after 2 seconds
         setTimeout(() => {
           setIsAnimating(false);
         }, 2000);
-        
+
         // Reset hasAnimated flag after the full animation interval
         setTimeout(() => {
           setHasAnimated(false);
         }, animationInterval);
       }
     }, animationInterval);
-    
-    // Set up auto-expand timer - expand after 10 minutes
+
+    const colorChangeTimer = setTimeout(() => {
+      setHasColorChanged(true);
+    }, autoExpandTime);
+
+    // Set up auto-expand timer
     const expandTimer = setTimeout(() => {
-      if (!isExpanded) {
+      if (!isExpanded && !hasAutoExpanded) {  // Only expand if it hasn't auto-expanded before
         setIsExpanded(true);
+        setHasAutoExpanded(true);  // Mark that it has auto-expanded
       }
     }, autoExpandTime);
-    
+
     // Save refs for cleanup
     animationTimerRef.current = animationTimer;
     expandTimerRef.current = expandTimer;
-    
+    colorChangeTimerRef.current = colorChangeTimer;
+
     // Clean up timers on unmount
     return () => {
       clearTimeout(animationTimerRef.current);
       clearTimeout(expandTimerRef.current);
+      clearTimeout(colorChangeTimerRef.current);
     };
-  }, [hasAnimated, isExpanded, animationInterval, autoExpandTime]);
-  
+  }, [hasAnimated, isExpanded, hasAutoExpanded, animationInterval, autoExpandTime]);
+
+
   // Handle button click
   const handleButtonClick = () => {
     setIsExpanded(true);
@@ -115,9 +129,11 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
     <>
       {/* Button - shown when not expanded */}
       {!isExpanded && (
-        <button 
-          className={`questionaire-button fixed bottom-5 right-5 hover:bg-blue-200 bg-blue-300 text-gray-600 font-mono text-xs py-2 px-4 rounded shadow-md transition duration-100 ease-in-out z-50`}
-          onClick={handleButtonClick}
+        <button
+            className={`fixed bottom-5 right-5 font-mono text-xs py-2 px-4 rounded shadow-md transition duration-100 ease-in-out z-50 ${
+                hasColorChanged ? 'questionaire-button' : 'questionaire-button-pre'
+            }`}
+            onClick={handleButtonClick}
         >
           Answer Questionnaire
         </button>
