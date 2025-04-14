@@ -38,14 +38,10 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     let isUndoRedoOperation = false;
 
     p.setup = () => {
-        const ppi = window.devicePixelRatio;
 
-        // For higher PPI displays, make the canvas proportionally smaller
-        const scaleFactor = 1 / (ppi > 1 ? ppi * 0.75 : 1); // Adjust the multiplier as needed
 
-        // Apply the scaling factor to the canvas dimensions
-        const scaledWidth = LAYOUT.CANVAS_WIDTH * scaleFactor;
-        const scaledHeight = LAYOUT.CANVAS_HEIGHT * scaleFactor;
+        const scaledWidth = LAYOUT.CANVAS_WIDTH;
+        const scaledHeight = LAYOUT.CANVAS_HEIGHT;
 
         p.createCanvas(scaledWidth, scaledHeight);
 
