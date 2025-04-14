@@ -509,8 +509,6 @@ class SubShapeGenerator {
         // Calculate the offset position based on posOffset parameter (0-100)
         // 0 = use center (centroid), 100 = use pivot point
         const posOffsetFactor = params.posOffset / 100;
-        console.log("posOffsetFactor: ", posOffsetFactor);
-
         // Calculate the reference point for positioning as a weighted average
         // between the centroid and pivot point
         const refX = centroidX * (1 - posOffsetFactor) + pivotX * posOffsetFactor;
