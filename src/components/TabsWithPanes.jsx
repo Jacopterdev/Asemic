@@ -112,6 +112,7 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 connection: "Along", // Default value
                 rotationType: "relative", // Default value
                 angle: {min: 0, max: 360},
+                posOffset: 100,
                 amount: {min: 1, max: 3}, // Default interval
                 size: {min: 20, max: 100}, // Default interval
             },
@@ -240,6 +241,15 @@ const TabsWithPanes = ({subShapeParams, setParams, onParamChange}) => {
                 },
             }).on("change", (event) => {
                 updateParam("connection", event.value); // Update the state
+            });
+
+            pane.addInput(activeTabData.params, "posOffset", {
+                label: "Position Offset",
+                min: 0,
+                max: 100,
+                step: 1,
+            }).on("change", (event) => {
+                updateParam("posOffset", event.value);
             });
 
             pane.addInput(activeTabData.params, "curve", {

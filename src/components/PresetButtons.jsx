@@ -46,6 +46,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         stretch: { min: 0, max: 99 },
         curve: { min: 0, max: 0 },
         rotationType: "relative",
+        posOffset: 100,
         angle: { min: 92, max: 92 },
         distort: { min: 0, max: 0 }
       }
@@ -67,6 +68,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         stretch: { min: 78, max: 78 },
         curve: { min: 0, max: 0 },
         rotationType: "absolute",
+        posOffset: 100,
         angle: { min: 0, max: 0 },
         distort: { min: 0, max: 0 }
       }
@@ -88,6 +90,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         stretch: { min: 0, max: 0 },
         curve: { min: 1, max: 42 },
         rotationType: "relative",
+        posOffset: 0,
         angle: { min: 0, max: 203 },
         distort: { min: 0, max: 0 }
       }
@@ -109,6 +112,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         stretch: { min: 0, max: 0 },
         curve: { min: 1, max: 71 },
         rotationType: "relative",
+        posOffset: 100,
         angle: { min: 0, max: 203 },
         distort: { min: 0, max: 0 }
       }
@@ -136,6 +140,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         amount: { min: 3, max: 100 },
         size: { min: 41, max: 58 },
         connection: "atEnd",
+        posOffset: 0,
         stretch: { min: 90, max: 150 },
         curve: { min: 1, max: 1 },
         rotationType: "absolute",
@@ -157,6 +162,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         amount: { min: 0, max: 10 },
         size: { min: 20, max: 160 },
         connection: "Along",
+        posOffset: 100,
         stretch: { min: 0, max: 0 },
         curve: { min: 71, max: 100 },
         rotationType: "relative",
@@ -184,6 +190,7 @@ const PresetButtons = ({ onPresetSelect }) => {
         amount: { min: 100, max: 100 },
         size: { min: 13, max: 32 },
         connection: "Along",
+        posOffset: 100,
         stretch: { min: 0, max: 0 },
         curve: { min: 1, max: 42 },
         rotationType: "relative",

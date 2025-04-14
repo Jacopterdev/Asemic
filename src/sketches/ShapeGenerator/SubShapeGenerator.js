@@ -146,6 +146,7 @@ class SubShapeGenerator {
                     : this.cNoise.noiseMap(this.noisePos, this.subShape.angle.min, this.subShape.angle.max) * (this.p.PI / 180),
                 curve: this.cNoise.noiseMap(this.noisePos, this.subShape.curve.min, this.subShape.curve.max),
                 stretch: this.cNoise.noiseMap(this.noisePos, this.subShape.stretch.min, this.subShape.stretch.max),
+                posOffset: this.subShape.posOffset,
             };
             const polygonVertices = this.createPolygon(base, polygonParams);
             this.polygons.push(polygonVertices);
@@ -400,7 +401,7 @@ class SubShapeGenerator {
         // The multiplier function grows logarithmically with sides
         // First, calculate the base size scaling factor
 
-// Create a separate curvature scaling factor
+        // Create a separate curvature scaling factor
         let curveScalingFactor;
 
         if (params.sides <= 3) {
@@ -477,6 +478,7 @@ class SubShapeGenerator {
             });
         }
 
+        let centroidX = 0, centroidY = 0;
         let pivotX, pivotY;
 
         if (isEvenSides) {
@@ -484,7 +486,6 @@ class SubShapeGenerator {
             // The bottom-left vertex is at index 0 after our default rotation
             pivotX = centeredVertices[0].x;
             pivotY = centeredVertices[0].y;
-
         } else {
             // For odd-sided shapes, the bottom vertex is always at index 0
             // after our defaultRotation
@@ -493,29 +494,38 @@ class SubShapeGenerator {
         }
 
 
+        // Calculate the offset position based on posOffset parameter (0-100)
+        // 0 = use center (centroid), 100 = use pivot point
+        const posOffsetFactor = params.posOffset / 100;
+        console.log("posOffsetFactor: ", posOffsetFactor);
+
+        // Calculate the reference point for positioning as a weighted average
+        // between the centroid and pivot point
+        const refX = centroidX * (1 - posOffsetFactor) + pivotX * posOffsetFactor;
+        const refY = centroidY * (1 - posOffsetFactor) + pivotY * posOffsetFactor;
+
         // Now we need to align the bottom point with the base position
         const finalVertices = [];
 
-        // First, apply rotation around the pivot point
+        // Apply rotation around the reference point
         for (let i = 0; i < centeredVertices.length; i++) {
-            // Translate to pivot point as origin
-            const translatedX = centeredVertices[i].x - pivotX;
-            const translatedY = centeredVertices[i].y - pivotY;
+            // Translate to reference point as origin
+            const translatedX = centeredVertices[i].x - refX;
+            const translatedY = centeredVertices[i].y - refY;
 
-            // Apply rotation around this new origin
             // Apply rotation around this new origin
             const rotatedX = translatedX * Math.cos(params.rotation) - translatedY * Math.sin(params.rotation);
             const rotatedY = translatedX * Math.sin(params.rotation) + translatedY * Math.cos(params.rotation);
 
-            // The rotated pivot is now at (0,0) in the rotated coordinate system
-            // We need to position the shape so that this rotated pivot aligns with base position
-
+            // The rotated reference point is now at (0,0) in the rotated coordinate system
+            // Position the shape so the reference point aligns with the base position
             finalVertices.push({
-                x: base.x + rotatedX, // Base position is where the pivot should be
+                x: base.x + rotatedX,
                 y: base.y + rotatedY,
                 angle: centeredVertices[i].angle
             });
         }
+
 
         // Calculate control points for bezier curves
         const controlPoints = [];
