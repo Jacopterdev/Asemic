@@ -13,6 +13,7 @@ class SubShapeGenerator {
         this.shapeSides = subShape.sides;
         this.polygons = [];
         this.usedEndpoints = new Set();
+        this.specialStrokeWeight = 0;
         
         // Pre-calculate which original points are endpoints
         this._endpointCache = this.precomputeEndpoints();
@@ -67,7 +68,7 @@ class SubShapeGenerator {
 
         for (const polygon of this.polygons) {
             if(!xray && this.shapeSides === 2){
-                this.p.strokeWeight(8);
+                this.p.strokeWeight(this.specialStrokeWeight);
                 this.p.stroke(0);
             }
             // Check if this is a curved polygon
@@ -391,7 +392,18 @@ class SubShapeGenerator {
 
     createPolygon(base, params) {
         const angleStep = (2 * this.p.PI) / params.sides;
-        let size = 1.5 * this.adjustSizeForPolygon(params.sides, params.size);
+        let size;
+        // Special case for 2 sides: stretch controls size instead
+        if (params.sides === 2) {
+            this.specialStrokeWeight = params.size/2;
+            // Use stretch to control size directly, ignore the size parameter
+            size =0.75*(params.stretch); // Convert 0-100 stretch to a size value
+        } else {
+            // Normal case: use size parameter
+            this.specialStrokeWeight = 0;
+            size = 1.5 * this.adjustSizeForPolygon(params.sides, params.size);
+        }
+
 
         const stretch = params.stretch / 100; // Convert 0-100 to 0-1
         let curveFactor = params.curve / 100; // Convert -100-100 to -1-1
