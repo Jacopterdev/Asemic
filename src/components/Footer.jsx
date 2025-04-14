@@ -86,6 +86,20 @@ function Footer() {
                                 allowing you to generate and customize unique symbolic systems.
                             </p>
 
+                            <div>
+                                <p>
+                                    The project explores procedural generation for 2D <i>form languages</i>: The
+                                    stylistic expression and coherence of shapes.
+                                    The tool examines how to deepen and enrich human agency in a generative, artistic
+                                    context, balancing between human and computer initiative.
+                                    The tool allows you to create your own visual language systems that can be
+                                    used for artistic, design, or conceptual purposes.
+                                </p>
+                                <p className="mt-4">
+                                    Created by Anton H. Mortensen & Jakob H. Pedersen as a Master Thesis project.
+                                </p>
+                            </div>
+
                             <div className="border-t border-gray-200 pt-4">
                                 <h4 className="about-title">Contact</h4>
 
@@ -126,21 +140,6 @@ function Footer() {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="border-t border-gray-200 pt-4">
-                                <h4 className="about-title">About the Project</h4>
-                                <p>
-                                    The project explores procedural generation for 2D <i>form languages</i>: The
-                                    stylistic expression and coherence of shapes.
-                                    The tool examines how to deepen and enrich human agency in a generative, artistic
-                                    context, balancing between human and computer initiative.
-                                    The tool allows you to create your own visual language systems that can be
-                                    used for artistic, design, or conceptual purposes.
-                                </p>
-                                <p className="mt-4">
-                                    Created by Anton H. Mortensen & Jakob H. Pedersen for our Master Thesis.
-                                </p>
                             </div>
                         </div>
                     </div>
