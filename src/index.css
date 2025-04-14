@@ -71,6 +71,9 @@ button, .button{
 .statetab{
     @apply border-b-2 border-b-orange-500 box-border;
 }
+.about-link{
+    @apply  text-gray-600  font-light cursor-pointer text-sm underline underline-offset-2 py-1 px-1;
+}
 
 
 /*<!-- Example theme: Translucent -->*/
@@ -120,4 +123,15 @@ button, .button{
 
 .questionaire-button{
     @apply hover:bg-orange-400 bg-orange-500 text-white text-xs font-mono py-3 px-8 rounded transition duration-100 ease-in-out;
+}
+
+.about-container{
+    @apply rounded-md fixed inset-2 bg-white/50 flex justify-center items-center z-50;
+}
+.about-container-inner{
+    @apply px-8 py-6 text-sm;
+}
+
+.about-title{
+    @apply font-light mt-2 mb-1;
 }

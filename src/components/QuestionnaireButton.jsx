@@ -125,7 +125,7 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
       
       {/* Expanded form */}
       {isExpanded && (
-        <div className="select-none fixed bottom-10 right-10 w-full max-w-2xl bg-gray-100 text-gray-600 p-12 rounded shadow-lg z-50">
+        <div className="select-none fixed bottom-10 right-10 w-full max-w-2xl bg-gray-100 text-gray-600 p-12 rounded shadow-lg z-50 p-8">
           <button 
             className="absolute top-4 right-4 hover:bg-gray-200 bg-gray-300 text-gray-600 font-mono text-xs p-1 rounded h-8 w-8 flex items-center justify-center"
             onClick={handleCloseClick}
@@ -140,7 +140,7 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
             </h3>
             
             <div className="px-16 mb-12">
-              <p className="text-sm text-gray-500 text-center leading-relaxed">
+              <p className="text-sm text-gray-600 text-center leading-relaxed">
                 We would greatly appreciate if you could spare a few minutes to answer our questionnaire.
                 <br/><br/>
                 Your feedback will help us improve the application and is valuable for our research.

@@ -13,6 +13,7 @@ import ShareButton from "./components/ShareButton"; // Import the ShareButton
 import GalleryPage from "./components/GalleryPage"; // Import the GalleryPage
 import PresetButtons from "./components/PresetButtons";
 import QuestionnaireButton from './components/QuestionnaireButton';
+import Footer from "./components/Footer.jsx";
 
 function MainApp() {
     // Your existing App code here
@@ -288,7 +289,9 @@ function MainApp() {
                     </div>
                 </div>
             </main>
-            
+            <Footer /> {/* Add the footer component */}
+
+
             {/* Add the QuestionnaireButton component */}
             <QuestionnaireButton surveyUrl="https://forms.gle/your-questionnaire-url-here" />
         </div>
