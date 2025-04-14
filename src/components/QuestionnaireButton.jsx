@@ -116,7 +116,7 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
       {/* Button - shown when not expanded */}
       {!isExpanded && (
         <button 
-          className={`fixed bottom-5 right-5 hover:bg-blue-200 bg-blue-300 text-gray-600 font-mono text-xs py-2 px-4 rounded shadow-md transition duration-100 ease-in-out z-50`}
+          className={`questionaire-button fixed bottom-5 right-5 hover:bg-blue-200 bg-blue-300 text-gray-600 font-mono text-xs py-2 px-4 rounded shadow-md transition duration-100 ease-in-out z-50`}
           onClick={handleButtonClick}
         >
           Answer Questionnaire
@@ -125,7 +125,7 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
       
       {/* Expanded form */}
       {isExpanded && (
-        <div className="fixed bottom-10 right-10 w-full max-w-2xl bg-gray-100 text-gray-600 p-12 rounded shadow-lg z-50">
+        <div className="select-none fixed bottom-10 right-10 w-full max-w-2xl bg-gray-100 text-gray-600 p-12 rounded shadow-lg z-50">
           <button 
             className="absolute top-4 right-4 hover:bg-gray-200 bg-gray-300 text-gray-600 font-mono text-xs p-1 rounded h-8 w-8 flex items-center justify-center"
             onClick={handleCloseClick}
@@ -149,7 +149,7 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
             
             <div className="flex justify-center mt-16 mb-8">
               <button 
-                className="hover:bg-orange-400 bg-orange-500 text-white text-xs font-mono py-3 px-8 rounded transition duration-100 ease-in-out"
+                className="questionaire-button"
                 onClick={handleCTAClick}
               >
                 Go to Questionnaire

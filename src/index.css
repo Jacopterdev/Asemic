@@ -16,6 +16,7 @@
     @apply p-0;
 }
 
+
 header{
     @apply mx-auto;
 }
@@ -115,4 +116,8 @@ button, .button{
 
 .tp-lblv {
     line-height: 2 !important;
+}
+
+.questionaire-button{
+    @apply hover:bg-orange-400 bg-orange-500 text-white text-xs font-mono py-3 px-8 rounded transition duration-100 ease-in-out;
 }

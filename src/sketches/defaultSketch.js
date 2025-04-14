@@ -38,8 +38,8 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     let isUndoRedoOperation = false;
 
     p.setup = () => {
-        // Create the canvas (adjust dimensions as needed)
         p.createCanvas(LAYOUT.CANVAS_WIDTH, LAYOUT.CANVAS_HEIGHT);
+
         p.angleMode(p.DEGREES);
         p.angleMode(p.RADIANS);
         p.noiseSeed(1);
