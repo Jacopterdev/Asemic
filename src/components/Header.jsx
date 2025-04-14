@@ -14,6 +14,7 @@ function Header() {
             {/* Header */}
             <header className="flex justify-between items-center h-12 bg-gray-50 text-gray-800">
                 {/* Left-aligned burger menu */}
+                {/*
                 <div className="flex items-center gap-3 pl-4">
                     <div
                         onClick={toggleMenu}
@@ -21,7 +22,7 @@ function Header() {
                     >
                         &#9776;
                     </div>
-                </div>
+                </div>*/}
 
                 {/* Center-aligned content using container */}
 
