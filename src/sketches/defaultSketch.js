@@ -90,6 +90,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
 
     const updateState = (stateName) => {
         if (currentState?.name === stateName) return; // Avoid unnecessary updates
+        currentState?.clearPreview?.();
         currentState = states[stateName]; // Switch to the existing state instance
     };
 
@@ -339,8 +340,9 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
             
 
             if (history?.canUndo()) {
-                
+                // IMPORTANT: Reset all references to points in MouseEventHandler
                 const state = history.undo();
+                currentState?.clearPreview?.();
                 if (restoreState(state)) {
                     
                     return;

@@ -112,6 +112,8 @@ class SkeletonState {
                 const history = new History();
                 if (history.canUndo()) {
                     const state = history.undo();
+                    // IMPORTANT: Reset all references to points in MouseEventHandler
+                    this.clearPreview();
                     if (this.p.restoreState(state)) {
                         // Success - state was restored
                         return;
@@ -362,7 +364,10 @@ class SkeletonState {
         // Clear existing points and lines first
         this.points.length = 0;
         this.lineManager.clearAllLines();
-        
+
+        // IMPORTANT: Reset all references to points in MouseEventHandler
+        this.clearPreview();
+
         // Get the current grid type and dimensions
         const grid = this.gridContext.getGrid();
         console.log("Grid object:", grid);
@@ -559,16 +564,7 @@ class SkeletonState {
         this.lineManager.clearAllLines();
         
         // IMPORTANT: Reset all references to points in MouseEventHandler
-        if (this.mouseHandler) {
-            this.mouseHandler.lastAddedPoint = null;
-            this.mouseHandler.selectedPoint = null;
-            this.mouseHandler.draggingPoint = null;
-            this.mouseHandler.mouseDragStart = null;
-            this.mouseHandler.isDragging = false;
-            this.mouseHandler.previewLines = [];
-            this.mouseHandler.previewPoint = null;
-            this.mouseHandler.hoveredLine = null;
-        }
+        this.clearPreview();
         
         // Notify about state change
         if (this.onStateChange) {
@@ -886,8 +882,22 @@ class SkeletonState {
         return isWithinX && isWithinY;
     }
 
+    clearPreview(){
+            if (this.mouseHandler) {
+                this.mouseHandler.lastAddedPoint = null;
+                this.mouseHandler.selectedPoint = null;
+                this.mouseHandler.draggingPoint = null;
+                this.mouseHandler.mouseDragStart = null;
+                this.mouseHandler.isDragging = false;
+                this.mouseHandler.previewLines = [];
+                this.mouseHandler.previewPoint = null;
+                this.mouseHandler.hoveredLine = null;
+            }
+    }
     // Add this method to the SkeletonState class
     keyPressed(evt) {
+
+
         // Check if the key is backspace
         if (evt.key === "Backspace" || evt.key === "Delete") {
             // Delete the selected point if there is one
