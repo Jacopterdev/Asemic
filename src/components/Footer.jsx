@@ -126,16 +126,9 @@ function Footer() {
                                     <div className="space-y-1">
                                         <p className="font-medium">Anton H. Mortensen</p>
                                         <p>
-                                            <a href="mailto:john@example.com"
+                                            <a href="mailto:antonmort@gmail.com"
                                                className="text-blue-500 hover:underline text-sm">
-                                                john@example.com
-                                            </a>
-                                        </p>
-                                        <p>
-                                            <a href="https://instagram.com/johnsmith" target="_blank"
-                                               rel="noopener noreferrer"
-                                               className="text-blue-500 hover:underline text-sm">
-                                                @johnsmith
+                                                antonmort@gmail.com
                                             </a>
                                         </p>
                                     </div>
