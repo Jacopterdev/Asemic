@@ -91,6 +91,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     const updateState = (stateName) => {
         if (currentState?.name === stateName) return; // Avoid unnecessary updates
         currentState?.clearPreview?.();
+        currentState?.handleEvent?.({type: 'exitMutantShopping'});
         currentState = states[stateName]; // Switch to the existing state instance
     };
 
