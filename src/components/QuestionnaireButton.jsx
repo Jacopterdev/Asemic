@@ -81,48 +81,10 @@ const QuestionnaireButton = ({ surveyUrl = 'https://docs.google.com/forms/d/e/1F
     e.stopPropagation();
     
     // Get the shape data URL directly from p5Instance
-    let shapeURL = '';
-    try {
-      if (window.p5Instance && typeof window.p5Instance.getShapeLanguageURL === 'function') {
-        shapeURL = window.p5Instance.getShapeLanguageURL();
-        
-        // Extract just the shape parameter
-        const url = new URL(shapeURL);
-        
-        // Build the complete form URL with the shape data
-        const formUrlBase = 'https://docs.google.com/forms/d/e/1FAIpQLSeUxaou3uODsiHrIgCtEcSY-HPhAPNJ0CA8mYmOfTa83gO-Vw/viewform?usp=pp_url&entry.1428287968=';
-        
-        // Check if the URL would be too long (7500 characters limit)
-        const fullFormUrl = formUrlBase + url;
-        
-        if (fullFormUrl.length > 7500) {
-          console.warn("URL too long for Google Forms, using fallback message");
-          // Use a fallback message instead of the full URL
-          const shortenedFormUrl = formUrlBase + encodeURIComponent("Please copy your design URL and paste it in your response");
-          window.open(shortenedFormUrl, '_blank', 'noopener,noreferrer');
-          
-          // Also copy the current URL to clipboard for convenience
-          navigator.clipboard.writeText(shapeURL).then(() => {
-            console.log("Design URL copied to clipboard");
-            alert("Your design URL is too complex for direct submission. It has been copied to your clipboard - please paste it into the form.");
-          }).catch(err => {
-            console.error("Failed to copy URL to clipboard:", err);
-          });
-        } else {
-          // URL is within acceptable length, proceed normally
-          console.log("Full form URL:", fullFormUrl);
-          window.open(fullFormUrl, '_blank', 'noopener,noreferrer');
-        }
-      } else {
-        console.warn("p5Instance or getShapeLanguageURL method not available");
-        // Fallback to basic form URL
-        window.open('https://docs.google.com/forms/d/e/1FAIpQLSeUxaou3uODsiHrIgCtEcSY-HPhAPNJ0CA8mYmOfTa83gO-Vw/viewform', '_blank', 'noopener,noreferrer');
-      }
-    } catch (error) {
-      console.error("Error getting shape data URL:", error);
-      // Fallback to basic form URL on error
-      window.open('https://docs.google.com/forms/d/e/1FAIpQLSeUxaou3uODsiHrIgCtEcSY-HPhAPNJ0CA8mYmOfTa83gO-Vw/viewform', '_blank', 'noopener,noreferrer');
-    }
+    let surveyURL = 'https://forms.gle/tt1au8ianosCJJzM9';
+    // Open survey in a new tab
+    window.open(surveyURL);
+
   };
   
   return (
