@@ -236,17 +236,14 @@ function MainApp() {
             </header>
 
             {/* Main Content Section */}
-            <main className="mx-auto w-[100%] flex justify-center" style={{
-                        overflowX: 'auto',
-                    }}>
-                <div className="flex justify-center gap-4 w-fit"style={{
-                        overflowX: 'auto',
-                    }}>
-                    <div className="shrink-0 bg-gray-100 shadow p-4 rounded w-fit" style={{
+            <main className="mx-auto w-[100%] flex justify-center">
+                <div className="flex justify-center gap-2 w-fit">
+                    <div className="flex-shrink-0 bg-gray-100 shadow p-4 rounded w-fit" style={{
                       maxHeight: '830px',
                         maxWidth: '400px',
                         width: '20%',
-                        marginLeft: '30px',
+                        minWidth: '200px',
+                        marginLeft: '0px',
                         overflowY: 'auto',
                         overflowX: 'auto',
                       scrollbarWidth: 'none', /* Firefox */
