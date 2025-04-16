@@ -2,13 +2,13 @@ import BaseGrid from "./BaseGrid.js";
 import KnobLabel from "./KnobLabel.js";
 
 class RectGrid extends BaseGrid {
-    constructor(p, cols, rows, xStart, yStart, gridSize) {
+    constructor(p, xStart, yStart, gridSize) {
         super(p, xStart, yStart, gridSize);
 
-        this.cols = cols;
-        this.rows = rows;
-        this.cellWidth = gridSize/cols;
-        this.cellHeight = gridSize/rows;
+        this.cols = 3;
+        this.rows = 3;
+        this.cellWidth = gridSize/this.cols;
+        this.cellHeight = gridSize/this.rows;
         this.grid = [];
 
         this.initGrid();
@@ -263,6 +263,30 @@ class RectGrid extends BaseGrid {
         // Draw the knob label
         this.knobLabel.draw();
     }
+
+    updateParams(p, xStart, yStart, gridSize) {
+        // Update the p5.js instance if needed
+        this.p = p;
+
+        // Update position and size parameters
+        this.xStart = xStart;
+        this.yStart = yStart;
+        this.gridSize = gridSize;
+
+        // Reinitialize the grid with new dimensions
+        this.initGrid();
+
+        // Update knob positions
+        this.colsKnob.x = xStart + this.gridSize / 2; // Center horizontally
+        this.colsKnob.y = yStart + this.gridSize; // Exactly on the bottom grid line
+
+        this.rowsKnob.x = xStart + this.gridSize; // Exactly on the right grid line
+        this.rowsKnob.y = yStart + this.gridSize / 2; // Center vertically
+
+        // Update the knob positions based on current grid settings
+        this.updateKnobPositions();
+    }
+
 
     mousePressed(mouseX, mouseY) {
         const distToColsKnob = this.p.dist(mouseX, mouseY, this.colsKnob.x, this.colsKnob.y);

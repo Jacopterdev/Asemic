@@ -86,7 +86,7 @@ class LineGenerator {
 
             // For the "both" type, randomly choose between straight and curved for each line
             const shouldBeCurved = lineType === LINE_TYPE.CURVED ||
-                (lineType === LINE_TYPE.BOTH && this.cNoise.noiseMap(this.noisePos, 0, 1) > 0.5);
+                (lineType === LINE_TYPE.BOTH && this.cNoise.noiseMap(this.noisePos, 0, 1) < lineParams.curveRatio/100);
 
             if (!shouldBeCurved) {
                 // Create a straight line
@@ -99,55 +99,58 @@ class LineGenerator {
                 });
             } else {
                 // Create a curved line
-                // Find a point that's not one of the endpoints
-                const otherPoints = this.points.filter(p =>
-                    !this.pointsEqual(p, line.start) &&
-                    !this.pointsEqual(p, line.end)
+                // Create a midpoint with offset
+                const midpoint = this.p.createVector(
+                    (line.start.x + line.end.x) / 2,
+                    (line.start.y + line.end.y) / 2
                 );
 
-                if (otherPoints.length > 0) {
-                    //const cp = this.p.random(otherPoints);
-                    const cpIndex = Math.floor(this.cNoise.noiseMap(this.noisePos, 0, otherPoints.length)); // Get the index
-                    const cp = otherPoints[cpIndex];
-                    const offsetCP = this.getOffsetPosition(cp, missAreaRadius);
+                // Add some perpendicular offset to make it curved
+                const dx = line.end.x - line.start.x;
+                const dy = line.end.y - line.start.y;
 
-                    this.curves.push({
-                        p1: offsetStart,
-                        cp: offsetCP,
-                        p2: offsetEnd,
-                        origP1: line.start,
-                        origP2: line.end,
-                        origCP: cp,
-                        lineWidth
-                    });
-                } else {
-                    //console.log("Creating own midpoint for line: " + line.start + " -> " + line.end + "");
-                    // If no other points available, create a midpoint with offset
-                    const midpoint = this.p.createVector(
-                        (line.start.x + line.end.x) / 2,
-                        (line.start.y + line.end.y) / 2
-                    );
+                const lineLength = this.p.sqrt(dx * dx + dy * dy);
 
-                    // Add some perpendicular offset to make it curved
-                    const dx = line.end.x - line.start.x;
-                    const dy = line.end.y - line.start.y;
-                    const perpDistance = 50; // Control curvature amount
+                const minCurviness = lineParams.curviness.min;
+                const maxCurviness = lineParams.curviness.max;
 
-                    midpoint.x += -dy / this.p.sqrt(dx*dx + dy*dy) * perpDistance;
-                    midpoint.y += dx / this.p.sqrt(dx*dx + dy*dy) * perpDistance;
 
-                    const offsetCP = this.getOffsetPosition(midpoint, missAreaRadius);
+                const perpDistance = this.cNoise.noiseMap(this.noisePos, minCurviness, maxCurviness) / 100;
 
-                    this.curves.push({
-                        p1: offsetStart,
-                        cp: offsetCP,
-                        p2: offsetEnd,
-                        origP1: line.start,
-                        origP2: line.end,
-                        origCP: midpoint,
-                        lineWidth
-                    });
-                }
+                const minCurveOffset = lineParams.curveOffset.min;
+                const maxCurveOffset = lineParams.curveOffset.max;
+                const curveOffset = this.cNoise.noiseMap(this.noisePos, minCurveOffset, maxCurveOffset) / 100;
+
+
+                const perpDirectionNoise = this.cNoise.noiseMap(this.noisePos, 0, 1);
+                // Parallel direction noise (to decide up/down skew)
+                const parallelDirectionNoise = this.cNoise.noiseMap(this.noisePos, 0, 1); // Offset noise position for variety
+
+                const perpDirection = perpDirectionNoise < 0.5 ? -1 : 1;
+                // Parallel direction: +1 (up) or -1 (down)
+                const parallelDirection = parallelDirectionNoise < 0.5 ? -1 : 1;
+
+
+                // Apply percentage-based perpendicular offset to the midpoint
+                midpoint.x += perpDirection * (-dy / lineLength) * perpDistance * lineLength;
+                midpoint.y += perpDirection * (dx / lineLength) * perpDistance * lineLength;
+
+                // Apply percentage-based parallel offset to the midpoint
+                midpoint.x += parallelDirection * (dx / lineLength) * curveOffset * lineLength;
+                midpoint.y += parallelDirection * (dy / lineLength) * curveOffset * lineLength;
+
+
+                const offsetCP = this.getOffsetPosition(midpoint, missAreaRadius);
+
+                this.curves.push({
+                    p1: offsetStart,
+                    cp: offsetCP,
+                    p2: offsetEnd,
+                    origP1: line.start,
+                    origP2: line.end,
+                    origCP: midpoint,
+                    lineWidth
+                });
             }
         }
     }
@@ -272,7 +275,7 @@ class LineGenerator {
         // Continue adding branches until we have enough lines
         while (selectedLines.length < numOfLines && selectedLines.length < allLines.length) {
             // Get remaining available lines
-            const remainingLines = allLines.filter(line => !selectedLines.includes(line));
+            let remainingLines = allLines.filter(line => !selectedLines.includes(line));
             if (remainingLines.length === 0) break;
 
             // Shuffle to randomize branch selection
@@ -347,9 +350,26 @@ class LineGenerator {
             }
 
             // If we couldn't find any connecting line, we're done
-            // Don't create disconnected components!
-            if (!foundBranch) break;
+            // Don't create disconnected components! EDIT: DO create disconnected components if necessary, make sure to utilize the full lineCount.
+            // If still no line is found, start a new disconnected segment
+            if (!foundBranch) {
+                const newStartLine = remainingLines[0]; // Take the first remaining line
+                selectedLines.push(newStartLine);
+
+                // Add its points to the used set and branchable points
+                const newStartPointStr = this.pointToString(newStartLine.start);
+                const newEndPointStr = this.pointToString(newStartLine.end);
+
+                usedPointsSet.add(newStartPointStr);
+                usedPointsSet.add(newEndPointStr);
+                branchablePoints.add(newStartPointStr);
+                branchablePoints.add(newEndPointStr);
+
+                // Update remaining lines
+                remainingLines = remainingLines.filter(line => line !== newStartLine);
+            }
         }
+
 
         return selectedLines;
     }
@@ -370,5 +390,7 @@ class LineGenerator {
     pointsEqual(p1, p2) {
         return Math.abs(p1.x - p2.x) < 0.1 && Math.abs(p1.y - p2.y) < 0.1;
     }
+
+
 }
 export default LineGenerator;

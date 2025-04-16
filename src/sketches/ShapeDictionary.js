@@ -57,6 +57,10 @@
     setValue(letter, x, y) {
         this.#dictionary[letter.toUpperCase()] = { x, y };
     }
+
+    setDictionary(dictionary) {
+        this.#dictionary = dictionary;
+    }
 }
 
 // Exporting the singleton instance
