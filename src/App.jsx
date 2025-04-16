@@ -236,12 +236,19 @@ function MainApp() {
             </header>
 
             {/* Main Content Section */}
-            <main className="mx-auto w-[96%] flex justify-center">
-                <div className="flex justify-center gap-4 w-fit">
+            <main className="mx-auto w-[100%] flex justify-center" style={{
+                        overflowX: 'auto',
+                    }}>
+                <div className="flex justify-center gap-4 w-fit"style={{
+                        overflowX: 'auto',
+                    }}>
                     <div className="shrink-0 bg-gray-100 shadow p-4 rounded w-fit" style={{
                       maxHeight: '830px',
-                        maxWidth: '20%',
+                        maxWidth: '400px',
+                        width: '20%',
+                        marginLeft: '30px',
                         overflowY: 'auto',
+                        overflowX: 'auto',
                       scrollbarWidth: 'none', /* Firefox */
                       msOverflowStyle: 'none', /* IE and Edge */
                       '&::webkitScrollbar': { display: 'none' } /* Chrome, Safari, Opera */
