@@ -236,11 +236,12 @@ function MainApp() {
             </header>
 
             {/* Main Content Section */}
-            <main className="container mx-auto">
-                <div className="flex justify-between gap-4">
-                    <div className="basis-1/3 bg-gray-100 shadow p-4 rounded w-full" style={{ 
-                      maxHeight: '830px', 
-                      overflowY: 'auto',
+            <main className="mx-auto w-[96%] flex justify-center">
+                <div className="flex justify-center gap-4 w-fit">
+                    <div className="shrink-0 bg-gray-100 shadow p-4 rounded w-fit" style={{
+                      maxHeight: '830px',
+                        maxWidth: '20%',
+                        overflowY: 'auto',
                       scrollbarWidth: 'none', /* Firefox */
                       msOverflowStyle: 'none', /* IE and Edge */
                       '&::webkitScrollbar': { display: 'none' } /* Chrome, Safari, Opera */
@@ -259,7 +260,7 @@ function MainApp() {
                         </div>
                     </div>
 
-                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                    <div className="shrink-0 bg-gray-100 shadow p-4 rounded w-fit">
                         <div className="flex justify-between items-center h-6">
                             <TabGroup buttons={firstGroupButtons}
                                       selectedButton={selectedButtonIndex}
@@ -293,7 +294,7 @@ function MainApp() {
 
 
             {/* Add the QuestionnaireButton component */}
-            <QuestionnaireButton surveyUrl="https://forms.gle/your-questionnaire-url-here" />
+            <QuestionnaireButton surveyUrl="" />
         </div>
     );
 }
