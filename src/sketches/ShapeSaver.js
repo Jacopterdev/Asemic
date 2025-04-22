@@ -32,35 +32,7 @@ class ShapeSaver {
             return false;
         }
         
-        // Use a reasonable output size
-        const outputSize = 800; // Fixed size for output
-        const buffer = this.p.createGraphics(outputSize, outputSize);
-        buffer.background(255);
-        
-        // Calculate a more appropriate scale factor
-        const displayScale = LAYOUT.SHAPE_SCALE * this.p.getShapeScale(); // Adjust this value to size the shape appropriately
-        
-        // Draw the shape centered in the buffer
-        buffer.push();
-
-        buffer.translate((1-displayScale) * outputSize / 2, (1-displayScale) * outputSize / 2);
-
-        buffer.scale(displayScale); // Use a fixed display scale
-        
-        // Create a fresh shape instance for the buffer
-        const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
-        const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
-        bufferShape.setNoisePosition(noiseX, noiseY);
-        bufferShape.generate();
-        
-        // Draw to the buffer
-        bufferShape.draw(false);
-        buffer.pop();
-       
-         // Apply the same effects as in the main canvas
-         let effect = new Effects(buffer);
-         effect.setSmoothAmount(this.mergedParams.smoothAmount);
-        effect.applyEffects(displayScale);
+        const buffer = this.setUpShapeForExport(letter);
 
         // Save the buffer as PNG
         buffer.save(`shape_${letter}.png`);
@@ -79,30 +51,7 @@ class ShapeSaver {
             return false;
         }
 
-        // Step 1: Create a buffer to render the shape
-        const outputSize = 800;
-        const buffer = this.p.createGraphics(outputSize, outputSize);
-        buffer.background(255);
-
-        // Scale and center the shape
-        const displayScale = LAYOUT.SHAPE_SCALE * this.p.getShapeScale();
-        buffer.push();
-        buffer.translate((1 - displayScale) * outputSize / 2, (1 - displayScale) * outputSize / 2);
-        buffer.scale(displayScale);
-
-        // Generate the shape
-        const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
-        const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
-        bufferShape.setNoisePosition(noiseX, noiseY);
-        bufferShape.generate();
-        bufferShape.draw(false);
-
-        buffer.pop();
-
-        // Apply the same effects as in the main canvas
-        let effect = new Effects(buffer);
-        effect.setSmoothAmount(this.mergedParams.smoothAmount);
-        effect.applyEffects(displayScale);
+        const buffer = this.setUpShapeForExport(letter);
 
         // Step 2: Extract the buffer contents as a base64 image
         const base64Image = buffer.elt.toDataURL("image/png");
@@ -138,6 +87,48 @@ class ShapeSaver {
                 }
             });
         });
+    }
+
+    setUpShapeForExport(letter){
+        // Check if properly initialized
+        if (!this.p || !this.mergedParams) {
+            console.error("ShapeSaver not properly initialized. Call init() first.");
+            return false;
+        }
+
+        // Use a reasonable output size
+        const outputSize = 1600; // Fixed size for output
+        const buffer = this.p.createGraphics(outputSize, outputSize);
+        buffer.background(255);
+
+        // Calculate a more appropriate scale factor
+        //const displayScale = LAYOUT.SHAPE_SCALE * this.p.getShapeScale(); // Adjust this value to size the shape appropriately
+        const shapeOffset = this.p.getShapeOffset();
+        console.log("shapeOffset", shapeOffset);
+
+        // Draw the shape centered in the buffer
+        buffer.push();
+        const margin = 400;
+
+        buffer.translate((margin)-shapeOffset.x, (margin)-shapeOffset.y);
+
+        buffer.scale(1); // Use a fixed display scale
+
+        // Create a fresh shape instance for the buffer
+        const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
+        const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+        bufferShape.setNoisePosition(noiseX, noiseY);
+        bufferShape.generate();
+
+        // Draw to the buffer
+        bufferShape.draw(false);
+        buffer.pop();
+
+        // Apply the same effects as in the main canvas
+        let effect = new Effects(buffer);
+        effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        effect.applyEffects(1);
+        return buffer;
     }
 
 
