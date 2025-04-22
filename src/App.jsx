@@ -14,6 +14,7 @@ import GalleryPage from "./components/GalleryPage"; // Import the GalleryPage
 import PresetButtons from "./components/PresetButtons";
 import QuestionnaireButton from './components/QuestionnaireButton';
 import Footer from "./components/Footer.jsx";
+import ZoomSuggestionPopup from "./components/ZoomSuggestionPopup.jsx";
 
 function MainApp() {
     // Your existing App code here
@@ -28,11 +29,40 @@ function MainApp() {
         curveRatio: 50,
         lineComposition: 'Branched',
     });
-
+    const [showZoomSuggestion, setShowZoomSuggestion] = useState(false);
     const [subShapeParams, setSubShapeParams] = useState({});
     const [lastUpdatedParam, setLastUpdatedParam] = useState(null); // Track last updated param
     const [selectedButtonIndex, setSelectedButtonIndex] = useState(0); // Default to the first button
     const location = useLocation();
+
+    // Check screen size and show popup if needed
+    useEffect(() => {
+        const checkScreenSize = () => {
+            // Don't show if user has dismissed it before
+            const dontShow = localStorage.getItem('dontShowZoomSuggestion') === 'true';
+
+            if (!dontShow && (window.innerWidth < 1600 || window.innerHeight < 901)) {
+                setShowZoomSuggestion(true);
+            }
+
+            console.log("Window dimensions:", window.innerWidth, window.innerHeight);
+            console.log("Should show popup:", !dontShow && (window.innerWidth < 1600 || window.innerHeight < 901));
+
+        };
+
+
+
+        // Check on initial load
+        checkScreenSize();
+
+        // Check when window is resized
+        window.addEventListener('resize', checkScreenSize);
+
+        return () => {
+            window.removeEventListener('resize', checkScreenSize);
+        };
+    }, []);
+
 
     // Check URL for shape data when the page loads
     useEffect(() => {
@@ -40,7 +70,7 @@ function MainApp() {
             try {
                 const url = new URL(window.location.href);
                 const shapeParam = url.searchParams.get('shape');
-                
+
                 if (shapeParam && window.p5Instance) {
                     setTimeout(() => {
                         if (window.p5Instance && window.p5Instance.checkURLForShapeLanguage) {
@@ -299,6 +329,11 @@ function MainApp() {
 
             {/* Add the QuestionnaireButton component */}
             <QuestionnaireButton surveyUrl="" />
+            <ZoomSuggestionPopup
+                isOpen={showZoomSuggestion}
+                onClose={() => setShowZoomSuggestion(false)}
+            />
+
         </div>
     );
 }
