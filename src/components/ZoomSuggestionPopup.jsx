@@ -9,10 +9,9 @@ const ZoomSuggestionPopup = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0  bg-white/50 flex items-center justify-center z-50">
             <div className="about-container-inner bg-gray-100 p-6 max-w-md w-full shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Screen Size Notice</h2>
+                <h2 className="text-xl font-bold mb-4">Please adjust your screen</h2>
                 <p className="mb-4">
-                    It looks like you're using a smaller screen. For the best experience,
-                    you may want to adjust your browser's zoom level.
+                    For the best experience, you may want to adjust your browser's zoom level.
                 </p>
                 <p className="mb-4">
                     <strong>Tip:</strong> You can zoom in or out by pressing:
