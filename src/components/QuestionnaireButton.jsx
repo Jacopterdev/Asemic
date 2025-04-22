@@ -121,7 +121,7 @@ const QuestionnaireButton = ({ surveyUrl = '' }) => {
               <p className="text-sm text-gray-600 text-center leading-relaxed">
                 We would greatly appreciate if you could spare a few minutes to answer our questionnaire.
                 <br/><br/>
-                Your feedback will help us improve the application and is valuable for our research.
+                Your feedback is valuable for our research.
               </p>
             </div>
             
