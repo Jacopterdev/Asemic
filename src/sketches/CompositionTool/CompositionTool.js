@@ -133,7 +133,7 @@ class CompositionTool {
     draw() {
         this.shapeInputField.draw();
         
-        this.p.applyEffects(this.shapeInputField.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
+        this.p.applyEffects(this.shapeInputField.scale);
 
         // Draw cursor if visible
         if (this.shapeInputField.cursorVisible) {
