@@ -180,6 +180,47 @@ class CompositionTool {
         this.p.blendMode(this.p.BLEND);
 
         this.slider.draw();
+        this.drawDeviationIcon()
+
+    }
+
+    drawDeviationIcon() {
+        const p = this.p;
+        const x = this.slider.x;
+        const y = this.slider.y - LAYOUT.PADDING-LAYOUT.BUTTON_PADDING; // Position above the slider
+
+        p.push();
+
+        // Set color to medium gray (127)
+        p.fill(127);
+        p.stroke(127);
+        p.strokeWeight(1);
+
+        // Parameters for the icon
+        const lineLength = 14; // Length of the horizontal line
+        const arrowSize = 3; // Size of arrowheads
+
+        // Draw the horizontal line
+        p.stroke(127);
+        p.line(x - lineLength/2, y, x + lineLength/2, y);
+
+        // Draw left-pointing arrowhead
+        p.fill(127);
+        p.noStroke();
+        p.triangle(
+            x - lineLength/2, y,
+            x - lineLength/2 + arrowSize, y - arrowSize,
+            x - lineLength/2 + arrowSize, y + arrowSize
+        );
+
+        // Draw right-pointing arrowhead
+        p.triangle(
+            x + lineLength/2, y,
+            x + lineLength/2 - arrowSize, y - arrowSize,
+            x + lineLength/2 - arrowSize, y + arrowSize
+        );
+
+        p.pop();
     }
 
     // Existing methods remain unchanged
