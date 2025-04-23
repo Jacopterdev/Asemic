@@ -501,7 +501,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
     };
 
     // Method to save current state to file
-    p.saveShapeLanguage = (filename = `shape_language_${Date.now()}.json`) => {
+    p.saveShapeLanguage = (filename = `form_language_${Date.now()}.json`) => {
         const jsonString = p.getShapeLanguageAsJSONString();
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -515,7 +515,7 @@ const defaultSketch = (p, mergedParamsRef, toolConfigRef, lastUpdatedParamRef) =
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        console.log("Shape language saved successfully as", filename);
+        console.log("Form language saved successfully as", filename);
         return true;
     };
 
