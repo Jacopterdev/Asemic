@@ -176,12 +176,26 @@ class ShapeInputField {
     updateMergedParams(newParams) {
         this.mergedParams = newParams;
 
-        // Regenerate all shapes based on stored letters
-        this.shapes = this.shapes.map(({ letter }) => ({
-            letter, // Keep the original letter
-            shape: this.createShape(letter) // Regenerate the shape
-        }));
+        // Regenerate all shapes based on stored letters, preserving spaces
+        this.shapes = this.shapes.map(({ letter, isSpace }) => {
+            // If it's a space, return it with the same structure
+            if (isSpace || letter === ' ') {
+                return {
+                    letter: ' ',
+                    shape: null,
+                    isSpace: true
+                };
+            }
+
+            // For non-space characters, regenerate the shape
+            return {
+                letter, // Keep the original letter
+                shape: this.createShape(letter), // Regenerate the shape
+                isSpace: false // Explicitly set isSpace to false
+            };
+        });
     }
+
 
 
 }
