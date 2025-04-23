@@ -111,7 +111,7 @@ class KeyboardGrid {
     handleMousePressed(mouseX, mouseY) {
         this.lastKeyPressed = this.getKeyFromMouse(mouseX, mouseY);
         // Only process non-space keys
-        if (this.lastKeyPressed !== ' ' && this.lastKeyPressed) {
+        if (this.lastKeyPressed) {
             this.cells.forEach((cell) => cell.checkKeyPressed(this.lastKeyPressed));
             return true; // Click was handled
         }
