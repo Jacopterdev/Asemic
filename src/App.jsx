@@ -45,9 +45,6 @@ function MainApp() {
                 setShowZoomSuggestion(true);
             }
 
-            console.log("Window dimensions:", window.innerWidth, window.innerHeight);
-            console.log("Should show popup:", !dontShow && (window.innerWidth < 1600 || window.innerHeight < 901));
-
         };
 
 

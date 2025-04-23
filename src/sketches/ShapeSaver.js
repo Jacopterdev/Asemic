@@ -230,69 +230,83 @@ class ShapeSaver {
             console.warn("Cannot download empty composition");
             return false;
         }
-        
-        // Get composition as string of letters
+
         const composition = shapeInputField.shapes.map(item => item.letter).join('');
         console.log(`Downloading composition: ${composition}`);
-        
-        // Calculate dimensions based on input field parameters
-        const bufferWidth = shapeInputField.width * 2;
-        const bufferHeight = shapeInputField.height * 1.5;
-        
+
+
+        const bufferWidth = shapeInputField.width*1.5;
+        const bufferHeight = shapeInputField.height*2;
+
         // Create buffer with white background
         const buffer = this.p.createGraphics(bufferWidth, bufferHeight);
         buffer.background(255);
-        
-        // Get values needed for layout
-        const baseShapeWidth = shapeInputField.width / shapeInputField.maxShapes * shapeInputField.defaultOverlap;
-        const kerningOffset = shapeInputField.kerning;
-        const adjustedSpacing = baseShapeWidth + kerningOffset;
-        
-        // Calculate starting X position to center shapes
-        const totalShapesWidth = shapeInputField.shapes.length * adjustedSpacing;
-        let startX = (bufferWidth - totalShapesWidth) / 2;
-        
+
+        // Use the same calculations as in ShapeInputField.drawShapes()
+        const effectiveShapeWidth = shapeInputField.shapeWidth * (1 + shapeInputField.kerning);
+        const totalWidth = shapeInputField.shapes.length * effectiveShapeWidth;
+
+        // Calculate starting X position to center shapes (match ShapeInputField.drawShapes logic)
+        let startX = (bufferWidth - totalWidth) / 2;
+
         // Draw each shape to buffer
-        for (let i = 0; i < shapeInputField.shapes.length; i++) {
-            const { letter } = shapeInputField.shapes[i];
-            
+        shapeInputField.shapes.forEach(({ letter, shape, isSpace }) => {
+            // If it's a space, just advance the position without drawing anything
+            if (isSpace) {
+                startX += effectiveShapeWidth;
+                return;
+            }
+
             // Get noise position for this letter
             const noisePosition = shapeDictionary.getValue(letter);
-            if (!noisePosition) continue;
-            
+            if (!noisePosition) {
+                startX += effectiveShapeWidth;
+                return;
+            }
+
             const { x: noiseX, y: noiseY } = noisePosition;
-            
+
             buffer.push();
-            // Position properly in buffer
-            //buffer.translate(startX, bufferHeight / 2);
-            buffer.translate(startX, (bufferHeight / 2) - (bufferHeight * shapeInputField.scale));
-            // Apply scale
+
+            // Position in buffer - center vertically as in ShapeInputField.drawShapes
+            buffer.translate(startX, bufferHeight/3);
+
+            // Apply the same scale factor as in the input field
             buffer.scale(shapeInputField.scale);
-            
+
             // Create a new shape instance for the buffer
             const bufferShape = new ShapeGeneratorV2(buffer, this.mergedParams);
             bufferShape.setNoisePosition(noiseX, noiseY);
             bufferShape.generate();
-            
+
             // Draw to buffer
             bufferShape.draw();
-            
+
             buffer.pop();
-            
-            // Advance position
-            startX += adjustedSpacing;
-        }
-        
+
+            // Advance position using the same calculation as in ShapeInputField
+            startX += effectiveShapeWidth;
+            console.log("StartX", startX);
+        });
+
+        //buffer.fill(0);
+        //buffer.ellipse(500, 20, 100, 100);
+
         // Apply effects to the composition
         const effect = new Effects(buffer);
         effect.setSmoothAmount(this.mergedParams.smoothAmount);
         effect.applyEffects(shapeInputField.scale);
-        
+
         // Save the composition
-        buffer.save(`composition_${Date.now()}.png`);
-        
+        buffer.save(`composition_${composition}.png`);
+
+        // Clean up by removing the buffer to free memory
+        buffer.remove();
+
+
         console.log("Downloaded composition successfully");
         return true;
+
     }
 
     downloadAllShapes(p, mergedParams, alphabet) {

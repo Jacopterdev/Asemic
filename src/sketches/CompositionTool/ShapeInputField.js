@@ -13,15 +13,14 @@ class ShapeInputField {
         this.width = width;        // Width of the input field
         this.height = height;      // Height of the input field
         this.shapes = [];          // Array to store the shapes
-        this.maxShapes = 12;    // Maximum number of shapes that fit in the field
+
         this.cursorVisible = true; // Visibility flag for the blinking cursor
         this.lastBlinkTime = 0;    // Timer for managing cursor blinking
         this.cursorBlinkInterval = 500; // Blinking interval in milliseconds
-
-        this.kerning = 80;
-        this.defaultOverlap = 0.33;
-
-        this.scale = (this.width/p.width)/this.maxShapes / this.defaultOverlap; // Scale factor
+        this.maxShapes = 12;
+        this.kerning = -0.3;
+        this.shapeWidth = this.width / (this.maxShapes+(this.maxShapes*this.kerning));
+        this.scale = 0.2 // Scale factor
     }
 
     // Add a new shape based on a key/letter
@@ -30,9 +29,20 @@ class ShapeInputField {
             this.shapes.shift(); // Remove the oldest shape if maximum is reached
         }
 
-        const shape = this.createShape(key);
-        if (shape) {
-            this.shapes.push({ letter: key, shape }); // Store both letter and shape
+        // Handle space character specially
+        if (key === ' ') {
+            // Add a space "shape" (no actual shape to draw, just a placeholder)
+            this.shapes.push({
+                letter: ' ',
+                shape: null,  // null shape indicates a space
+                isSpace: true // Flag to identify this as a space
+            });
+        } else {
+            // Normal character processing
+            const shape = this.createShape(key);
+            if (shape) {
+                this.shapes.push({ letter: key, shape });
+            }
         }
 
         this.lastBlinkTime = this.p.millis(); // Reset cursor blink timer
@@ -48,12 +58,22 @@ class ShapeInputField {
 
     // Get the current cursor position
     getCursorPosition() {
-        const totalShapesWidth = this.shapes.length * this.kerning; // Total width occupied by shapes
-        let cursorX =
-            this.x + (this.width - totalShapesWidth) / 2 + this.shapes.length * this.kerning; // Position after last shape
-        const cursorY = this.y + this.height / 2; // Midpoint of the input field vertically
+        const p = this.p;
 
-        return { x: cursorX, y: cursorY }; // Return cursor position
+        // Use the same width calculation as in drawShapes for consistency
+        const effectiveShapeWidth = this.shapeWidth * (1 + this.kerning);
+        const totalWidth = this.shapes.length * effectiveShapeWidth;
+
+        // Calculate the starting X position (same as in drawShapes)
+        let startX = this.x + (this.width - totalWidth) / 2;
+
+        // Move to where the next shape would be positioned
+        let cursorX = startX + (this.shapes.length * effectiveShapeWidth);
+
+        // Vertical position remains at the center of the input field
+        const cursorY = this.y + this.height / 2;
+
+        return { x: cursorX, y: cursorY };
     }
 
     // Refactored drawCursor method
@@ -71,45 +91,36 @@ class ShapeInputField {
     drawShapes() {
         const p = this.p;
 
-        // Calculate the base width available for each shape
-        const baseShapeWidth = this.width / this.maxShapes * this.defaultOverlap;
+        // Calculate the total width all shapes will occupy together
+        const effectiveShapeWidth = this.shapeWidth * (1 + this.kerning);
+        const totalWidth = this.shapes.length * effectiveShapeWidth;
 
-        // Adjust kerning: influences the spacing between shapes
-        const kerningOffset = this.kerning;
-
-        // Calculate the actual spacing between shapes
-        const adjustedSpacing = baseShapeWidth + kerningOffset;
-
-        // Calculate starting X position to align shapes evenly, considering adjusted spacing
-        const totalShapesWidth = this.shapes.length * adjustedSpacing;
-        let startX = this.x + (this.width - (totalShapesWidth + baseShapeWidth)) / 2;
+        let startX = this.x + (this.width - totalWidth) / 2;
 
         // Draw each shape
-        this.shapes.forEach(({ shape }) => {
+        this.shapes.forEach(({ shape, isSpace }) => {
+            // If it's a space, just advance the position without drawing anything
+            if (isSpace) {
+                startX += effectiveShapeWidth;
+                return;
+            }
+            if(!shape){return;}
+
             p.push();
 
-            // Translate to the starting position of the current shape
-            //p.translate(startX - baseShapeWidth, this.y);
-
-
-            const inputFieldScale = this.scale;
-            const shapeScale = p.getShapeScale();
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-
-            //Find the new margin offset.
-            p.translate(startX - ((spacedShapeScale*baseShapeWidth)/2), this.y - ((spacedShapeScale*this.height)/2) + (this.height/2));
-
+            // Position at the current shape's starting position
+            p.translate(startX, this.y); // Center vertically
 
             // Scale the shape to fit appropriately
-            p.scale(spacedShapeScale * inputFieldScale);
+            p.scale(this.scale);
 
-            // Use the `draw` method of ShapeGeneratorV2 to render the shape
+            // Use the `draw` method to render the shape
             shape.draw();
 
             p.pop();
 
-            // Advance position by dynamically adjusted spacing
-            startX += adjustedSpacing;
+            // Advance to the next shape position
+            startX += effectiveShapeWidth;
         });
     }
 

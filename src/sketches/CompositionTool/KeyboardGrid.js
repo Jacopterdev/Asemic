@@ -23,10 +23,33 @@ class KeyboardGrid {
         this.effect = new Effects(this.buffer);
         this.lastKeyPressed = null;
 
+        // Add this property to the class constructor
+        this.cellMap = new Map(); // Maps grid positions (col,row) to alphabet characters
+
+
         // Create the cells
+        // Create the cells
+        // Create the cells
+        let skipCounter = 0;
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
+                // Skip cells if needed
+                if (skipCounter > 0) {
+                    skipCounter--;
+                    continue; // Skip this cell position, leaving an empty space
+                }
+
                 const char = this.alphabet[index];
+
+                // After 'L', set up to skip 1 cell
+                if (char === 'L') {
+                    skipCounter = 1;
+                }
+                // After 'M', set up to skip 3 cells
+                else if (char === ' ') {
+                    skipCounter = 3;
+                }
+
                 // Create a new Cell object
                 const cell = new KeyboardCell(this.p,
                     this.buffer,
@@ -36,6 +59,9 @@ class KeyboardGrid {
                     char, // Alphabet character
                     callback // Callback to handle key press
                 );
+
+                this.cellMap.set(`${col},${row}`, char);
+
 
                 this.cells.push(cell);
                 index = (index + 1) % this.alphabet.length; // Loop through the alphabet
@@ -112,18 +138,13 @@ class KeyboardGrid {
         const col = Math.floor(relativeX / this.cellSize);
         const row = Math.floor(relativeY / this.cellSize);
 
-        // Make sure we're within bounds
-        if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
-            // Get the index in our keyboard layout
-            const index = row * this.cols + col;
+        // Look up the key in our cell map
+        const key = this.cellMap.get(`${col},${row}`);
 
-            // Make sure the index exists in our alphabet
-            if (index < this.alphabet.length) {
-                return this.alphabet[index];
-            }
-            return null;
-        }
+        // Return the key if found, otherwise null
+        return key || null;
     }
+
 
     /**
      * Checks if the current mouse position is hovering over the buffer.

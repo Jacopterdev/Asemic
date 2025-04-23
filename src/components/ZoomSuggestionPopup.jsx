@@ -9,14 +9,14 @@ const ZoomSuggestionPopup = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0  bg-white/50 flex items-center justify-center z-50">
             <div className="about-container-inner bg-gray-100 p-6 max-w-md w-full shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Please adjust your screen</h2>
-                <p className="mb-4">
+                <h2 className="text-xl font-bold mb-4 text-gray-600 font-mono">Please adjust your screen</h2>
+                <p className="mb-4 text-gray-600">
                     For the best experience, you may want to adjust your browser's zoom level.
                 </p>
-                <p className="mb-4">
+                <p className="mb-4 text-gray-600">
                     <strong>Tip:</strong> You can zoom in or out by pressing:
                 </p>
-                    <ul className="list-disc ml-5 mt-2">
+                    <ul className="list-disc ml-5 mt-2 text-gray-600">
                         <li>Ctrl + (Windows) or ⌘ + (Mac) to zoom in</li>
                         <li>Ctrl - (Windows) or ⌘ - (Mac) to zoom out</li>
                         <li>Or hold Ctrl (Windows) or ⌘ (Mac) and use your mouse wheel/trackpad</li>

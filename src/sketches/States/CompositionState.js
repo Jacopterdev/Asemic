@@ -31,6 +31,7 @@ class CompositionState {
     }
 
     mouseDragged() {
+        this.compositionTool.handleMouseDragged();
         // Handle composition-specific mouse dragging if needed
     }
 
