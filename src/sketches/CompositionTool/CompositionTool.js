@@ -8,6 +8,7 @@ import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
 import Effects from "../Effects.js";
 import shapeDictionary from "../ShapeDictionary.js";
 import keyboardGrid from "./KeyboardGrid.js";
+import RangeSlider from "../UI/RangeSlider.js";
 
 class CompositionTool {
     constructor(p, mergedParams) {
@@ -33,7 +34,7 @@ class CompositionTool {
             (p.width - (2*50))/10,        // Size of each cell
             3,         // Number of rows
             10,         // Number of columns
-            "QWERTYUIOPASDFGHJKL ZXCVBNM   ", // Alphabet to populate the grid
+            "QWERTYUIOPASDFGHJKLZXCVBNM ", // Alphabet to populate the grid
             (key) => this.onKeyPress(key) // Callback for key presses
         );
 
@@ -57,7 +58,24 @@ class CompositionTool {
         this.backspaceTimer = null;
         this.initialDelayTimer = null; // Timer for the initial delay
 
+        this.slider = new RangeSlider(
+            p,                          // p5 instance
+            1100,   // x position (20px to the right of component)
+            580,                     // y position (aligned with top)
+            5,                         // width (slider width)
+            100,                        // height (slider height)
+            -0.5,                       // minimum noiseJump value
+            0.3,                        // maximum noiseJump value
+            -0.2,             // initial value
+            this.setKerning.bind(this), // callback when value changes
+            true
+        );
+        // Show the slider
+        this.slider.show();
+    }
 
+    setKerning(value) {
+        this.shapeInputField.kerning = value;
     }
     
     // Handle mouse presses for the download button
@@ -92,6 +110,7 @@ class CompositionTool {
             }
             return true; // Event handled
         }
+        this.slider.mousePressed();
         
         // Let the keyboard grid handle the mouse press
         if (this.keyboardGrid.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
@@ -103,6 +122,11 @@ class CompositionTool {
 
     handleMouseReleased() {
         this.keyboardGrid.handleMouseReleased();
+        this.slider.mouseReleased();
+    }
+
+    handleMouseDragged(){
+        this.slider.mouseDragged();
     }
     
     // Draw method to render the CompositionTool components
@@ -154,6 +178,8 @@ class CompositionTool {
         this.p.blendMode(this.p.MULTIPLY);
         this.p.rect(30, (this.p.height/2)-20, 1140, 1000, 8);
         this.p.blendMode(this.p.BLEND);
+
+        this.slider.draw();
     }
 
     // Existing methods remain unchanged
