@@ -322,10 +322,6 @@ function MainApp() {
                 </div>
             </main>
             <Footer /> {/* Add the footer component */}
-
-
-            {/* Add the QuestionnaireButton component */}
-            <QuestionnaireButton surveyUrl="" />
             <ZoomSuggestionPopup
                 isOpen={showZoomSuggestion}
                 onClose={() => setShowZoomSuggestion(false)}
