@@ -4,32 +4,37 @@
     }
 
     /**
-     * Adds new lines involving a new point.
-     * For every existing point, create a new line between it and the new point.
-     * @param {Object} newPoint - The new point to add (e.g., { x, y }).
-     * @param {Array} existingPoints - The current array of points.
+     * Add a single line between two points
+     * @param {Object} point1 - First point
+     * @param {Object} point2 - Second point
+     * @param {Boolean} selected - Whether the line should be visible
      */
-    addLinesForPoint(newPoint, existingPoints) {
-        existingPoints.forEach((existingPoint) => {
-            if (newPoint.x === existingPoint.x && newPoint.y === existingPoint.y) {
-                return; // Do not add this line
-            }
-
+    addLine(point1, point2, selected = true) {
+        // Check if the line already exists
+        const exists = this.lines.some(line => 
+            (line.start.id === point1.id && line.end.id === point2.id) || 
+            (line.start.id === point2.id && line.end.id === point1.id)
+        );
+        
+        if (!exists) {
             this.lines.push({
-                start: existingPoint,
-                end: newPoint,
-                selected: true, // Default to selectd
+                start: point1,
+                end: point2,
+                selected: selected
             });
-        });
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Removes all lines that involve a given point.
-     * @param {Object} point - The point to remove (e.g., { x, y }).
+     * Remove a specific line
+     * @param {Object} line - The line to remove
      */
-    removeLinesForPoint(point) {
-        this.lines = this.lines.filter(
-            (line) => line.start !== point && line.end !== point // Remove lines where the point is involved
+    removeLine(line) {
+        this.lines = this.lines.filter(l => 
+            !(l.start.id === line.start.id && l.end.id === line.end.id) &&
+            !(l.start.id === line.end.id && l.end.id === line.start.id)
         );
     }
 
@@ -42,6 +47,23 @@
         this.lines = this.lines.filter(line => 
             line.start.id !== point.id && line.end.id !== point.id
         );
+    }
+
+    /**
+     * Add lines from a point to all points in a list
+     * @param {Object} sourcePoint - The source point
+     * @param {Array} targetPoints - Array of target points
+     * @param {Boolean} selected - Whether the lines should be visible
+     */
+    addLinesForPoint(sourcePoint, targetPoints, selected = true) {
+        let addedAnyLine = false;
+        
+        targetPoints.forEach(targetPoint => {
+            const added = this.addLine(sourcePoint, targetPoint, selected);
+            addedAnyLine = addedAnyLine || added;
+        });
+        
+        return addedAnyLine;
     }
 
     /**
@@ -73,10 +95,25 @@
             .map(({ start, end }) => ({ start, end })); // Remove 'selected' property
     }
 
+    /**
+     * Clears all lines
+     */
     clearAllLines() {
         this.lines = [];
     }
 
+    /**
+     * Check if a line between two points already exists
+     * @param {Object} point1 - First endpoint
+     * @param {Object} point2 - Second endpoint
+     * @returns {Boolean} True if the line exists
+     */
+    lineExists(point1, point2) {
+        return this.lines.some(line => 
+            (line.start.id === point1.id && line.end.id === point2.id) || 
+            (line.start.id === point2.id && line.end.id === point1.id)
+        );
+    }
 }
 
 export default LineManager;

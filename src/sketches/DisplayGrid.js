@@ -1,13 +1,13 @@
 import ShapeGenerator from "./ShapeGenerator/ShapeGenerator.js";
 import ShapeGeneratorV2 from "./ShapeGenerator/ShapeGeneratorV2.js";
 import shapeDictionary from "./ShapeDictionary.js";
-import Effects from "./Effects.js";
 import shapeSaver from "./ShapeSaver.js";
 import DownloadButton from "./DownloadButton.js";
 import {SPACING as LAYOUT} from "./States/LayoutConstants.js";
+import MutantButton from "./MutantButton.js";
 
 class DisplayGrid {
-    constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams) {
+    constructor(p, cols, rows, xStart, yStart, gridSize, mergedParams, buffer = null) {
         this.p = p;
         this.cols = cols;
         this.rows = rows;
@@ -15,32 +15,45 @@ class DisplayGrid {
         this.xStart = xStart;
         this.yStart = yStart;
 
-        this.cellWidth = gridSize/cols;
-        this.cellHeight = gridSize/rows;
+        this.cellWidth = gridSize / cols;
+        this.cellHeight = gridSize / rows;
         this.grid = [];
         this.hoveredCell = null;
 
         this.scrollOffset = 0;
+        this.isDragging = false; // Track if user is dragging
+        this.lastMouseY = 0;     // Track last mouse Y position
 
         this.mergedParams = mergedParams;
-        this.scale = 1/rows;
+        this.scale = this.cellWidth / p.width;
+
+        this.suffix = 0;
 
         this.initGrid();
 
         // Initialize downloadButtons array
         this.downloadButtons = [];
-        
+        this.mutantButtons = [];
+
         // Create initial buttons for all cells
-        this.createDownloadButtons();
+        if (!buffer) {
+            this.createDownloadButtons();
+            this.createMutantButtons();
+        }
+
 
         this.hoveredCellRow = -1;
         this.hoveredCellCol = -1;
+
+        this.buffer = buffer;
+
+        this.addRows(5);
     }
 
     // Initialize the grid and assign letters
     initGrid() {
         this.cellWidth = this.gridSize / this.cols;
-        this.cellHeight = this.gridSize / this.rows;
+        this.cellHeight = this.cellWidth;
         this.grid = [];
         let letterCode = 65; // Start with 'A' (ASCII code)
 
@@ -51,13 +64,30 @@ class DisplayGrid {
                 let y = j * this.cellHeight + this.yStart;
 
                 // Assign letter to the cell and wrap after 'Z'
-                const letter = String.fromCharCode(letterCode);
-                letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
+                let letter;
+                // If suffix is 0 (initial state), use only letters A-Z
+                if (this.suffix === 0) {
+                    letter = String.fromCharCode(letterCode);
+                } else {
+                    // Once we exceed Z, append the number suffix (e.g., A1, B1, etc.)
+                    letter = String.fromCharCode(letterCode) + this.suffix;
+                }
+                //letterCode = letterCode === 90 ? 65 : letterCode + 1; // Wrap from 'Z' to 'A'
+                const wrap = letterCode === 90;
+                if (wrap) {
+                    letterCode = 65;
+                    this.suffix++;
+                } else {
+                    letterCode++;
+                }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if (this.buffer) {
+                    shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);
+                }
 
                 // Get noise position for the letter from the ShapeDictionary
-                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
+                const {x: noiseX, y: noiseY} = shapeDictionary.getValue(letter);
 
                 // Set the noise position for the shape
                 shape.setNoisePosition(noiseX, noiseY);
@@ -73,22 +103,47 @@ class DisplayGrid {
                 };
             }
         }
+
+        const visibleHeight = this.p.height - this.yStart;
+        this.maxScroll = Math.max(0, this.rows * this.cellHeight - visibleHeight);
+
     }
+
+    createMutantButtons() {
+        this.mutantButtons = [];
+
+        for (let j = 0; j < this.grid.length; j++) {
+            this.mutantButtons[j] = [];
+            for (let i = 0; i < this.grid[j].length; i++) {
+                const cell = this.grid[j][i];
+                const pos = MutantButton.positionInCell(cell);
+
+                this.mutantButtons[j][i] = new MutantButton(
+                    this.p,
+                    pos.x,
+                    pos.y,
+                    cell.letter,
+                    this.cellWidth
+                );
+            }
+        }
+    }
+
 
     // New method to create buttons for all grid cells
     createDownloadButtons() {
         this.downloadButtons = [];
-        
+
         for (let j = 0; j < this.grid.length; j++) {
             this.downloadButtons[j] = [];
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const pos = DownloadButton.positionInCell(cell);
-                
+
                 this.downloadButtons[j][i] = new DownloadButton(
-                    this.p, 
-                    pos.x, 
-                    pos.y, 
+                    this.p,
+                    pos.x,
+                    pos.y,
                     cell.letter,
                     true
                 );
@@ -96,8 +151,37 @@ class DisplayGrid {
         }
     }
 
-    drawGrid() {
+    drawScrollbar() {
         const p = this.p;
+
+        const visibleHeight = p.height - this.yStart; // Available height for the visible grid
+        const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+        const proportionVisible = visibleHeight / gridHeight;
+
+        // Calculate scrollbar height based on visible proportion
+        const scrollbarHeight = Math.max(20, visibleHeight * proportionVisible); // Minimum scrollbar height is 20
+        const maxScrollbarMovement = visibleHeight - scrollbarHeight; // Max movement for the scrollbar
+        const scrollbarPosition = (Math.abs(this.scrollOffset) / (gridHeight - visibleHeight)) * maxScrollbarMovement;
+
+        // Clamp scrollbar position to remain within bounds
+        const clampedScrollbarY = this.yStart + Math.min(maxScrollbarMovement, scrollbarPosition);
+
+
+        // Define scrollbar dimensions
+        const scrollbarWidth = 10;
+        const scrollbarX = this.xStart + this.gridSize + 5; // Position on the right of the grid
+
+        // Draw the actual scrollbar handle
+        this.p.fill(156, 163, 175);
+        this.p.noStroke();
+        p.rect(scrollbarX, clampedScrollbarY, scrollbarWidth, scrollbarHeight, 5);
+    }
+
+    drawGrid() {
+        let p = this.p;
+        if (this.buffer) {
+            p = this.buffer;
+        }
 
         // First check which cell is being hovered
         this.updateHoveredCell();
@@ -108,117 +192,136 @@ class DisplayGrid {
 
         // Initialize downloadButtons array if it doesn't exist
         if (!this.downloadButtons) this.downloadButtons = [];
-        
+        if(!this.mutantButtons) this.mutantButtons = [];
+
         // Draw grid cells
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
-                
+
                 // Only draw cells that are visible
                 if (cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > p.height) {
                     continue;
                 }
-                
+
                 // Draw cell borders and letter
                 p.noFill();
                 p.stroke(200);
                 p.rect(cell.x, cellYWithScroll, this.cellWidth, this.cellHeight);
-                
+
                 // Draw letter in corner
                 p.fill(64);
                 p.noStroke();
                 p.textSize(12);
+                p.textAlign(p.LEFT, p.CENTER);
                 p.text(cell.letter, cell.x + LAYOUT.PADDING, cellYWithScroll + LAYOUT.PADDING + 10);
             }
         }
-        
+
+        //Only draw download buttons if its not a buffer.
+        if (this.buffer) return;
+
         // Draw buttons for visible cells
         for (let j = 0; j < this.grid.length; j++) {
             if (!this.downloadButtons[j]) this.downloadButtons[j] = [];
-            
+            if (!this.mutantButtons[j]) this.mutantButtons[j] = [];
+
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
-                
+
                 // Check if cell is visible
                 const isVisible = !(cellYWithScroll + this.cellHeight < 0 || cellYWithScroll > this.p.height);
-                
+
                 // Create button if it doesn't exist
                 if (!this.downloadButtons[j][i]) {
                     const pos = DownloadButton.positionInCell(cell);
                     this.downloadButtons[j][i] = new DownloadButton(
-                        this.p, 
-                        pos.x, 
-                        pos.y, 
+                        this.p,
+                        pos.x,
+                        pos.y,
                         cell.letter,
                         true
                     );
                 }
-                
+                if (!this.mutantButtons[j][i]) {
+                    const pos = MutantButton.positionInCell(cell);
+                    this.mutantButtons[j][i] = new MutantButton(
+                        this.p,
+                        pos.x,
+                        pos.y,
+                        cell.letter,
+                        this.cellWidth,
+                    )
+                }
+
                 // Update button position with scroll and visibility
                 const pos = DownloadButton.positionInCell(cell, this.scrollOffset);
-                
+                const mutPos = MutantButton.positionInCell(cell, this.scrollOffset);
+
                 const button = this.downloadButtons[j][i];
+                const mutantButton = this.mutantButtons[j][i];
                 button.update(pos.x, pos.y);
+                mutantButton.update(mutPos.x, mutPos.y);
+                mutantButton.isVisible = ((j === this.hoveredCellRow && i === this.hoveredCellCol && isVisible));
                 button.isVisible = ((j === this.hoveredCellRow && i === this.hoveredCellCol && isVisible));
-                
+
                 // Draw the button if visible
                 if (button.isVisible) {
                     button.draw();
                 }
+                if(mutantButton.isVisible) {
+                    mutantButton.draw();
+                }
             }
         }
+
+        this.drawScrollbar();
     }
 
-    drawShapes(xray = false){
-        const p = this.p;
+    drawShapes(xray = false) {
+        let p = this.p;
+        if (this.buffer) {
+            p = this.buffer;
+        }
+
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
 
                 if (cell.shape !== null) {
-                    p.push(); // Save current transformation state
+                    p.push(); // Save the current transformation state
 
-                    //Scale the shape
-                    const shapeScale = this.p.getShapeScale();
-                    const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-                    const space = cell.w;
+                    const {totalScale, newX, newY} = this.p.findScale(this.scale, cell.x, cellYWithScroll, cell.w);
 
-                    //Find the new margin offset.
-                    this.p.translate(cell.x - ((spacedShapeScale*cell.w)/2) + (space/2), cellYWithScroll - ((spacedShapeScale*cell.w)/2) + (space/2));
+                    p.translate(newX, newY);
 
-                    this.p.scale(this.scale * spacedShapeScale);
+                    p.scale(totalScale);
 
-                    /**
-                    // Translate to the top-left corner of the current cell
-                    p.translate(cell.x, cellYWithScroll);
-
-                    // Scale down the shape to fit within the cell dimensions
-                    const scaleX = (p.w / cell.w) * 0.1;
-                    const scaleY = (p.h / cell.h) * 0.1;
-                    p.scale(this.scale);
-                    */
-
-
-                    // Draw the shape relative to the translated origin (scaled to fit)
+                    // Draw the shape relative to the translated and scaled origin
                     cell.shape.draw(xray);
 
                     p.pop(); // Restore the previous transformation state
+
                 }
             }
         }
-}
+    }
+
     updateMergedParams(mergedParams) {
         this.mergedParams = mergedParams;
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 cell.shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if (this.buffer) {
+                    cell.shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);
+                }
 
                 // Get noise position for the letter from the ShapeDictionary
-                const { x: noiseX, y: noiseY } = shapeDictionary.getValue(cell.letter);
+                const {x: noiseX, y: noiseY} = shapeDictionary.getValue(cell.letter);
 
                 // Set the noise position for the shape
                 cell.shape.setNoisePosition(noiseX, noiseY);
@@ -227,11 +330,13 @@ class DisplayGrid {
             }
         }
     }
+
     setGrid(cols, rows) {
         this.cols = cols;
         this.rows = rows;
         this.initGrid();
     }
+
     // Detect if the mouse is hovering over a cell
     updateHover(mx, my) {
         this.hoveredCell = null;
@@ -257,8 +362,14 @@ class DisplayGrid {
     }
 
     handleScroll(md) {
+        const mouseInCanvas = (this.p.mouseX >= 0 && this.p.mouseX <= this.p.width &&
+            this.p.mouseY >= 0 && this.p.mouseY <= this.p.height)
+        if (!mouseInCanvas) {
+            return;
+        }
+
         const SCROLL_THRESHOLD = 400; // Pixels near the viewport bottom
-        const ADD_ROW_COUNT = 5; // Pre-add this many rows
+        const ADD_ROW_COUNT = 3; // Pre-add this many rows
 
         // Update scroll offset by the mouse delta
         this.scrollOffset -= md * 1; // Adjust speed of scroll scaling if needed
@@ -267,6 +378,9 @@ class DisplayGrid {
         if (this.scrollOffset > 0) {
             this.scrollOffset = 0;
         }
+
+        // Clamp scroll offset to remain within bounds
+        this.scrollOffset = this.p.constrain(this.scrollOffset, -this.maxScroll, 0);
 
         // Calculate the viewport's bottom edge relative to `scrollOffset`
         const viewportBottomEdge = Math.abs(this.scrollOffset) + this.p.height;
@@ -284,6 +398,7 @@ class DisplayGrid {
 
         // Reset download buttons array since positions will change
         this.downloadButtons = [];
+        this.mutantButtons = [];
     }
 
     // Add Rows dynamically
@@ -302,17 +417,36 @@ class DisplayGrid {
                 const x = col * this.cellWidth + this.xStart;
                 const y = startingY + row * this.cellHeight; // Align new rows correctly
 
-                // Assign letters (wrap from 'Z' to 'A')
-                const letter = String.fromCharCode(letterCode);
-                letterCode = letterCode === 90 ? 65 : letterCode + 1;
+                // Assign letter to the cell and wrap after 'Z'
+                let letter;
+                // If suffix is 0 (initial state), use only letters A-Z
+                if (this.suffix === 0) {
+                    letter = String.fromCharCode(letterCode);
+                } else {
+                    // Once we exceed Z, append the number suffix (e.g., A1, B1, etc.)
+                    letter = String.fromCharCode(letterCode) + this.suffix;
+                }
+
+                const wrap = letterCode === 90;
+                if (wrap) {
+                    letterCode = 65;
+                    this.suffix++;
+                } else {
+                    letterCode++;
+                }
 
                 let shape = new ShapeGeneratorV2(this.p, this.mergedParams);
+                if (this.buffer) {
+                    shape = new ShapeGeneratorV2(this.buffer, this.mergedParams);
+                }
                 // Get noise position for the letter from the ShapeDictionary
                 //const { x: noiseX, y: noiseY } = shapeDictionary.getValue(letter);
 
                 const value = shapeDictionary.getValue(letter);
-                if (!value) {return;}
-                const { x: noiseX, y: noiseY } = value;
+                if (!value) {
+                    return;
+                }
+                const {x: noiseX, y: noiseY} = value;
 
                 // Set the noise position for the shape
                 shape.setNoisePosition(noiseX, noiseY);
@@ -339,21 +473,35 @@ class DisplayGrid {
 
         // Update row count dynamically
         this.rows += numRows;
-            // Create download buttons for the new rows
+        // Create download buttons for the new rows
         for (let j = this.grid.length - numRows; j < this.grid.length; j++) {
             this.downloadButtons[j] = [];
+            this.mutantButtons[j] = [];
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const pos = DownloadButton.positionInCell(cell);
-                
+                const mutPos = MutantButton.positionInCell(cell);
+
                 this.downloadButtons[j][i] = new DownloadButton(
-                    this.p, 
-                    pos.x, 
-                    pos.y, 
+                    this.p,
+                    pos.x,
+                    pos.y,
                     cell.letter
                 );
+
+                this.mutantButtons[j][i] = new MutantButton(
+                    this.p,
+                    mutPos.x,
+                    mutPos.y,
+                    cell.letter,
+                    this.cellWidth,
+                );
             }
+
         }
+
+        const visibleHeight = this.p.height - this.yStart;
+        this.maxScroll = Math.max(0, this.rows * this.cellHeight - visibleHeight);
     }
 
     // Add this helper method to get the last letter's ASCII code
@@ -393,32 +541,34 @@ class DisplayGrid {
         if (this.downloadButtons) {
             for (let row = 0; row < this.downloadButtons.length; row++) {
                 if (!this.downloadButtons[row]) continue;
-                
+
                 for (let col = 0; col < this.downloadButtons[row].length; col++) {
                     const button = this.downloadButtons[row][col];
                     if (!button || !button.isVisible) continue;
-                    
+
                     if (button.isClicked(this.p.mouseX, this.p.mouseY)) {
                         // Make sure we have a valid cell
                         if (!this.grid[row] || !this.grid[row][col] || !this.grid[row][col].shape) {
                             console.error("Invalid grid cell or missing shape");
                             return false;
                         }
-            
+
                         const cell = this.grid[row][col];
                         const letter = cell.letter;
-                        
+
                         console.log("Download button clicked for letter:", letter);
-                        
+
                         try {
                             // Initialize shapeSaver before using it
                             const selectedOption = button.getSelectedOption().type;
                             shapeSaver.init(this.p, this.mergedParams);
-                            if(selectedOption == "svg"){
+                            if (selectedOption == "svg") {
                                 shapeSaver.saveAsSvg(letter);
                             } else if (selectedOption == "png") {
                                 shapeSaver.download(letter);
-                            } else {return;}
+                            } else {
+                                return;
+                            }
                             return true;
                         } catch (error) {
                             console.error("Error downloading shape:", error);
@@ -427,28 +577,117 @@ class DisplayGrid {
                 }
             }
         }
-        
+
+        if (!this.buffer) {
+            for (let j = 0; j < this.grid.length; j++) {
+                for (let i = 0; i < this.grid[j].length; i++) {
+                    const mutantButton = this.mutantButtons[j][i];
+                    const clickedLetter = mutantButton.handleClick();
+
+                    if (clickedLetter) {
+                        // This event will be handled by the parent component (AnatomyState)
+                        return { type: 'startMutantShopping', letter: clickedLetter };
+                    }
+                }
+            }
+        }
+
+
+        const p = this.p;
+        const visibleHeight = p.height - this.yStart; // Available height for the visible grid
+        const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+        const proportionVisible = visibleHeight / gridHeight;
+
+        // Calculate scrollbar height based on visible proportion
+        const scrollbarHeight = Math.max(20, visibleHeight * proportionVisible); // Minimum scrollbar height is 20
+        const maxScrollbarMovement = visibleHeight - scrollbarHeight; // Max movement for the scrollbar
+        const scrollbarStart = (Math.abs(this.scrollOffset) / (gridHeight - visibleHeight)) * maxScrollbarMovement;
+
+        const clampedScrollbarY = this.yStart + Math.min(maxScrollbarMovement, scrollbarStart);
+
+        const mx = this.p.mouseX;
+        const my = this.p.mouseY;
+
+        const scrollbarWidth = 10;
+        const scrollbarX = this.xStart + this.gridSize + 5; // Position on the right of the grid
+
+        if (mx > scrollbarX &&
+            mx < scrollbarX + scrollbarWidth &&// Condition: Inside scrollbar (adjust these as per actual scrollbar bounds)
+            my >= clampedScrollbarY &&
+            my <= clampedScrollbarY + scrollbarHeight) {
+            this.isDragging = true;
+            this.lastMouseY = my;
+        }
         return false; // No button was clicked
+    }
+
+    handleMouseDragged() {
+        if (this.isDragging) {
+            const SCROLL_THRESHOLD = 400; // Pixels near the viewport bottom
+            const ADD_ROW_COUNT = 3; // Pre-add this many rows
+
+            const my = this.p.mouseY;
+            const md = my - this.lastMouseY;
+
+            const visibleHeight = this.p.height - this.yStart; // Available height for the visible grid
+            const gridHeight = this.rows * this.cellHeight; // Total height of the grid
+            const proportionVisible = visibleHeight / gridHeight;
+
+            // Update scroll offset by the mouse delta
+            this.scrollOffset -= md * 1 / proportionVisible; // Adjust speed of scroll scaling if needed
+
+            // Prevent scrolling above the topmost position
+            if (this.scrollOffset > 0) {
+                this.scrollOffset = 0;
+            }
+
+            // Clamp scroll offset to remain within bounds
+            this.scrollOffset = this.p.constrain(this.scrollOffset, -this.maxScroll, 0);
+
+            this.lastMouseY = my; // Update the last recorded mouse position
+
+            // Calculate the viewport's bottom edge relative to `scrollOffset`
+            const viewportBottomEdge = Math.abs(this.scrollOffset) + this.p.height;
+
+            // The bottom edge of the last row
+            const lastRowBottomEdge = this.grid[this.grid.length - 1][0].y + this.cellHeight;
+
+            // Check if we need to add rows
+            if (viewportBottomEdge + SCROLL_THRESHOLD > lastRowBottomEdge) {
+                this.addRows(ADD_ROW_COUNT);
+            }
+
+            // Purge rows above the visible area
+            this.purgeOffscreenRows();
+
+            // Reset download buttons array since positions will change
+            this.downloadButtons = [];
+            this.mutantButtons = [];
+        }
+    }
+
+    handleMouseReleased() {
+        this.isDragging = false;
     }
 
     updateHoveredCell() {
         const p = this.p;
-        
+
         // Reset hovered cell
         this.hoveredCellRow = -1;
         this.hoveredCellCol = -1;
-        
+
         // Check if mouse is over any cell
         for (let j = 0; j < this.grid.length; j++) {
             for (let i = 0; i < this.grid[j].length; i++) {
                 const cell = this.grid[j][i];
                 const cellYWithScroll = cell.y + this.scrollOffset;
-                
+
                 // Check if mouse is over this cell
                 if (
-                    p.mouseX >= cell.x && 
+                    p.mouseX >= cell.x &&
                     p.mouseX <= cell.x + cell.w &&
-                    p.mouseY >= cellYWithScroll && 
+                    p.mouseY >= cellYWithScroll &&
                     p.mouseY <= cellYWithScroll + cell.h
                 ) {
                     this.hoveredCellRow = j;
@@ -458,6 +697,6 @@ class DisplayGrid {
             }
         }
     }
-
 }
+
 export default DisplayGrid;

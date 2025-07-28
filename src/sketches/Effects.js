@@ -30,6 +30,8 @@ class Effects {
         const targetAmount = this.smoothAmount;    // Original smoothAmount to return to
         const startTime = this.p.millis();         // Reset start time for the new animation
 
+
+
         // Animation loop
         const animationLoop = () => {
             if (!this.isAnimating) return; // Exit early if animation was stopped or restarted
@@ -41,7 +43,7 @@ class Effects {
             const easedValue = targetAmount - (targetAmount - startAmount) * Math.pow(1 - t, 3);
 
             // Update smoothAmount
-            this.smoothAmount = t >= 1 ? targetAmount : easedValue; // Ensure it snaps back to the original
+            this.smoothAmount = Math.max(0, t >= 1 ? targetAmount : easedValue);
 
             // Stop animation when complete
             if (t >= 1) {

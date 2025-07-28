@@ -19,6 +19,8 @@ class ShapeGeneratorV2 {
     }
 
     generate() {
+        this.cNoise.resetNoise();
+        this.subShapeGenerators = [];
 
         /** LINE GENERATION */
         //Retrieve information for line generation
@@ -41,14 +43,10 @@ class ShapeGeneratorV2 {
 
         // Iterate through the subShapes
         for (const subShape of this.subShapes) {
-            const placeAtPoints = this.configParser.getPlaceAtPoints(subShape.config);
-            const shapeSides = this.configParser.getShapeSides(subShape.config.subShape);
-            let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves, shapeSides);
+            let subShapeGenerator = new SubShapeGenerator(this.p, subShape.config, this.cNoise, this.noisePos, lines, curves);
             this.subShapeGenerators.push(subShapeGenerator);
-            subShapeGenerator.generate(placeAtPoints);
+            subShapeGenerator.generate();
         }
-
-
     }
 
     draw(xray = false){
@@ -61,8 +59,14 @@ class ShapeGeneratorV2 {
     }
 
     setNoisePosition(x, y) {
-        this.noisePos.x = x;
-        this.noisePos.y = y;
+        //this.noisePos.x = x;
+        //this.noisePos.y = y;
+
+        // Create a new object with numeric values instead of modifying existing object
+        this.noisePos = {
+            x: Number(x),
+            y: Number(y)
+        };
     }
 }
 export default ShapeGeneratorV2;

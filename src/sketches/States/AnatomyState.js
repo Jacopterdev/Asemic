@@ -1,36 +1,69 @@
 ﻿import DisplayGrid from "../DisplayGrid.js";
 import {SPACING as LAYOUT} from "./LayoutConstants.js";
 import shapeSaver from "../ShapeSaver.js";
+import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
+import MutantShopping from "../MutantShopping.js";
+import mutantShopping from "../MutantShopping.js";
 
 class AnatomyState {
-    constructor(p, points, lineManager, shapeGenerator, mergedParams) {
+    constructor(p, points, mergedParams) {
         this.p = p;
         this.name = "Anatomy";
         this.points = points;
-        this.lineManager = lineManager;
-        this.shapeGenerator = shapeGenerator;
         this.mergedParams = mergedParams;
-        this.displayGrid = new DisplayGrid(p, 3,3, LAYOUT.MARGIN, LAYOUT.MARGIN, p.width - LAYOUT.MARGIN * 2, this.mergedParams);
+        this.displayGrid = new DisplayGrid(p, 4,3, LAYOUT.MARGIN, LAYOUT.MARGIN, LAYOUT.GRID_SIZE*1.5 - LAYOUT.MARGIN * 2, this.mergedParams);
         this.blurScale = 1;
         this.xray = false;
         this.resetXrayTimer = null; // To track the timeout for resetting xray
+        this.viewMode = 'grid';
+
+        this.previousStateButton = new GoToNextStateButton(this.p,
+            LAYOUT.PREVIOUS_STATE_BUTTON_X,
+            LAYOUT.PREVIOUS_STATE_BUTTON_Y,
+            () => {
+                this.p.changeState("Edit Skeleton");
+            },
+            true);
+        this.nextStateButton = new GoToNextStateButton(this.p,
+            LAYOUT.NEXT_STATE_BUTTON_X,
+            LAYOUT.NEXT_STATE_BUTTON_Y,
+            () => {
+                this.p.changeState("Composition");
+            })
 
     }
 
     draw() {
-        this.displayGrid.drawShapes();
-        this.p.applyEffects(this.blurScale);
-        this.displayGrid.drawGrid();
-        if (this.xray) this.displayGrid.drawShapes(true);
+        this.p.cursor(this.p.ARROW);
+
+        // Draw based on current view mode
+        if (this.viewMode === 'grid') {
+            this.displayGrid.drawShapes();
+            this.p.applyEffects(this.blurScale);
+            this.displayGrid.drawGrid();
+            if (this.xray) this.displayGrid.drawShapes(true);
+
+        } else if (this.viewMode === 'shopping') {
+            //this.p.clear();  // Clear the main canvas
+            //this.p.background(255);  // Set the background to white
+
+            this.mutantShopping.drawShapes();
+            this.p.applyEffects(this.mutantShopping.scale);
+            this.mutantShopping.drawGrid();
+            //this.mutantShopping.draw();
+        }
+        this.previousStateButton.draw();
+        this.nextStateButton.draw();
+
     }
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
-
         this.blurScale = this.displayGrid.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE;
 
-        //this.displayGrid.updateMergedParams(this.mergedParams);
-
         this.displayGrid.updateMergedParams(this.mergedParams);
+        if(this.mutantShopping){
+            this.mutantShopping.updateMergedParams(this.mergedParams);
+        }
 
         // Clear any existing timer
         if (this.resetXrayTimer) {
@@ -41,29 +74,119 @@ class AnatomyState {
         this.resetXrayTimer = setTimeout(() => {
             this.xray = false;
         }, 1000);
-
     }
 
-    // Update the mousePressed method to handle button clicks
-    mousePressed() {
-        // Delegate button handling to DisplayGrid
-        this.displayGrid.handleMousePressed();
-        
-        // If no button was clicked, set xray mode
-        //if (!buttonClicked) {
-            this.xray = true;
-        //}
+    // Add a method to start mutant shopping
+    startMutantShopping(letter) {
+        const shoppingWidth = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingHeight = LAYOUT.GRID_SIZE-(2*LAYOUT.MARGIN);
+        const shoppingX = LAYOUT.MARGIN; // Center horizontally
+        const shoppingY = LAYOUT.MARGIN; // Center vertically
 
+        if(!this.mutantShopping){
+            this.mutantShopping = new MutantShopping(
+                this.p,
+                shoppingX,
+                shoppingY,
+                shoppingWidth,
+                shoppingHeight,
+                this.mergedParams, // Assuming you have merged parameters
+                (event) => this.handleEvent(event),
+                letter
+            );
+        } else {
+            this.mutantShopping.setLetter(letter);
+        }
+
+        // Change view mode to shopping
+        this.viewMode = 'shopping';
+    }
+
+    handleEvent(event) {
+        if (!event) return;
+
+        switch (event.type) {
+            case 'startMutantShopping':
+                this.startMutantShopping(event.letter);
+                break;
+            case 'exitMutantShopping':
+                // Handle back button click from MutantShopping
+                this.displayGrid.updateMergedParams(this.mergedParams);
+                this.viewMode = 'grid';
+                //this.mutantShopping = null;
+                break;
+
+            // ... handle other events ...
+        }
+    }
+
+
+
+    // Update the mousePressed method to handle button clicks
+    /**
+    mousePressed() {
+        if (this.viewMode === 'grid') {
+            // Delegate button handling to DisplayGrid
+            this.displayGrid.handleMousePressed();
+
+            this.xray = true;
+
+            if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.previousStateButton.click();
+            }
+
+            if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+                this.nextStateButton.click();
+            }
+        } else {
+            this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
+        }
+    }*/
+    mousePressed() {
+        if (this.viewMode === 'grid') {
+            // Delegate button handling to DisplayGrid
+            const event = this.displayGrid.handleMousePressed();
+            if(event){
+                this.handleEvent(event);
+                return;
+            }
+
+            this.xray = true;
+
+
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            const event = this.mutantShopping.mousePressed(this.p.mouseX, this.p.mouseY);
+            if (event) {
+                this.handleEvent(event);
+            }
+        }
+        if(this.previousStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.previousStateButton.click();
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)){
+            this.nextStateButton.click();
+        }
     }
 
     mouseDragged() {
-        this.xray = true;
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseDragged();
+            this.xray = true;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseDragged();
+        }
+
         // No mouse drag interaction in this state
     }
 
     mouseReleased() {
-        this.xray = false;
-        this.p.animateSmoothAmount();
+        if (this.viewMode === 'grid') {
+            this.displayGrid.handleMouseReleased();
+            this.xray = false;
+        } else if (this.viewMode === 'shopping' && this.mutantShopping) {
+            this.mutantShopping.mouseReleased();
+        }
     }
 
     mouseWheel(event) {

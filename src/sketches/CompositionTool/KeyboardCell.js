@@ -3,7 +3,7 @@ import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
 import {SPACING as LAYOUT} from "../States/LayoutConstants.js";
 
 class KeyboardCell {
-    constructor(p, buffer, x, y, size, char, callback, fontSize = 8, fontType = "Roboto Mono", fontFillColor = 128) {
+    constructor(p, buffer, x, y, size, char, callback, fontSize = 12, fontType = "Roboto Mono", fontFillColor = 64) {
         this.p = p;
         this.buffer = buffer;
         this.x = x; // X coordinate of the cell
@@ -39,42 +39,18 @@ class KeyboardCell {
 
     drawShape(){
         // Scale the shape to fit appropriately in the cell
-        const scaleFactor =  this.size / this.p.width; // Adjust scale factor to fit the cell size
+        const scaleFactor =  this.size / this.buffer.width; // Adjust scale factor to fit the cell size
 
         // Draw the shape if it exists
         if (this.shape) {
-            this.buffer.push();
 
-            /**
-            const shapeScale = this.p.getShapeScale();
-            console.log(shapeScale);
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-            const space = this.size - (this.size * LAYOUT.SHAPE_SCALE);
+            this.buffer.push(); // Save the current transformation state
 
-            const shapeSize = this.size * spacedShapeScale;
+            const {totalScale, newX, newY} = this.p.findScale(scaleFactor, this.x, this.y, this.size);
 
-            // Translate to the center of the cell
-            //this.buffer.translate(this.x - ((spacedShapeScale*this.size)/2) + (space/2), this.y - ((spacedShapeScale*this.size)/2)+ (space/2));
-            this.buffer.translate(this.x, this.y);
-            // Center the scale behavior
-            this.buffer.translate(this.size / 2, this.size / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
-            //this.buffer.translate(shapeSize / 2, shapeSize / 2); // Move origin to the center of the cell (assuming size represents the intended bounding box for the shape)
+            this.buffer.translate(newX, newY);
 
-            this.buffer.scale(scaleFactor * spacedShapeScale);
-
-            this.buffer.translate(-this.size / 2, -this.size / 2); // Move origin back to the original position
-            //this.buffer.translate(-shapeSize / 2, -shapeSize / 2); // Move origin back to the original position
-            */
-
-            //Scale the shape
-            const shapeScale = this.p.getShapeScale();
-            const spacedShapeScale = shapeScale * LAYOUT.SHAPE_SCALE;
-            const space = this.size;
-
-            //Find the new margin offset.
-            this.buffer.translate(this.x - ((spacedShapeScale*this.size)/2) + (space/2), this.y - ((spacedShapeScale*this.size)/2) + (space/2));
-
-            this.buffer.scale(scaleFactor * spacedShapeScale);
+            this.buffer.scale(totalScale);
 
 
             // Render the shape
@@ -96,7 +72,7 @@ class KeyboardCell {
         }
 
         // Draw the cell background
-        p.stroke(196); // Black stroke around the cell
+        p.stroke(240); // Black stroke around the cell
         p.rect(this.x, this.y, this.size, this.size);
 
         p.noStroke();
@@ -107,7 +83,7 @@ class KeyboardCell {
         p.textFont(this.fontType); // Use the configured font type
 
         // Draw the character in the bottom-left corner
-        const padding = 5; // Some padding from the edges
+        const padding = 8; // Some padding from the edges
         p.textAlign(p.LEFT, p.BOTTOM); // Align text at the bottom-left corner
         p.text(
             this.char,

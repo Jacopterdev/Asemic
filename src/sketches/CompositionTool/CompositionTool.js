@@ -8,6 +8,7 @@ import ShapeGeneratorV2 from "../ShapeGenerator/ShapeGeneratorV2.js";
 import Effects from "../Effects.js";
 import shapeDictionary from "../ShapeDictionary.js";
 import keyboardGrid from "./KeyboardGrid.js";
+import RangeSlider from "../UI/RangeSlider.js";
 
 class CompositionTool {
     constructor(p, mergedParams) {
@@ -33,7 +34,7 @@ class CompositionTool {
             (p.width - (2*50))/10,        // Size of each cell
             3,         // Number of rows
             10,         // Number of columns
-            "QWERTYUIOPASDFGHJKL ZXCVBNM   ", // Alphabet to populate the grid
+            "QWERTYUIOPASDFGHJKLZXCVBNM ", // Alphabet to populate the grid
             (key) => this.onKeyPress(key) // Callback for key presses
         );
 
@@ -57,7 +58,24 @@ class CompositionTool {
         this.backspaceTimer = null;
         this.initialDelayTimer = null; // Timer for the initial delay
 
+        this.slider = new RangeSlider(
+            p,                          // p5 instance
+            1100,   // x position (20px to the right of component)
+            580,                     // y position (aligned with top)
+            5,                         // width (slider width)
+            100,                        // height (slider height)
+            -0.5,                       // minimum noiseJump value
+            0.3,                        // maximum noiseJump value
+            -0.2,             // initial value
+            this.setKerning.bind(this), // callback when value changes
+            true
+        );
+        // Show the slider
+        this.slider.show();
+    }
 
+    setKerning(value) {
+        this.shapeInputField.kerning = value;
     }
     
     // Handle mouse presses for the download button
@@ -68,7 +86,7 @@ class CompositionTool {
             
             try {
                 // Use ShapeSaver's method instead of direct implementation
-                const allCharacters = "QWERTYUIOPASDFGHJKL ZXCVBNM"; // Match your grid layout
+                const allCharacters = "QWERTYUIOPASDFGHJKLZXCVBNM"; // Match your grid layout
                 shapeSaver.init(this.p, this.mergedParams)
                     .downloadAllShapes(this.p, this.mergedParams, allCharacters);
                 return true;
@@ -92,6 +110,7 @@ class CompositionTool {
             }
             return true; // Event handled
         }
+        this.slider.mousePressed();
         
         // Let the keyboard grid handle the mouse press
         if (this.keyboardGrid.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
@@ -103,13 +122,18 @@ class CompositionTool {
 
     handleMouseReleased() {
         this.keyboardGrid.handleMouseReleased();
+        this.slider.mouseReleased();
+    }
+
+    handleMouseDragged(){
+        this.slider.mouseDragged();
     }
     
     // Draw method to render the CompositionTool components
     draw() {
         this.shapeInputField.draw();
         
-        this.p.applyEffects(this.shapeInputField.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
+        this.p.applyEffects(this.shapeInputField.scale);
 
         // Draw cursor if visible
         if (this.shapeInputField.cursorVisible) {
@@ -149,6 +173,54 @@ class CompositionTool {
         //this.p.textAlign(this.p.LEFT);
         const hoverKeyboard = this.keyboardGrid.isBufferHovered();
         if (hoverKeyboard) this.p.cursor(this.p.HAND);
+
+        this.p.fill(240);
+        this.p.blendMode(this.p.MULTIPLY);
+        this.p.rect(30, (this.p.height/2)-20, 1140, 1000, 8);
+        this.p.blendMode(this.p.BLEND);
+
+        this.slider.draw();
+        this.drawDeviationIcon()
+
+    }
+
+    drawDeviationIcon() {
+        const p = this.p;
+        const x = this.slider.x;
+        const y = this.slider.y - LAYOUT.PADDING-LAYOUT.BUTTON_PADDING; // Position above the slider
+
+        p.push();
+
+        // Set color to medium gray (127)
+        p.fill(127);
+        p.stroke(127);
+        p.strokeWeight(1);
+
+        // Parameters for the icon
+        const lineLength = 14; // Length of the horizontal line
+        const arrowSize = 3; // Size of arrowheads
+
+        // Draw the horizontal line
+        p.stroke(127);
+        p.line(x - lineLength/2, y, x + lineLength/2, y);
+
+        // Draw left-pointing arrowhead
+        p.fill(127);
+        p.noStroke();
+        p.triangle(
+            x - lineLength/2, y,
+            x - lineLength/2 + arrowSize, y - arrowSize,
+            x - lineLength/2 + arrowSize, y + arrowSize
+        );
+
+        // Draw right-pointing arrowhead
+        p.triangle(
+            x + lineLength/2, y,
+            x + lineLength/2 - arrowSize, y - arrowSize,
+            x + lineLength/2 - arrowSize, y + arrowSize
+        );
+
+        p.pop();
     }
 
     // Existing methods remain unchanged

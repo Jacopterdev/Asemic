@@ -1,16 +1,15 @@
-﻿import React, { useState } from "react";
+﻿import React, {useEffect, useState} from "react";
 import PropTypes from "prop-types";
 
-const TabGroup = ({ buttons, onButtonSelect }) => {
-    const [selectedButton, setSelectedButton] = useState(0); // Default to the first button being selected
+const TabGroup = ({ buttons, onButtonSelect, selectedButton }) => {
 
     const handleButtonClick = (button, index) => {
         if (selectedButton !== index) {
-            setSelectedButton(index); // Update selected button
-            if (onButtonSelect) onButtonSelect(index); // Notify the parent about the new selection
-            if (button.onClick) button.onClick(true); // Execute custom button action with active state as true
+            if (onButtonSelect) onButtonSelect(index); // Notify parent of the selection
+            if (button.onClick) button.onClick(true); // Trigger custom action
         }
     };
+
 
     return (
         <div className="flex items-center space-x-2">
@@ -37,7 +36,6 @@ const TabGroup = ({ buttons, onButtonSelect }) => {
     );
 };
 
-// Prop Types for validation
 TabGroup.propTypes = {
     buttons: PropTypes.arrayOf(
         PropTypes.shape({
@@ -45,10 +43,12 @@ TabGroup.propTypes = {
                 PropTypes.string, // String labels
                 PropTypes.string, // Image file paths
             ]).isRequired,
-            onClick: PropTypes.func, // Optional custom function for button action, receives active state as true
+            onClick: PropTypes.func,
         })
     ).isRequired,
-    onButtonSelect: PropTypes.func, // Callback to notify the parent of the selected button index
+    onButtonSelect: PropTypes.func,
+    selectedButton: PropTypes.number, // Controlled prop for selected button
 };
+
 
 export default TabGroup;

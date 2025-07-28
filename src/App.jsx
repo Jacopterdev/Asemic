@@ -11,6 +11,10 @@ import SaveButton from "./components/SaveButton"; // Import SaveButton
 import LoadButton from "./components/LoadButton"; // Import LoadButton
 import ShareButton from "./components/ShareButton"; // Import the ShareButton
 import GalleryPage from "./components/GalleryPage"; // Import the GalleryPage
+import PresetButtons from "./components/PresetButtons";
+import QuestionnaireButton from './components/QuestionnaireButton';
+import Footer from "./components/Footer.jsx";
+import ZoomSuggestionPopup from "./components/ZoomSuggestionPopup.jsx";
 
 function MainApp() {
     // Your existing App code here
@@ -20,12 +24,42 @@ function MainApp() {
         smoothAmount: 10,
         lineWidth: {min: 8, max: 24},
         lineType: 'straight',
+        curviness: {min: 0, max: 100},
+        curveOffset: {min: 0, max: 100},
+        curveRatio: 50,
         lineComposition: 'Branched',
     });
-
+    const [showZoomSuggestion, setShowZoomSuggestion] = useState(false);
     const [subShapeParams, setSubShapeParams] = useState({});
     const [lastUpdatedParam, setLastUpdatedParam] = useState(null); // Track last updated param
+    const [selectedButtonIndex, setSelectedButtonIndex] = useState(0); // Default to the first button
     const location = useLocation();
+
+    // Check screen size and show popup if needed
+    useEffect(() => {
+        const checkScreenSize = () => {
+            // Don't show if user has dismissed it before
+            const dontShow = localStorage.getItem('dontShowZoomSuggestion') === 'true';
+
+            if (!dontShow && (window.innerWidth < 1600 || window.innerHeight < 901)) {
+                setShowZoomSuggestion(true);
+            }
+
+        };
+
+
+
+        // Check on initial load
+        checkScreenSize();
+
+        // Check when window is resized
+        window.addEventListener('resize', checkScreenSize);
+
+        return () => {
+            window.removeEventListener('resize', checkScreenSize);
+        };
+    }, []);
+
 
     // Check URL for shape data when the page loads
     useEffect(() => {
@@ -33,7 +67,7 @@ function MainApp() {
             try {
                 const url = new URL(window.location.href);
                 const shapeParam = url.searchParams.get('shape');
-                
+
                 if (shapeParam && window.p5Instance) {
                     setTimeout(() => {
                         if (window.p5Instance && window.p5Instance.checkURLForShapeLanguage) {
@@ -111,7 +145,7 @@ function MainApp() {
     }, []);
 
     const mergedParams = { ...params, ...subShapeParams };
-    console.log("lastupdated param",lastUpdatedParam);
+
 
     // NEW: State for managing selected buttons for each group
     const [toolConfig, setToolConfig] = useState({
@@ -119,60 +153,57 @@ function MainApp() {
         grid: "radial", // Default selection for the second group
     });
 
+    useEffect(() => {
+        const handleToolConfigEvent = (event) => {
+            if (event && event.detail && typeof event.detail === 'string') {
+                console.log("Received toolConfig update:", event.detail);
+
+                setToolConfig((prev) => {
+                    const updatedToolConfig = {
+                        ...prev,
+                        state: event.detail, // Update the state key
+                    };
+
+                    // Automatically update TabGroup selection based on button label
+                    const tabIndex = firstGroupButtons.findIndex((button) => button.label === event.detail);
+                    if (tabIndex !== -1) {
+                        setSelectedButtonIndex(tabIndex); // Update state for TabGroup
+                    }
+
+                    return updatedToolConfig;
+                });
+            }
+        };
+
+        window.addEventListener('toolConfig', handleToolConfigEvent);
+
+        return () => {
+            window.removeEventListener('toolConfig', handleToolConfigEvent);
+        };
+    }, []);
+
+
+
     const firstGroupButtons = [
         {
             label: "Edit Skeleton",
-            onClick: () => setIsSecondGroupVisible(true), // Ensure the second group is visible
         },
         {
             label: "Anatomy",
-            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
-
         },
         {
             label: "Composition",
-            onClick: () => setIsSecondGroupVisible(false), // Hide the second group
-
-        },
-    ];
-
-    const secondGroupButtons = [
-        {
-            label: "./radial.svg",
-            type: "radial",
-            onClick: () => console.log("Secondary Button 1 clicked"),
-        },
-        {
-            label: "./rect.svg",
-            type: "rect",
-            onClick: () => console.log("Secondary Button 2 clicked"),
-        },
-        {
-            label: "./noGrid.svg",
-            type: "none",
-            onClick: () => console.log("Secondary Button 2 clicked"),
         },
     ];
 
     // Callback for handling button selection in the first group
     const handleFirstGroupSelection = (index) => {
-        setToolConfig((prevState) => ({
-            ...prevState,
-            state: firstGroupButtons[index].label, // Update `state` with the selected label
+        setSelectedButtonIndex(index); // Update state in MainApp
+        setToolConfig((prev) => ({
+            ...prev,
+            state: firstGroupButtons[index].label, // Update toolConfig.state as well
         }));
-
-        console.log(`First group selected index: ${index}`);
     };
-    const handleSecondGroupSelection = (index) => {
-        setToolConfig((prevState) => ({
-            ...prevState,
-            grid: secondGroupButtons[index].type, // Update `grid` with the selected label
-        }));
-
-        console.log(`Second group selected index: ${index}`);
-    };
-
-    const [isSecondGroupVisible, setIsSecondGroupVisible] = useState(true); // Track visibility of the second ButtonGroup
 
     const handleSave = () => {
         // Call p5 sketch's saveShapeLanguage method or any other save logic
@@ -232,9 +263,20 @@ function MainApp() {
             </header>
 
             {/* Main Content Section */}
-            <main className="container mx-auto p-6">
-                <div className="flex justify-between gap-4">
-                    <div className="basis-1/4 bg-gray-100 shadow p-4 rounded w-full overflow-hidden">
+            <main className="mx-auto w-[100%] flex justify-center">
+                <div className="flex justify-center gap-2 w-fit">
+                    <div className="flex-shrink-0 bg-gray-100 shadow p-4 rounded w-fit" style={{
+                      maxHeight: '830px',
+                        maxWidth: '400px',
+                        width: '20%',
+                        minWidth: '200px',
+                        marginLeft: '0px',
+                        overflowY: 'auto',
+                        overflowX: 'auto',
+                      scrollbarWidth: 'none', /* Firefox */
+                      msOverflowStyle: 'none', /* IE and Edge */
+                      '&::webkitScrollbar': { display: 'none' } /* Chrome, Safari, Opera */
+                    }}>
                         <div className="space-y-2">
                             <TweakpaneComponent
                                 defaultParams={params}
@@ -245,21 +287,18 @@ function MainApp() {
                                 setParams={setSubShapeParams}
                                 onParamChange={handleSetParams}
                             />
+                                <PresetButtons />
                         </div>
                     </div>
 
-                    <div className="flex-1 bg-gray-100 shadow p-4 rounded">
+                    <div className="shrink-0 bg-gray-100 shadow p-4 rounded w-fit">
                         <div className="flex justify-between items-center h-6">
-                            <TabGroup buttons={firstGroupButtons} onButtonSelect={handleFirstGroupSelection} />
+                            <TabGroup buttons={firstGroupButtons}
+                                      selectedButton={selectedButtonIndex}
+                                      onButtonSelect={handleFirstGroupSelection}
+                            />
 
                             <div className="flex items-center space-x-2">
-                                {isSecondGroupVisible && (
-                                    <ButtonGroup 
-                                        buttons={secondGroupButtons} 
-                                        onButtonSelect={handleSecondGroupSelection}
-                                    />
-                                )}
-                                
                                 {/* Action buttons in the top bar - using components now */}
                                 {/* Increased margin from ml-4 to ml-8 for more space */}
                                 <div className="flex items-center space-x-2 ml-24">
@@ -278,11 +317,16 @@ function MainApp() {
                                 toolConfig={toolConfig}
                                 lastUpdatedParam={lastUpdatedParam}
                             />
-                            <div className="bg-gray-50 flex-1 rounded m-4"></div>
                         </div>
                     </div>
                 </div>
             </main>
+            <Footer /> {/* Add the footer component */}
+            <ZoomSuggestionPopup
+                isOpen={showZoomSuggestion}
+                onClose={() => setShowZoomSuggestion(false)}
+            />
+
         </div>
     );
 }

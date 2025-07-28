@@ -7,8 +7,29 @@ import PossibleLinesRenderer from "../PossibleLinesRenderer.js";
 import EphemeralLineAnimator from "../EphemeralLineAnimator.js";
 import GridContext from "../GridContext.js";
 import {SPACING as LAYOUT, SPACING} from "./LayoutConstants.js";
-import Tutorial from "../Tutorial.js";
 import {p5 as p} from "p5/lib/p5.js";
+import RandomPointGenerator from '../RandomPointGenerator.js';
+import DisplayGrid from "../DisplayGrid.js";
+import * as buffer from "node:buffer";
+import Effects from "../Effects.js";
+import DeleteButton from "../SkeletonButtons/DeleteButton.js";
+import FillGridButton from "../SkeletonButtons/FillGridButton.js";
+import UndoButton from "../SkeletonButtons/UndoButton.js"; // Add this import
+import RadialGridButton from "../SkeletonButtons/RadialGridButton.js";
+import RectGridButton from "../SkeletonButtons/RectGridButton.js";
+import NoGridButton from "../SkeletonButtons/NoGridButton.js";
+import ToggleButtonGroup from "../SkeletonButtons/ToggleButtonGroup.js";
+import radialGridButton from "../SkeletonButtons/RadialGridButton.js";
+import rectGridButton from "../SkeletonButtons/RectGridButton.js";
+import noGridButton from "../SkeletonButtons/NoGridButton.js";
+import EraserToolButton from "../SkeletonButtons/EraserToolButton.js"; // Import DisplayGrid if not already imported
+import ConnectToOneButton from "../SkeletonButtons/ConnectToOneButton.js";
+import ConnectWithoutCrossingButton from "../SkeletonButtons/ConnectWithoutCrossingButton.js";
+import ConnectToAllButton from "../SkeletonButtons/ConnectToAllButton.js";
+import GoToNextStateButton from "../SkeletonButtons/GoToNextStateButton.js";
+import History from "../History.js";  // Import the History singleton
+import ConnectToNearest from "../SkeletonButtons/ConnectToNearest.js";
+import RangeSlider from "../UI/RangeSlider.js";
 
 class SkeletonState {
     constructor(p, points, lineManager, mergedParams, toolConfig) {
@@ -17,50 +38,257 @@ class SkeletonState {
         this.mergedParams = mergedParams;
         this.toolConfig = toolConfig;
         this.currentGridType = "none"; // Track the current grid type
+        this.previousGridType = null;
         this.possibleLinesRenderer = null;
         this.pointRenderer = null;
         this.gridContext = null;
         this.points = points;
         this.lineManager = lineManager;
         this.ephemeralLineAnimator = null;
-        this.gridContext  = null;
         this.possibleLinesRenderer  = null;
         this.mouseHandler = null;
-        this.deleteButtonPosition = { x: 0, y: 0 }; // Will be set in updateGridContext
-        this.deleteButtonSize = { width: 40, height: 40 };
-        this.isDeleteButtonHovered = false;
-        // Add new fill grid button properties
-        this.fillGridButtonPosition = { x: 0, y: 0 }; // Will be set in updateGridContext
-        this.fillGridButtonSize = { width: 40, height: 40 };
-        this.isFillGridButtonHovered = false;
-        
-        // Initialize tutorial system
-        const tutorialSeen = typeof localStorage !== 'undefined' && localStorage.getItem('tutorialCompleted') === 'true';
-        this.tutorial = new Tutorial(p);
-        this.tutorial.active = !tutorialSeen; // Only show if not seen before
-        
-        // Help button properties
-        this.helpButtonSize = 40;
-        this.helpButtonX = p.width - 60;
-        this.helpButtonY = 20;
+
+        this.xray = false;
+        this.resetXrayTimer = null;
+
+
+
+        this.createSkeletonButtons();
+        this.nextStateButton = new GoToNextStateButton(
+            this.p,
+            LAYOUT.NEXT_STATE_BUTTON_X,
+            LAYOUT.NEXT_STATE_BUTTON_Y,
+            () => {
+                this.p.changeState("Anatomy");
+            }
+        );
+
+
         
         this.init();
+
+        //BUFFER
+        this.bufferWidth = 350; // Buffer width
+        this.bufferHeight = 800; // Buffer height
+
+        // Initialize the buffer (off-screen graphics canvas)
+        this.buffer = p.createGraphics(this.bufferWidth, this.bufferHeight);
+        this.initBufferGrid(); // Initialize the buffer grid
+
+   
     }
+
+    createSkeletonButtons(){
+        let x = LAYOUT.GRID_SIZE;
+        let y = LAYOUT.MARGIN;
+
+        const buttonsCanFit = Math.floor((LAYOUT.GRID_SIZE - LAYOUT.BUTTON_SIZE - LAYOUT.MARGIN) / (LAYOUT.BUTTON_SIZE + LAYOUT.BUTTON_PADDING));
+        console.log("Buttons can fit:", buttonsCanFit);
+
+        // Function to calculate button position based on index
+        const calculateButtonY = (index) => {
+            return y + index * (LAYOUT.BUTTON_SIZE + LAYOUT.BUTTON_PADDING);
+        };
+
+        // Create an array to store the buttons
+        this.skeletonButtons = [];
+
+        // Add buttons dynamically based on index
+        this.deleteButton = new DeleteButton(
+            this.p,
+            x, // x-coordinate for all buttons in the column
+            calculateButtonY(buttonsCanFit), // Dynamic y-coordinate for the button
+            () => this.deleteAllPoints() // Define delete callback
+        );
+        this.skeletonButtons.push(this.deleteButton);
+
+        // Add the Undo button above the Fill Grid button
+        this.undoButton = new UndoButton(
+            this.p,
+            x,
+            calculateButtonY(buttonsCanFit-2),
+            () => {
+                // Use the history instance
+                const history = new History();
+                if (history.canUndo()) {
+                    const state = history.undo();
+                    // IMPORTANT: Reset all references to points in MouseEventHandler
+                    this.clearPreview();
+                    if (this.p.restoreState(state)) {
+                        // Success - state was restored
+                        return;
+                    }
+                }
+                console.warn('No more undo history available');
+            }
+        );
+        this.skeletonButtons.push(this.undoButton);
+
+        this.fillGridButton = new FillGridButton(
+            this.p,
+            x,
+            calculateButtonY(buttonsCanFit-1),
+            () => this.fillGridWithPoints()
+        );
+        this.skeletonButtons.push(this.fillGridButton);
+
+ 
+
+        /** GRID BUTTONS */
+        this.radialGridButton = new RadialGridButton(
+            this.p,
+            x,
+            calculateButtonY(3),
+            () => {
+                this.setGrid("radial");
+                this.gridButtons.toggle(this.radialGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.radialGridButton);
+
+        this.rectGridButton = new RectGridButton(
+            this.p,
+            x,
+            calculateButtonY(4),
+            () => {
+                this.setGrid("rect");
+                this.gridButtons.toggle(this.rectGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.rectGridButton);
+
+        this.noGridButton = new NoGridButton(
+            this.p,
+            x,
+            calculateButtonY(5),
+            () => {
+                this.setGrid("none");
+                this.gridButtons.toggle(this.noGridButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.noGridButton);
+
+        this.gridButtons = new ToggleButtonGroup([this.radialGridButton, this.rectGridButton, this.noGridButton]);
+        this.gridButtons.toggle(this.noGridButton); //Default Grid.
+
+        /** TOOL BUTTONS */
+        //Add her, i draw og i onclick.
+        this.eraserToolButton = new EraserToolButton(
+            this.p,
+            x,
+            calculateButtonY(7),
+            () => {
+                this.setTool("eraser"); // Define the tool type for eraser
+                this.toolButtons.toggle(this.eraserToolButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.eraserToolButton);
+
+        // Connect to one button (simple line between two points)
+        this.connectToOneButton = new ConnectToOneButton(
+            this.p,
+            x,
+            calculateButtonY(8),
+            () => {
+                this.setTool("connectToOne");
+                this.toolButtons.toggle(this.connectToOneButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectToOneButton);
+
+        // Connect without crossing (four connected points forming a square)
+        this.connectWithoutCrossingButton = new ConnectWithoutCrossingButton(
+            this.p,
+            x,
+            calculateButtonY(9),
+            () => {
+                this.setTool("connectWithoutCrossing");
+                this.toolButtons.toggle(this.connectWithoutCrossingButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectWithoutCrossingButton);
+
+        // Connect to all (six points with crossing connections)
+        this.connectToAllButton = new ConnectToAllButton(
+            this.p,
+            x,
+            calculateButtonY(10),
+            () => {
+                this.setTool("connectToAll");
+                this.toolButtons.toggle(this.connectToAllButton);
+            },
+            true
+        )
+        this.skeletonButtons.push(this.connectToAllButton);
+
+        this.connectToNearestButton = new ConnectToNearest(
+            this.p,
+            x,
+            calculateButtonY(11), // Adjust the position as needed - should be below the Connect to All button
+            () => {
+                this.mouseHandler.setToolMode("connectToNearest");
+                this.toolButtons.toggle(this.connectToNearestButton);
+            },
+            true
+        );
+        this.skeletonButtons.push(this.connectToNearestButton);
+
+        // Add the slider for the Connect to Nearest button
+        this.rangeSlider = new RangeSlider(
+            this.p, 
+            x+15, // Keep the same x position as the button (vertically aligned)
+            calculateButtonY(11) + LAYOUT.BUTTON_SIZE + 5, // Position below the button with a small gap
+            5, // Thinner width (was LAYOUT.BUTTON_SIZE)
+            100, // Height of slider
+            50, // Minimum value (minimum connection radius)
+            450, // Maximum value (maximum connection radius)
+            150, // Initial value (default connection radius)
+            (value) => {
+                // Update the connection radius in the mouse handler when slider changes
+                this.mouseHandler.connectionRadius = value;
+            }
+        );
+
+        // Create the toggle button group
+        this.toolButtons = new ToggleButtonGroup([
+            this.eraserToolButton, 
+            this.connectToOneButton, 
+            this.connectWithoutCrossingButton,
+            this.connectToAllButton,
+            this.connectToNearestButton
+        ]);
+
+        // Set connectToOneButton as the default tool
+        this.toolButtons.toggle(this.connectToOneButton);
+
+    }
+
+
 
     init(){
         // Other initialization code...
 
+        let xStart = LAYOUT.MARGIN;
+        let yStart = LAYOUT.MARGIN;
+        let gridSize = LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2;
         // Initialize the gridContext based on the default `currentGridType` ("none")
-        this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, this.p.width - SPACING.MARGIN * 2);
+        this.gridContext = new GridContext(RectGrid, this.p, xStart, yStart, gridSize);
+        //this.gridContext = new GridContext(RectGrid, this.p, SPACING.MARGIN, SPACING.MARGIN, 800); //Is updated somewhere else!
 
         this.pointRenderer = new PointRenderer(this.p, this.mergedParams.missRadius); // Initialize the PointRenderer
 
         this.possibleLinesRenderer = new PossibleLinesRenderer(this.p); // Initialize PossibleLinesRenderer
 
         //Animator
-        this.ephemeralLineAnimator = new EphemeralLineAnimator(this.p, this.lineManager);
+        //this.ephemeralLineAnimator = new EphemeralLineAnimator(this.p, this.lineManager);
 
-        this.ephemeralLineAnimator.start(); // Start the animation
+        //this.ephemeralLineAnimator.start(); // Start the animation
 
         // Create the possible lines renderer
         this.possibleLinesRenderer = new PossibleLinesRenderer(this.p);
@@ -71,175 +299,107 @@ class SkeletonState {
             this.gridContext, 
             this.points, 
             this.lineManager,
-            this.possibleLinesRenderer // Pass the renderer
+            this.possibleLinesRenderer, // Pass the renderer
+            // Add callback for state changes
+            (eventType) => { // Add parameter to receive the event type
+                console.log(`In callback: ${eventType}`);
+
+                // Record state after significant changes
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("skeletonChange");
+                }
+
+                this.p.previousPoints = JSON.parse(JSON.stringify(this.points));
+                this.p.previousLines = JSON.parse(JSON.stringify(this.lineManager.getLines()));
+                
+                // Only notify when the operation ends (mouse released)
+                if (eventType === "end") {
+                    this.notifyLinesCountChanged();
+                }
+            }
         );
 
         // Other initialization code...
     }
 
-    // Update drawDeleteButton method to make the button bigger
-    drawDeleteButton() {
-        const size = 30; // Larger button size (was 24)
-        const iconX = this.p.width - size - LAYOUT.MARGIN;
-        const iconY = this.p.height - size - LAYOUT.MARGIN;
-        
-        // Check if mouse is hovering over button
-        this.isDeleteButtonHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
+    initBufferGrid() {
+        // Initialize a grid with 1 column and 3 rows inside the buffer
+        this.bufferGrid = new DisplayGrid(
+            this.p,
+            1, // 1 column
+            3, // 3 rows
+            LAYOUT.MARGIN, // X start in the buffer (relative to buffer)
+            LAYOUT.MARGIN, // Y start in the buffer
+            this.bufferWidth - LAYOUT.MARGIN*2, // Total height of the grid
+            this.mergedParams,
+            this.buffer
+        );
+        this.effect = new Effects(this.buffer);
 
-        if(this.isDeleteButtonHovered) this.p.cursor(this.p.HAND);
-        
-        // Match your index.css button styles
-        if(this.isDeleteButtonHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Draw trash can icon in text-gray-600 color (rgb(75, 85, 99))
-        this.p.stroke(75, 85, 99); // text-gray-600
-        this.p.strokeWeight(1);
-        this.p.noFill();
-        
-        // Keep icon size the same - just centered in the larger button
-        const iconSize = 18; // Icon size (unchanged)
-        const margin = (size - iconSize) / 2; // Center the icon
-        const trashWidth = iconSize * 0.6;
-        const trashHeight = iconSize * 0.5;
-        const trashX = iconX + (size - trashWidth) / 2;
-        const trashY = iconY + margin + size * 0.15;
-        
-        // Trash can body
-        this.p.rect(trashX, trashY, trashWidth, trashHeight, 1);
-        
-        // Trash can lid
-        const lidWidth = trashWidth * 1.1;
-        const lidHeight = size * 0.05;
-        const lidX = iconX + (size - lidWidth) / 2;
-        const lidY = trashY - lidHeight - 1;
-        this.p.line(lidX, lidY, lidX + lidWidth, lidY);
-        
-        // Handle on lid
-        const handleWidth = lidWidth * 0.2;
-        const handleHeight = size * 0.05;
-        const handleX = iconX + (size - handleWidth) / 2;
-        const handleY = lidY - handleHeight;
-        this.p.rect(handleX, handleY, handleWidth, handleHeight, 1);
-        
-        // Update position and size properties for hit detection
-        this.deleteButtonPosition = { x: iconX, y: iconY };
-        this.deleteButtonSize = { width: size, height: size };
+        // Render the grid onto the buffer immediately
+        this.drawBufferGrid();
     }
 
-    // Update drawFillGridButton method to make the button bigger
-    drawFillGridButton() {
-        const size = 30; // Larger button size (was 24)
-        const iconX = this.p.width - size * 2 - LAYOUT.MARGIN * 1.5; // Position left of delete button
-        const iconY = this.p.height - size - LAYOUT.MARGIN;
-        
-        // Check if mouse is hovering over button
-        this.isFillGridButtonHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
+    drawBufferGrid() {
+        // Clear the buffer and draw the grid
+        this.buffer.background(255);
+        this.bufferGrid.drawShapes();
+        this.effect.applyEffects(this.bufferGrid.scale * this.p.getShapeScale() * LAYOUT.SHAPE_SCALE);
 
-        if(this.isFillGridButtonHovered) this.p.cursor(this.p.HAND);
-        
-        // Match your index.css button styles
-        if(this.isFillGridButtonHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Draw grid fill icon in text-gray-600 color (rgb(75, 85, 99))
-        this.p.stroke(75, 85, 99); // text-gray-600
-        this.p.strokeWeight(1);
-        this.p.noFill();
-        
-        // Keep icon size the same - just centered in the larger button
-        const iconSize = 18; // Icon size
-        const margin = (size - iconSize) / 2; // Center the icon
-        const gridSize = iconSize * 0.8;
-        const gridX = iconX + (size - gridSize) / 2;
-        const gridY = iconY + (size - gridSize) / 2;
-        
-        // Draw grid outline
-        this.p.rect(gridX, gridY, gridSize, gridSize, 1);
-        
-        // Draw grid lines
-        const cellSize = gridSize / 2;
-        
-        // Vertical line
-        this.p.line(gridX + cellSize, gridY, gridX + cellSize, gridY + gridSize);
-        
-        // Horizontal line
-        this.p.line(gridX, gridY + cellSize, gridX + gridSize, gridY + cellSize);
-        
-        // Draw points at the intersections
-        this.p.noStroke();
-        this.p.fill(75, 85, 99); // text-gray-600
-        const dotSize = 2; // Small dots
-        
-        // Draw points at intersections
-        for (let i = 0; i <= 2; i++) {
-            for (let j = 0; j <= 2; j++) {
-                this.p.ellipse(
-                    gridX + i * cellSize,
-                    gridY + j * cellSize,
-                    dotSize,
-                    dotSize
-                );
-            }
-        }
-        
-        // Update position and size properties for hit detection
-        this.fillGridButtonPosition = { x: iconX, y: iconY };
-        this.fillGridButtonSize = { width: size, height: size };
+        //this.bufferGrid.drawShapes(true);
+        this.bufferGrid.drawGrid(); // Pass buffer as P5 canvas for drawing
+        if (this.xray) this.bufferGrid.drawShapes(true);
+
     }
 
     // Add method to fill grid with points
     fillGridWithPoints() {
+        // Record state before filling if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("beforeFillGrid");
+        }
+        
         console.log("Starting fillGridWithPoints");
         
         // Clear existing points and lines first
         this.points.length = 0;
         this.lineManager.clearAllLines();
-        
+
+        // IMPORTANT: Reset all references to points in MouseEventHandler
+        this.clearPreview();
+
         // Get the current grid type and dimensions
         const grid = this.gridContext.getGrid();
+        console.log("Grid object:", grid);
         
         // Force grid update before proceeding
         this.updateGridContext();
+
+
+        // Check grid type in multiple ways to be sure
+        const toolConfigType = this.toolConfig?.grid || "NoGrid";
+        console.log("Grid types - current:", this.currentGridType, 
+                    "toolConfig:", toolConfigType,
+                    "grid constructor:", grid.constructor.name);
         
-        console.log(`Current grid type: ${this.currentGridType}`);
-        console.log("Grid object:", grid);
-        
-        if (this.currentGridType === "rect") {
-            // Get grid dimensions - add fallbacks in case these are undefined
-            const cols = grid.cols || 3;  // Default to 3 if undefined
-            const rows = grid.rows || 3;  // Default to 3 if undefined
+        // More robust check for NoGrid: check multiple conditions
+        if (this.currentGridType === "none"){
+            
+   this.generateRandomPoints();
+
+        } else if (this.currentGridType === "rect") {
+            // Get grid dimensions - use current grid values or user settings
+            const cols = grid.cols || 5;  // Default to 5 if undefined
+            const rows = grid.rows || 5;  // Default to 5 if undefined
             console.log(`Rectangle grid dimensions: ${cols}x${rows}`);
             
             // Calculate grid cell dimensions
-            const gridWidth = grid.width || (this.p.width - 2 * LAYOUT.MARGIN);
-            const gridHeight = grid.height || (this.p.width - 2 * LAYOUT.MARGIN);
+            const gridWidth = grid.width || (LAYOUT.GRID_SIZE - 2 * LAYOUT.MARGIN);
+            const gridHeight = grid.height || (LAYOUT.GRID_SIZE - 2 * LAYOUT.MARGIN);
             const cellWidth = gridWidth / cols;
             const cellHeight = gridHeight / rows;
             const startX = grid.x || LAYOUT.MARGIN;
             const startY = grid.y || LAYOUT.MARGIN;
-            
-            console.log(`Grid dimensions: ${gridWidth}x${gridHeight}, Cell: ${cellWidth}x${cellHeight}, Start: ${startX},${startY}`);
             
             // Create points in row-column order to match our indexing
             let pointId = 0;
@@ -251,126 +411,193 @@ class SkeletonState {
                         id: pointId++
                     };
                     this.points.push(point);
-                    console.log(`Added point at (${point.x}, ${point.y})`);
                 }
-            }
-            
-            console.log(`Added ${this.points.length} points to this.points`);
-            
-            if (this.points.length === 0) {
-                console.error("No points were added! Check grid dimensions.");
-                return;
             }
             
             // Total points per row is cols + 1 (for intersections)
             const pointsPerRow = cols + 1;
-            console.log(`Points per row: ${pointsPerRow}`);
             
-            // Loop through all points by row and column for more reliable indexing
+            // Create lines between adjacent points
             for (let row = 0; row <= rows; row++) {
                 for (let col = 0; col <= cols; col++) {
                     const currentIndex = row * pointsPerRow + col;
                     
                     // Connect to right neighbor (if not at right edge)
                     if (col < cols && this.points[currentIndex] && this.points[currentIndex + 1]) {
-                        const rightIndex = currentIndex + 1;
                         this.lineManager.lines.push({
                             start: this.points[currentIndex],
-                            end: this.points[rightIndex],
+                            end: this.points[currentIndex + 1],
                             selected: true
                         });
                     }
                     
                     // Connect to bottom neighbor (if not at bottom edge)
                     if (row < rows && this.points[currentIndex] && this.points[currentIndex + pointsPerRow]) {
-                        const bottomIndex = currentIndex + pointsPerRow;
                         this.lineManager.lines.push({
                             start: this.points[currentIndex],
-                            end: this.points[bottomIndex],
+                            end: this.points[currentIndex + pointsPerRow],
                             selected: true
                         });
                     }
                 }
             }
             
-            console.log(`Created ${this.lineManager.lines.length} lines for rectangular grid`);
-        } else {
-            // For other grid types, continue using grid.getIntersections()
-            const gridPoints = grid.getIntersections();
-            console.log(`Generated ${gridPoints.length} grid points`);
+            console.log(`Created ${this.points.length} points and ${this.lineManager.lines.length} lines for rectangular grid`);
+        } 
+        else if (this.currentGridType === "radial") {
+            // Get radial grid parameters
+            const angularDivisions = grid.angularDivisions || 12; // Default to 12 if undefined 
+            const radialDivisions = grid.radialDivisions || 5;   // Default to 5 if undefined
+            const centerX = grid.centerX || (LAYOUT.GRID_SIZE / 2);
+            const centerY = grid.centerY || (LAYOUT.GRID_SIZE / 2);
+            const radius = grid.radius || (Math.min(LAYOUT.GRID_SIZE, LAYOUT.GRID_SIZE) / 2 - LAYOUT.MARGIN);
             
-            // Add points at each intersection
+            console.log(`Radial grid parameters: ${angularDivisions} angles, ${radialDivisions} circles`);
+            
+            // Add points for each intersection on concentric circles
             let pointId = 0;
-            gridPoints.forEach(point => {
-                this.points.push({
-                    x: point.x,
-                    y: point.y,
-                    id: pointId++
-                });
+            
+            // Add points on the circles
+            for (let r = 1; r <= radialDivisions; r++) {
+                const currentRadius = (radius / radialDivisions) * r;
+                
+                for (let a = 0; a < angularDivisions; a++) {
+                    const angle = (2 * Math.PI * a) / angularDivisions;
+                    const x = centerX + currentRadius * Math.cos(angle);
+                    const y = centerY + currentRadius * Math.sin(angle);
+                    
+                    this.points.push({
+                        x: x,
+                        y: y,
+                        id: pointId++
+                    });
+                }
+            }
+            
+            // Add center point last
+            const centerPointId = pointId++;
+            this.points.push({
+                x: centerX,
+                y: centerY,
+                id: centerPointId
             });
             
-            // Rest of the function for radial and none grid types
-            if (this.currentGridType === "radial") {
-                const angularDivisions = grid.angularDivisions;
-                const radialDivisions = grid.radialDivisions;
-                
-                // Connect points on the same circle (adjacent angles)
-                for (let r = 1; r <= radialDivisions; r++) {
-                    for (let a = 0; a < angularDivisions; a++) {
-                        const currentIndex = (r - 1) * angularDivisions + a;
-                        const nextIndex = (r - 1) * angularDivisions + ((a + 1) % angularDivisions);
-                        
-                        this.lineManager.lines.push({
-                            start: this.points[currentIndex],
-                            end: this.points[nextIndex],
-                            selected: true
-                        });
-                    }
-                }
-                
-                // Connect points on the same radius (adjacent circles)
-                for (let r = 1; r < radialDivisions; r++) {
-                    for (let a = 0; a < angularDivisions; a++) {
-                        const currentIndex = (r - 1) * angularDivisions + a;
-                        const nextRadiusIndex = r * angularDivisions + a;
-                        
-                        this.lineManager.lines.push({
-                            start: this.points[currentIndex],
-                            end: this.points[nextRadiusIndex],
-                            selected: true
-                        });
-                    }
-                }
-                
-                // Connect center point to first circle
-                const centerIndex = this.points.length - 1; // Last point is center
+            // NOW ADD LINES BETWEEN POINTS:
+            
+            // Connect points along each circle (adjacent angular points)
+            for (let r = 0; r < radialDivisions; r++) {
                 for (let a = 0; a < angularDivisions; a++) {
+                    const currentIndex = r * angularDivisions + a;
+                    const nextAngleIndex = r * angularDivisions + ((a + 1) % angularDivisions);
+                    
                     this.lineManager.lines.push({
-                        start: this.points[centerIndex],
-                        end: this.points[a],
+                        start: this.points[currentIndex],
+                        end: this.points[nextAngleIndex],
                         selected: true
                     });
                 }
             }
-            // For NoGrid - no specific structure, don't add lines
-            else {
-                // No lines for "none" grid type
+            
+            // Connect points along radial lines (between adjacent circles)
+            for (let r = 0; r < radialDivisions - 1; r++) {
+                for (let a = 0; a < angularDivisions; a++) {
+                    const currentIndex = r * angularDivisions + a;
+                    const nextRadiusIndex = (r + 1) * angularDivisions + a;
+                    
+                    this.lineManager.lines.push({
+                        start: this.points[currentIndex],
+                        end: this.points[nextRadiusIndex],
+                        selected: true
+                    });
+                }
             }
+            
+            // Connect center point to the innermost circle
+            for (let a = 0; a < angularDivisions; a++) {
+                this.lineManager.lines.push({
+                    start: this.points[centerPointId],
+                    end: this.points[a],
+                    selected: true
+                });
+            }
+            
+            console.log(`Created ${this.points.length} points and ${this.lineManager.lines.length} lines for radial grid`);
         }
+        
+        console.log(`Generated ${this.points.length} grid points`);
+        
+        // Record state after filling if recordCurrentState exists
+        if (typeof this.p.recordCurrentState === 'function') {
+            this.p.recordCurrentState("fillGrid");
+        }
+
+        this.notifyLinesCountChanged();
+
     }
 
-    // Add this method to handle delete functionality
+    // Add this method to your SkeletonState class
+    setTool(toolType) {
+        // You can store the current tool type for use in other methods
+        this.currentToolType = toolType;
+        
+        // Update the mouseHandler behavior based on the selected tool
+        if (this.mouseHandler) {
+            this.mouseHandler.setToolMode(toolType);
+            
+            // Reset the lastAddedPoint when switching to connectToOne tool
+            if (toolType === "connectToOne") {
+                this.mouseHandler.lastAddedPoint = null;
+            }
+        }
+        
+        console.log(`Tool changed to: ${toolType}`);
+    }
+
+    /**
+     * Delete all points and lines
+     */
     deleteAllPoints() {
         // Clear all points
         this.points.length = 0;
         
-        // Remove all lines
+        // Clear all lines in the line manager
         this.lineManager.clearAllLines();
+        
+        // IMPORTANT: Reset all references to points in MouseEventHandler
+        this.clearPreview();
+        
+        // Notify about state change
+        if (this.onStateChange) {
+            this.onStateChange("end");
+        }
+        
+        // Notify about lines count change
+        this.notifyLinesCountChanged();
+        
+        console.log("All points and lines deleted");
     }
+
+    // Add a method to generate random points
+    generateRandomPoints() {
+        const generator = new RandomPointGenerator(this.p, LAYOUT.GRID_SIZE, LAYOUT.GRID_SIZE);
+        const { points, lines } = generator.generate();
+        
+        // Clear existing points and lines
+        this.points.length = 0;
+        this.lineManager.clearAllLines();
+        
+        // Add new points
+        points.forEach(point => this.points.push(point));
+        
+        // Add new lines to the line manager
+        lines.forEach(line => this.lineManager.lines.push(line));
+    }
+
+
 
     // Modify the draw method to handle the null selectedPoint
     draw() {
-        this.p.cursor(this.p.ARROW)
+        this.p.cursor(this.p.ARROW);
         this.updateGridContext();
         const missRadius = this.mergedParams.missArea;
         this.pointRenderer.setMissRadius(missRadius);
@@ -378,7 +605,7 @@ class SkeletonState {
         this.p.noStroke();
         this.p.fill(0); // Color: black
 
-        this.ephemeralLineAnimator.updateAndDraw();
+        //this.ephemeralLineAnimator.updateAndDraw();
 
         this.gridContext.draw();
 
@@ -388,86 +615,87 @@ class SkeletonState {
         // Draw lines between points (we pass null for selectedPoint since we don't use it anymore)
         this.possibleLinesRenderer.drawLines(this.lineManager.getLines(), null, this.mouseHandler.getHoveredLineForRendering());
 
+        // Draw all lines
+        this.lineManager.getLines().forEach(line => {
+            this.possibleLinesRenderer.drawLines([line], null, this.hoveredLine);
+        });
+        
+        // Draw preview lines (add this line)
+        this.mouseHandler.drawPreviewLines();
+
         //For changing the cursor
         let anyHovered = this.possibleLinesRenderer.getAnyHoveredLine();
 
-        // Draw all points with hover effect
+        // Update the points drawing part of the draw method
         this.points.forEach((point) => {
             const isHovered = this.pointRenderer.isHovered(point, this.p.mouseX, this.p.mouseY);
+            const isSelected = this.mouseHandler.selectedPoint && this.mouseHandler.selectedPoint.id === point.id;
+            
             if (isHovered) {
                 anyHovered = true; // At least one point is hovered
             }
-            this.pointRenderer.draw(point, isHovered); // Render the point with hover state
-
+            
+            // Render the point with hover and selected states
+            this.pointRenderer.draw(point, isHovered, isSelected);
         });
+
         // Update cursor based on whether any point is hovered
         if (anyHovered) this.p.cursor(this.p.HAND);
 
         // Draw the delete button
-        this.drawDeleteButton();
-        
+        //this.drawDeleteButton();
+        this.deleteButton.draw();
+        this.undoButton.draw(); // Add this line
+
         // Draw the fill grid button
-        this.drawFillGridButton();
+        //this.drawFillGridButton();
+        this.fillGridButton.draw();
+  
         
-        // Draw help button if tutorial is inactive
-        if (this.tutorial && !this.tutorial.active) {
-            this.drawHelpButton();
+
+        this.radialGridButton.draw();
+        this.rectGridButton.draw();
+        this.noGridButton.draw();
+
+        this.eraserToolButton.draw();
+        this.connectToOneButton.draw();
+        this.connectWithoutCrossingButton.draw();
+        this.connectToAllButton.draw();
+        this.connectToNearestButton.draw();
+
+        // Draw the range slider if the connect to nearest tool is active
+        if (this.mouseHandler.toolMode === "connectToNearest") {
+            this.rangeSlider.show();
+            this.rangeSlider.draw();
+        } else {
+            this.rangeSlider.hide();
         }
-        
-        // Draw tutorial overlay last so it appears on top
-        if (this.tutorial && this.tutorial.active) {
-            this.tutorial.draw();
-        }
+
+        this.drawBufferGrid();
+        // Render the buffer on the right-hand side of the canvas
+        const bufferX = this.p.width - this.bufferWidth; // Position 10px from the right edge
+        const bufferY = 0; // Position 0px from the top
+        this.p.image(this.buffer, bufferX, bufferY);
+
+        this.nextStateButton.draw();
     }
 
-    // Update drawHelpButton method to make the button bigger
-    drawHelpButton() {
-        this.p.push();
-    
-        // Make the button the same size as utility buttons
-        const size = 30; // Larger button size (was 24)
-    
-        // Position at top-right
-        const iconX = this.p.width - size - LAYOUT.MARGIN;
-        const iconY = 20; // Keep it at the top
-    
-        // Update the class properties to reflect size and position
-        this.helpButtonSize = size;
-        this.helpButtonX = iconX;
-        this.helpButtonY = iconY;
-    
-        // Check if mouse is hovering over button
-        const isHovered = 
-            this.p.mouseX >= iconX && 
-            this.p.mouseX <= iconX + size && 
-            this.p.mouseY >= iconY && 
-            this.p.mouseY <= iconY + size;
-    
-        // Change cursor to hand when hovering
-        if(isHovered) this.p.cursor(this.p.HAND);
-    
-        // Match your index.css button styles
-        if(isHovered) {
-            this.p.fill(229, 231, 235); // hover:bg-gray-200 - matches the hover style
-        } else {
-            this.p.fill(209, 213, 219); // bg-gray-300 - matches the normal style
-        }
-        
-        this.p.noStroke(); // No border like your buttons
-        this.p.rect(iconX, iconY, size, size, 4); // rounded (4px is similar to your rounded class)
-        
-        // Keep question mark size similar but centered in the larger button
-        this.p.fill(75, 85, 99); // text-gray-600
-        this.p.noStroke();
-        this.p.textSize(16); // Appropriate size for the question mark
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text("?", iconX + size/2, iconY + size/2 + 1); // +1 for better vertical alignment
-    
-        this.p.pop();
-    }
+
 
     updateMergedParams(newMergedParams) {
         this.mergedParams = newMergedParams;
+        this.effect.setSmoothAmount(this.mergedParams.smoothAmount);
+        this.bufferGrid.updateMergedParams(newMergedParams);
+
+        // Clear any existing timer
+        if (this.resetXrayTimer) {
+            clearTimeout(this.resetXrayTimer);
+        }
+
+        // Set a timer to disable xray mode after 1 second
+        this.resetXrayTimer = setTimeout(() => {
+            this.xray = false;
+        }, 1000);
     }
 
     updateToolConfig(newToolConfig) {
@@ -476,36 +704,81 @@ class SkeletonState {
 
 
     mousePressed() {
+        // Check if slider was clicked first
+        if (this.rangeSlider.visible && this.rangeSlider.mousePressed()) {
+            return true;
+        }
+        
+        // Rest of your mousePressed logic...
         if (!this.mouseHandler) return;
         
-        // First check if the tutorial handled the click
-        if (this.tutorial && this.tutorial.active) {
-            if (this.tutorial.handleMousePressed(this.p.mouseX, this.p.mouseY)) {
-                return true; // Tutorial handled the click
-            }
+
+
+        if(!this.isMouseWithinGrid()){
+            this.xray = true;
         }
-        
-        // Check if the delete button was clicked
-        if (this.isDeleteButtonHovered) {
-            this.deleteAllPoints();
+
+
+        if(this.deleteButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.deleteButton.click();
             return;
         }
-        
+
+        // Check if the undo button was clicked
+        if(this.undoButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.undoButton.click();
+            return;
+        }
+
         // Check if the fill grid button was clicked
-        if (this.isFillGridButtonHovered) {
-            this.fillGridWithPoints();
+        if (this.fillGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.fillGridButton.click();
             return;
         }
         
-        // Check for help button clicks when tutorial is inactive
-        if (this.tutorial && !this.tutorial.active &&
-            this.p.mouseX >= this.helpButtonX && 
-            this.p.mouseX <= this.helpButtonX + this.helpButtonSize &&
-            this.p.mouseY >= this.helpButtonY && 
-            this.p.mouseY <= this.helpButtonY + this.helpButtonSize) {
-            
-            this.tutorial.toggleTutorial();
-            return true;
+        if(this.radialGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.radialGridButton.click();
+            return;
+        }
+
+        if(this.rectGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.rectGridButton.click();
+            return;
+        }
+
+        if(this.noGridButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.noGridButton.click();
+            return;
+        }
+
+        if(this.eraserToolButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.eraserToolButton.click();
+            return;
+        }
+        
+        if(this.connectToOneButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToOneButton.click();
+            return;
+        }
+        
+        if(this.connectWithoutCrossingButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectWithoutCrossingButton.click();
+            return;
+        }
+        
+        if(this.connectToAllButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToAllButton.click();
+            return;
+        }
+
+        if(this.connectToNearestButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.connectToNearestButton.click();
+            return;
+        }
+
+        if(this.nextStateButton.checkHover(this.p.mouseX, this.p.mouseY)) {
+            this.nextStateButton.click();
+            return;
         }
         
         const knobDragged = this.gridContext.mousePressed(this.p.mouseX, this.p.mouseY);
@@ -514,17 +787,37 @@ class SkeletonState {
     }
 
     mouseDragged() {
+        // Check if slider is being dragged
+        if (this.rangeSlider.isDragging) {
+            this.rangeSlider.mouseDragged();
+            return true;
+        }
+        
+        // Rest of your mouseDragged logic...
         if (!this.mouseHandler) return;
+        // First check if the grid is being interacted with
         const knobDragged = this.gridContext.mouseDragged(this.p.mouseX, this.p.mouseY);
         if (knobDragged) return;
         this.mouseHandler.handleMouseDragged();
+
+        if(!this.isMouseWithinGrid()){
+            this.xray = true;
+        }
     }
 
     mouseReleased() {
+        // Check if slider was released
+        if (this.rangeSlider.visible) {
+            this.rangeSlider.mouseReleased();
+        }
+        
+        // Rest of your mouseReleased logic...
         if (!this.mouseHandler) return;
         const knobDragged = this.gridContext.mouseReleased();
         if (knobDragged) return;
         this.mouseHandler.handleMouseReleased();
+
+        this.xray = false;
     }
 
     mouseMoved() {
@@ -533,22 +826,28 @@ class SkeletonState {
         }
     }
 
+    mouseWheel(event) {
+        this.bufferGrid.handleScroll(event.delta);
+    }
+
+    setGrid(type = "none"){
+        this.currentGridType = type;
+    }
+
     updateGridContext = () => {
         let xStart = LAYOUT.MARGIN;
         let yStart = LAYOUT.MARGIN;
-        let gridSize = this.p.width - LAYOUT.MARGIN * 2;
-
-        // Position the delete button at the bottom right corner of the canvas
-        this.deleteButtonPosition = { 
-            x: this.p.width - this.deleteButtonSize.width - LAYOUT.MARGIN, 
-            y: this.p.height - this.deleteButtonSize.height - LAYOUT.MARGIN 
-        };
+        let gridSize = LAYOUT.GRID_SIZE - LAYOUT.MARGIN * 2;
 
         // Retrieve the latest grid type from toolConfig
-        const toolConfig = this.toolConfig;
-        const gridType = toolConfig?.grid || "none";
+        //const toolConfig = this.toolConfig;
+        //const gridType = toolConfig?.grid || "none";
+
+        const gridType = this.currentGridType;
+        const previousGridType = this.previousGridType;
+
         // Only update the gridContext if the gridType has changed
-        if (this.currentGridType !== gridType) {
+        if (previousGridType !== gridType) {
             if (gridType === "radial") {
                 this.gridContext.setGridType(RadialGrid,
                     this.p,
@@ -559,12 +858,90 @@ class SkeletonState {
                     12
                 ); // Adjust parameters
             } else if (gridType === "rect") {
-                this.gridContext.setGridType(RectGrid, this.p, 3, 3, xStart, yStart, gridSize);
+
+                this.gridContext.setGridType(RectGrid, this.p, xStart, yStart, gridSize);
             } else if (gridType === "none") {
                 this.gridContext.setGridType(NoGrid, this.p, xStart, yStart, gridSize);
             }
-            this.currentGridType = gridType; // Update current grid type
+            this.previousGridType = gridType; // Backup the current grid type
+
         }
     };
+
+    isMouseWithinGrid() {
+        // Define the grid boundaries (adjust these values as per your grid dimensions)
+        const gridStartX = LAYOUT.MARGIN; // Grid's starting X position
+        const gridStartY = LAYOUT.MARGIN; // Grid's starting Y position
+        const gridEndX = LAYOUT.GRID_SIZE + 2* LAYOUT.MARGIN; // Grid's ending X position
+        const gridEndY = LAYOUT.GRID_SIZE + LAYOUT.MARGIN; // Grid's ending Y position
+
+        // Check if the mouse is within the grid boundaries
+        const isWithinX = this.p.mouseX >= gridStartX && this.p.mouseX <= gridEndX;
+        const isWithinY = this.p.mouseY >= gridStartY && this.p.mouseY <= gridEndY;
+
+        return isWithinX && isWithinY;
+    }
+
+    clearPreview(){
+            if (this.mouseHandler) {
+                this.mouseHandler.lastAddedPoint = null;
+                this.mouseHandler.selectedPoint = null;
+                this.mouseHandler.draggingPoint = null;
+                this.mouseHandler.mouseDragStart = null;
+                this.mouseHandler.isDragging = false;
+                this.mouseHandler.previewLines = [];
+                this.mouseHandler.previewPoint = null;
+                this.mouseHandler.hoveredLine = null;
+            }
+    }
+    // Add this method to the SkeletonState class
+    keyPressed(evt) {
+
+
+        // Check if the key is backspace
+        if (evt.key === "Backspace" || evt.key === "Delete") {
+            // Delete the selected point if there is one
+            if (this.mouseHandler && this.mouseHandler.selectedPoint) {
+                // Record state before deletion if recordCurrentState exists
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("beforePointDelete");
+                }
+                
+                // Call the removePoint method from MouseEventHandler
+                this.mouseHandler.removePoint(this.mouseHandler.selectedPoint);
+                this.mouseHandler.selectedPoint = null; // Clear the selected point reference
+                
+                // Record state after deletion if recordCurrentState exists
+                if (typeof this.p.recordCurrentState === 'function') {
+                    this.p.recordCurrentState("afterPointDelete");
+                }
+                
+                return true; // Indicate that we handled the keypress
+            }
+        }
+        
+        return false; // We didn't handle the keypress
+    }
+
+    // Add this method to your SkeletonState class
+    notifyLinesCountChanged() {
+        // Get the current count of lines
+        const linesCount = this.lineManager.getLines().length;
+        console.log("Dispatching skeleton-update event with lines count:", linesCount);
+        
+        // Update the global variable
+        window.skeletonLinesCount = linesCount;
+        
+        // Dispatch an event to notify components
+        const event = new CustomEvent('skeleton-update', {
+            detail: {
+                skeletonLinesCount: linesCount
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+
+
 }
 export default SkeletonState;
